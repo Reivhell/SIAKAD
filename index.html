@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Manajemen Akademik</title>
+    <script>
+      // Early suppression of benign Vite/WebSocket/HMR connection failure events
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        var reasonStr = reason ? (reason.message || String(reason)) : '';
+        if (
+          reasonStr.toLowerCase().includes('websocket') || 
+          reasonStr.toLowerCase().includes('failed to connect') ||
+          reasonStr.toLowerCase().includes('closed without opened') ||
+          reasonStr.toLowerCase().includes('vite')
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+
+      window.addEventListener('error', function(event) {
+        var msg = event.message || '';
+        if (
+          msg.toLowerCase().includes('websocket') || 
+          msg.toLowerCase().includes('failed to connect') ||
+          msg.toLowerCase().includes('closed without opened') ||
+          msg.toLowerCase().includes('vite')
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
