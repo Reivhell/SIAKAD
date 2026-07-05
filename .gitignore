@@ -23,6 +23,8 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 !.env.example
+dev.db
+test.db
 
 # IDEs and Editors
 .vscode/
@@ -37,7 +39,7 @@ lerna-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
-   
+
 # Vite / Frontend Caches
 .vite/
 .eslintcache

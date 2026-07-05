@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  siakad_db:
+    image: postgres:15-alpine
+    container_name: siakad_postgres
+    environment:
+      POSTGRES_USER: siakad_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-siakad_local_dev}
+      POSTGRES_DB: siakad_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - siakad_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siakad_admin -d siakad_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  siakad_redis:
+    image: redis:7-alpine
+    container_name: siakad_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - siakad_redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  siakad_pg_data:
+  siakad_redis_data:

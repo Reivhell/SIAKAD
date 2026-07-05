@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String @id @default(uuid())
+  username     String @unique
+  email        String @unique
+  name         String
+  role         String
+  phone        String
+  department   String
+  passwordHash String
+  hashingAlgo  String
+}
+
+model KrsItem {
+  id           String @id @default(uuid())
+  studentNim   String @unique
+  studentName  String
+  studentEmail String @unique
+  prodi        String
+  sksDiambil   Int
+  status       String
+  coursesJson  String // Stored as JSON string since SQLite doesn't support arrays
+}
+
+model AuditRecord {
+  id        String @id @default(uuid())
+  actorId   String
+  email     String
+  action    String
+  resource  String
+  timestamp String
+  ip        String
+  userAgent String
+  details   String?
+  oldValue  String?
+  newValue  String?
+}
