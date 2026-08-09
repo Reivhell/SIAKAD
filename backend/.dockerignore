@@ -1,0 +1,15 @@
+# Build context exclusion — jangan pernah menyalin secret/data ke image
+node_modules
+dist
+*.db
+*.db-journal
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+Dockerfile
+.dockerignore
+tests/
+coverage/
+*.log
