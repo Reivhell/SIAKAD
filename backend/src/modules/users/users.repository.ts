@@ -59,5 +59,33 @@ export class UserRepository implements IBaseRepository<SecureUser> {
   async count(): Promise<number> {
     return this.prisma.user.count();
   }
+
+  /**
+   * Informasi minimal untuk validasi sesi pada setiap request terproteksi.
+   * Tidak pernah mengambil passwordHash — mengurangi permukaan data sensitif.
+   */
+  async findAuthSession(id: string): Promise<{ id: string; refreshVersion: number } | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, refreshVersion: true },
+    });
+    return user ? { id: user.id, refreshVersion: user.refreshVersion } : null;
+  }
+
+  /**
+   * Meningkatkan refreshVersion → semua access & refresh token lama hangus
+   * (dipakai pada logout & setelah reset password).
+   */
+  async bumpRefreshVersion(id: string): Promise<boolean> {
+    try {
+      const result = await this.prisma.user.update({
+        where: { id },
+        data: { refreshVersion: { increment: 1 } },
+      });
+      return result !== null;
+    } catch {
+      return false;
+    }
+  }
 }
 

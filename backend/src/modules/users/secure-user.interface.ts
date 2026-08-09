@@ -8,4 +8,5 @@ export interface SecureUser {
   department: string;
   passwordHash: string;
   hashingAlgo: 'argon2' | 'bcrypt';
+  refreshVersion?: number;
 }

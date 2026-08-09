@@ -8,20 +8,30 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { z } from 'zod';
 import crypto from 'crypto';
 
+// Batasi panjang semua input agar tidak bisa menjadi vektor DoS / database abuse.
 const loginInputSchema = z.object({
-  username: z.string().email({ message: 'Username harus berupa alamat email valid' }),
-  password: z.string().min(6, { message: 'Kata sandi minimal 6 karakter' })
+  username: z.string().email({ message: 'Username harus berupa alamat email valid' }).max(254),
+  password: z.string().min(6, { message: 'Kata sandi minimal 6 karakter' }).max(128, { message: 'Kata sandi terlalu panjang' })
 });
 
 // Registrasi publik hanya boleh untuk student dan applicant.
 // Role privileged (admin, dekan, kaprodi, lecturer, baak, bauk) hanya via provisioning admin.
 const registrationInputSchema = z.object({
-  name: z.string().min(3, { message: 'Nama lengkap minimal 3 karakter' }),
-  email: z.string().email({ message: 'Format email tidak valid' }),
-  password: z.string().min(8, { message: 'Kata sandi minimal 8 karakter demi keamanan' }),
+  name: z.string().min(3, { message: 'Nama lengkap minimal 3 karakter' }).max(120),
+  email: z.string().email({ message: 'Format email tidak valid' }).max(254),
+  password: z.string().min(8, { message: 'Kata sandi minimal 8 karakter demi keamanan' }).max(128),
   role: z.enum(['student', 'applicant'], { message: 'Peran pengguna tidak valid. Registrasi mandiri hanya tersedia untuk mahasiswa dan calon mahasiswa.' }),
-  department: z.string().min(3, { message: 'Program studi / unit kerja minimal 3 karakter' }),
-  phone: z.string().min(10, { message: 'Nomor telepon minimal 10 digit' })
+  department: z.string().min(3, { message: 'Program studi / unit kerja minimal 3 karakter' }).max(120),
+  phone: z.string().min(10, { message: 'Nomor telepon minimal 10 digit' }).max(30)
+});
+
+const resetRequestSchema = z.object({
+  email: z.string().email({ message: 'Format email tidak valid' }).max(254)
+});
+
+const resetConfirmSchema = z.object({
+  token: z.string().min(1).max(4096),
+  newPassword: z.string().min(8, { message: 'Kata sandi baru minimal 8 karakter.' }).max(128)
 });
 
 @Controller('api/auth')
@@ -70,7 +80,7 @@ export class AuthController {
       const { hash, algo } = await this.securityService.secureHash(validatedData.password);
 
       const newUser: SecureUser = {
-        id: 'u-' + Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
         username: validatedData.email.toLowerCase(),
         email: validatedData.email.toLowerCase(),
         name: validatedData.name,
@@ -180,7 +190,8 @@ export class AuthController {
         id: user.id,
         email: user.email,
         role: user.role,
-        name: user.name
+        name: user.name,
+        ver: user.refreshVersion ?? 0
       };
 
       const token = this.securityService.signAccessToken(payload);
@@ -245,8 +256,18 @@ export class AuthController {
 
   @Post('reset-password-request')
   async resetPasswordRequest(@Req() req: express.Request, @Body() body: any) {
-    const { email } = body;
     const ip = req.ip || '127.0.0.1';
+
+    let email: string;
+    try {
+      email = resetRequestSchema.parse(body).email;
+    } catch {
+      // Respons generik untuk semua kasus — tidak membocorkan apakah email terdaftar.
+      return {
+        status: 'success',
+        message: 'Instruksi reset kata sandi telah dikirim jika email terdaftar.'
+      };
+    }
 
     const user = await this.usersService.findByUsername(email);
     if (!user) {
@@ -294,15 +315,16 @@ export class AuthController {
 
   @Post('reset-password-confirm')
   async resetPasswordConfirm(@Req() req: express.Request, @Body() body: any) {
-    const { token, newPassword } = body;
     const ip = req.ip || '127.0.0.1';
 
-    if (!token) {
-      throw new HttpException({ status: 'error', message: 'Token pemulihan diperlukan.' }, HttpStatus.BAD_REQUEST);
-    }
-
-    if (!newPassword || newPassword.length < 8) {
-      throw new HttpException({ status: 'error', message: 'Kata sandi baru minimal 8 karakter.' }, HttpStatus.BAD_REQUEST);
+    let token: string;
+    let newPassword: string;
+    try {
+      const parsed = resetConfirmSchema.parse(body);
+      token = parsed.token;
+      newPassword = parsed.newPassword;
+    } catch {
+      throw new HttpException({ status: 'error', message: 'Token pemulihan atau kata sandi baru tidak valid.' }, HttpStatus.BAD_REQUEST);
     }
 
     if (await this.securityService.isTokenInvalid(token)) {
@@ -352,7 +374,10 @@ export class AuthController {
 
     await this.securityService.invalidateToken(token);
 
-    const successDetails = `Password reset completed successfully using JWT_RESET_PASSWORD_SECRET. User ID ${decoded.id} has secure new password.`;
+    // Cabut semua sesi yang ada: setiap access/refresh token lama langsung hangus.
+    await this.usersService.bumpRefreshVersion(decoded.id);
+
+    const successDetails = `Password reset completed successfully using JWT_RESET_PASSWORD_SECRET. User ID ${decoded.id} has secure new password. All prior sessions revoked.`;
     this.securityService.logSecurityEvent('INFO', successDetails, ip);
 
     // Fetch user details for audit record
@@ -374,22 +399,36 @@ export class AuthController {
   }
 
   @Post('secure-logout')
-  secureLogout(@Req() req: express.Request, @Res({ passthrough: true }) res: express.Response) {
+  async secureLogout(@Req() req: express.Request, @Res({ passthrough: true }) res: express.Response) {
     const ip = req.ip || '127.0.0.1';
-    res.clearCookie('token');
-    res.clearCookie('refreshToken');
-    
-    // Since logout is client-triggered, we'll try to identify the user if token cookie is present.
-    // If not, it's fine.
+
+    // Cabut refresh token di sisi server (bump refreshVersion) sehingga
+    // token lama yang dicuri tidak dapat dipakai lagi, meskipun cookie disalin.
+    const refreshCookie = req.cookies?.refreshToken;
+    let revokedId: string | null = null;
+    let revokedEmail = 'anonymous@kampus.ac.id';
+    if (refreshCookie) {
+      const decoded = this.securityService.verifyRefreshToken(refreshCookie);
+      if (decoded) {
+        revokedId = decoded.id;
+        revokedEmail = decoded.email || revokedEmail;
+        await this.usersService.bumpRefreshVersion(decoded.id);
+      }
+    }
+
+    this.securityService.logSecurityEvent('INFO', `User logged out; refresh token revoked (id=${revokedId || 'none'}).`, ip);
     this.auditService.log(
-      'ANONYMOUS',
-      'anonymous@kampus.ac.id',
+      revokedId || 'ANONYMOUS',
+      revokedEmail,
       'AUTH_LOGOUT',
       'auth',
-      'User logged out and security cookies cleared.',
+      revokedId ? 'User logged out and refresh token revoked server-side.' : 'User logged out; security cookies cleared.',
       ip,
       req.headers['user-agent'] || 'Unknown'
     );
+
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
 
     return {
       status: 'success',

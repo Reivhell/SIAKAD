@@ -12,15 +12,18 @@ datasource db {
 }
 
 model User {
-  id           String @id @default(uuid())
-  username     String @unique
-  email        String @unique
-  name         String
-  role         String
-  phone        String
-  department   String
-  passwordHash String
-  hashingAlgo  String
+  id             String @id @default(uuid())
+  username       String @unique
+  email          String @unique
+  name           String
+  role           String
+  phone          String
+  department     String
+  passwordHash   String
+  hashingAlgo    String
+  // Versi sesi untuk rotasi refresh token & revocation terpusat.
+  // Naikkan nilai ini saat logout / reset password → semua token lama hangus.
+  refreshVersion Int    @default(0)
 }
 
 model KrsItem {
@@ -46,4 +49,53 @@ model AuditRecord {
   details   String?
   oldValue  String?
   newValue  String?
+}
+
+// ── Akademik domain: seeded dummy data yang realistis ──────────────
+// Bukan "demo"-chrome; data statik yang dipegang DB dan disajikan lewat
+// endpoint /api/dashboard agar UI tidak lagi hardcode angka.
+
+model AcademicPeriod {
+  id       String  @id @default(uuid())
+  code     String  @unique // e.g. "2025/2026-Ganjil"
+  label    String
+  isActive Boolean @default(false)
+}
+
+model CourseOffering {
+  id       String @id @default(uuid())
+  code     String
+  name     String
+  sks      Int
+  program  String // Program Studi
+  lecturer String
+  schedule String
+  room     String
+
+  @@unique([program, code])
+}
+
+// Tren IPK per tahun akademik — pemasok grafik area dashboard admin.
+model GpaTrend {
+  id      String @id @default(uuid())
+  academicYear String
+  gpaAvg  Float
+}
+
+// Distribusi mahasiswa per prodi — pemasok grafik bar dashboard admin.
+model FacultyDistribution {
+  id       String @id @default(uuid())
+  program  String @unique
+  students Int
+}
+
+// Riwayat IPS/IPK per semester seorang mahasiswa.
+model StudentGpaHistory {
+  id      String @id @default(uuid())
+  nim     String
+  semester String
+  ips     Float
+  ipk     Float
+
+  @@unique([nim, semester])
 }

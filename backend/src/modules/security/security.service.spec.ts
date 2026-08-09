@@ -10,12 +10,12 @@ describe('SecurityService Unit Tests', () => {
   });
 
   describe('Password Hashing & Verification', () => {
-    it('should successfully hash a plain password using argon2 or bcrypt', async () => {
+    it('should successfully hash a plain password using argon2', async () => {
       const password = 'mySuperSecurePassword123';
       const { hash, algo } = await securityService.secureHash(password);
 
       expect(hash).toBeDefined();
-      expect(algo === 'argon2' || algo === 'bcrypt').toBe(true);
+      expect(algo).toBe('argon2');
     });
 
     it('should verify correct password successfully', async () => {

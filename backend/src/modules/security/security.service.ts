@@ -1,9 +1,7 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
-import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import Redis from 'ioredis';
 
 export interface SecurityLog {
   timestamp: string;
@@ -13,14 +11,26 @@ export interface SecurityLog {
 }
 
 @Injectable()
-export class SecurityService implements OnModuleInit, OnModuleDestroy {
+export class SecurityService implements OnModuleInit {
   public jwtAccessSecret: string = process.env.JWT_ACCESS_SECRET || '';
   public jwtRefreshSecret: string = process.env.JWT_REFRESH_SECRET || '';
   public jwtResetPasswordSecret: string = process.env.JWT_RESET_PASSWORD_SECRET || '';
-  
+
   // Basis untuk derivasi fallback di dev — diambil dari env, TIDAK hardcoded.
   // Di production, semua secret HARUS diset secara eksplisit via env var (process akan exit jika tidak).
   private readonly devBaseSeed: string = process.env.JWT_SECRET || '';
+
+  // Token hardening: semua JWT harus HS256 dan di-issue oleh API ini.
+  // Menentukan issuer + algorithm secara eksplisit mencegah algoritme confusion
+  // dan memastikan token asing (dari issuer lain) tidak pernah diterima.
+  static readonly JWT_ISSUER = 'siakad-api';
+  static readonly JWT_ALGORITHM = 'HS256';
+
+  // Penyimpanan one-time-use reset token: hash(token) => expiry (ms epoch).
+  // Dibanding Set<string>, store ini: (1) ter-otomatis kadaluarsa, (2) ter-bound,
+  //  sehingga tidak bisa tumbuh tak terbatas menjadi memory leak.
+  private readonly invalidatedResetTokens = new Map<string, number>();
+  private static readonly MAX_INVALIDATED_TOKENS = 1000;
 
   public readonly secretsMetadata = {
     JWT_ACCESS_SECRET: { configured: !!process.env.JWT_ACCESS_SECRET, source: process.env.JWT_ACCESS_SECRET ? 'Environment (.env)' : 'On-the-Fly Generator (Ephemeral)' },
@@ -29,54 +39,49 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
   };
 
   public readonly securityLogs: SecurityLog[] = [];
-  public readonly invalidPasswordResetTokens = new Set<string>();
-  private redis: Redis | null = null;
 
   onModuleInit() {
     this.initializeSecrets();
-    if (process.env.REDIS_URL) {
-      this.redis = new Redis(process.env.REDIS_URL, {
-        retryStrategy(times) {
-          if (times > 3) return null; // fall back if unable to connect
-          return Math.min(times * 50, 2000);
-        },
-        maxRetriesPerRequest: 1
-      });
-      this.redis.on('error', (err) => {
-        // Suppress multiple error logs
-      });
-    }
     this.logSecurityEvent('INFO', 'SIAKAD Modern Security System Initialized via NestJS.', '0.0.0.0');
   }
 
-  onModuleDestroy() {
-    if (this.redis) {
-      this.redis.quit();
+  /**
+   * Menandai token sebagai tidak valid (one-time-use) hingga `ttlSeconds`.
+   * Hanya hash SHA-256 dari token yang disimpan — token mentah tidak
+   * pernah berada di memori dalam jangka panjang.
+   */
+  public invalidateToken(token: string, ttlSeconds: number = 600): void {
+    this.pruneInvalidatedTokens();
+    const hash = this.hashToken(token);
+    const expiresAt = Date.now() + ttlSeconds * 1000;
+    this.invalidatedResetTokens.set(hash, expiresAt);
+    if (this.invalidatedResetTokens.size > SecurityService.MAX_INVALIDATED_TOKENS) {
+      let oldestKey: string | null = null;
+      let oldestExpiry = Infinity;
+      for (const [key, expiry] of this.invalidatedResetTokens) {
+        if (expiry < oldestExpiry) {
+          oldestExpiry = expiry;
+          oldestKey = key;
+        }
+      }
+      if (oldestKey) this.invalidatedResetTokens.delete(oldestKey);
     }
   }
 
-  public async invalidateToken(token: string, expirySeconds: number = 600) {
-    try {
-      if (this.redis && this.redis.status === 'ready') {
-        await this.redis.set(`bl:${token}`, '1', 'EX', expirySeconds);
-        return;
-      }
-    } catch (e) {
-      // Ignore
-    }
-    this.invalidPasswordResetTokens.add(token);
+  public isTokenInvalid(token: string): boolean {
+    this.pruneInvalidatedTokens();
+    return this.invalidatedResetTokens.has(this.hashToken(token));
   }
 
-  public async isTokenInvalid(token: string): Promise<boolean> {
-    try {
-      if (this.redis && this.redis.status === 'ready') {
-        const exists = await this.redis.get(`bl:${token}`);
-        return !!exists;
-      }
-    } catch (e) {
-      // Ignore
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  private pruneInvalidatedTokens(): void {
+    const now = Date.now();
+    for (const [key, expiry] of this.invalidatedResetTokens) {
+      if (expiry <= now) this.invalidatedResetTokens.delete(key);
     }
-    return this.invalidPasswordResetTokens.has(token);
   }
 
 
@@ -125,23 +130,39 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     console.log(`[SECURITY ${type}] ${event.timestamp} - ${message}`);
   }
 
-  // Token signatures
+  // Token signatures — HS256 + issuer tetap diverifikasi saat decode.
   public signAccessToken(payload: any): string {
-    return jwt.sign(payload, this.jwtAccessSecret, { expiresIn: '15m', algorithm: 'HS256' });
+    return jwt.sign(payload, this.jwtAccessSecret, {
+      expiresIn: '15m',
+      algorithm: SecurityService.JWT_ALGORITHM,
+      issuer: SecurityService.JWT_ISSUER,
+    });
   }
 
   public signRefreshToken(payload: any): string {
-    return jwt.sign(payload, this.jwtRefreshSecret, { expiresIn: '7d', algorithm: 'HS256' });
+    return jwt.sign(payload, this.jwtRefreshSecret, {
+      expiresIn: '7d',
+      algorithm: SecurityService.JWT_ALGORITHM,
+      issuer: SecurityService.JWT_ISSUER,
+    });
   }
 
   public signResetPasswordToken(payload: any): string {
-    return jwt.sign(payload, this.jwtResetPasswordSecret, { expiresIn: '10m', algorithm: 'HS256' });
+    return jwt.sign(payload, this.jwtResetPasswordSecret, {
+      expiresIn: '10m',
+      algorithm: SecurityService.JWT_ALGORITHM,
+      issuer: SecurityService.JWT_ISSUER,
+    });
   }
 
-  // Token verifications
+  // Token verifications — algoritme dan issuer diverifikasi secara eksplisit.
+  // Ini mencegah kategori serangan "algorithm confusion" dan penolakan token asing.
   public verifyAccessToken(token: string): any {
     try {
-      return jwt.verify(token, this.jwtAccessSecret);
+      return jwt.verify(token, this.jwtAccessSecret, {
+        algorithms: [SecurityService.JWT_ALGORITHM],
+        issuer: SecurityService.JWT_ISSUER,
+      });
     } catch (err) {
       return null;
     }
@@ -149,7 +170,10 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
 
   public verifyRefreshToken(token: string): any {
     try {
-      return jwt.verify(token, this.jwtRefreshSecret);
+      return jwt.verify(token, this.jwtRefreshSecret, {
+        algorithms: [SecurityService.JWT_ALGORITHM],
+        issuer: SecurityService.JWT_ISSUER,
+      });
     } catch (err) {
       return null;
     }
@@ -157,7 +181,10 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
 
   public verifyResetToken(token: string): any {
     try {
-      return jwt.verify(token, this.jwtResetPasswordSecret);
+      return jwt.verify(token, this.jwtResetPasswordSecret, {
+        algorithms: [SecurityService.JWT_ALGORITHM],
+        issuer: SecurityService.JWT_ISSUER,
+      });
     } catch (err) {
       return null;
     }
@@ -165,34 +192,20 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
 
   // Passwords
   public async secureHash(password: string): Promise<{ hash: string; algo: 'argon2' | 'bcrypt' }> {
-    try {
-      const hash = await argon2.hash(password, {
-        type: argon2.argon2id,
-        memoryCost: 2 ** 12, // 4MB
-        timeCost: 3,
-        parallelism: 1
-      });
-      return { hash, algo: 'argon2' };
-    } catch (error) {
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(password, salt);
-      return { hash, algo: 'bcrypt' };
-    }
+    const hash = await argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 12, // 4MB
+      timeCost: 3,
+      parallelism: 1
+    });
+    return { hash, algo: 'argon2' };
   }
 
   public async secureVerify(password: string, hash: string, algo: 'argon2' | 'bcrypt'): Promise<boolean> {
     try {
-      if (algo === 'argon2') {
-        return await argon2.verify(hash, password);
-      } else {
-        return await bcrypt.compare(password, hash);
-      }
+      return await argon2.verify(hash, password);
     } catch (err) {
-      try {
-        return await bcrypt.compare(password, hash);
-      } catch {
-        return false;
-      }
+      return false;
     }
   }
 
