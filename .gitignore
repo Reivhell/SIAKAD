@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 /dist
+/backend/dist
+/frontend/dist
 /build
 /out
 
@@ -25,6 +27,12 @@ lerna-debug.log*
 !.env.example
 dev.db
 test.db
+
+# Dokumentasi akun dev (berisi kredensial dummy) — jangan pernah di-commit
+akun.md
+
+# Codebase memory artifacts
+.codebase-memory/
 
 # IDEs and Editors
 .vscode/
