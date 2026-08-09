@@ -70,3 +70,16 @@ dan langkah yang wajib dilakukan sebelum rilis ke produksi.
   agregator log (pino/winston + GCP/DataDog).
 - Ideal: dua secret berbeda untuk refresh & access sudah dilakukan; jangan
   pernah memakai satu secret untuk semua tujuan.
+
+## 5. Status Verifikasi (per commit eca4dc9)
+
+- `npm audit` (production deps): **0 vulnerabilities** di backend dan frontend
+  (multer, fast-uri, ip-address, body-parser, hono, prisma, valibot, postcss
+  dibersihkan via `npm audit fix` non-breaking, hanya perubahan lockfile).
+- Pemindaian secret di seluruh file ter-commit: bersih (tidak ada private key,
+  AWS key, API key, atau kredensial hardcoded; satu-satunya kemunculan
+  `password=` adalah fixture di unit test).
+- Backend: `tsc --noEmit` bersih, 26/26 test hijau (3 file).
+- Frontend: `tsc --noEmit` bersih, `vite build` sukses.
+- Branch `dev`, 8 commit keamanan terpisah; refactor WIP yang sedang berjalan
+  tidak ikut ter-commit.
