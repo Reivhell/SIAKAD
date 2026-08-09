@@ -16,7 +16,10 @@ export class AuditController {
     @Query('action') action?: string,
     @Query('email') email?: string,
   ) {
-    const records = await this.auditService.getRecords(limit ? Number(limit) : 100, action, email);
+    // Cap limit untuk mencegah klien meminta array raksasa (memory abuse).
+    const rawLimit = Number(limit);
+    const safeLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 500) : 100;
+    const records = await this.auditService.getRecords(safeLimit, action, email);
     return {
       status: 'success',
       count: records.length,

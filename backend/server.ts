@@ -14,7 +14,11 @@ import express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.set('trust proxy', 1);
+  // Trust proxy sebaiknya mengikuti deployment: 1 hop saat di belakang satu
+  // reverse proxy (Nginx/Cloudflare). Jangan aktifkan tanpa proxy — jika
+  // expose langsung, klien bisa memalsukan X-Forwarded-For untuk bypass rate limit.
+  const trustProxy = process.env.TRUST_PROXY !== undefined ? Number(process.env.TRUST_PROXY) : 1;
+  app.set('trust proxy', trustProxy);
 
   // Enable graceful shutdown hooks for Prisma and Redis connections
   app.enableShutdownHooks();
@@ -86,7 +90,7 @@ async function bootstrap() {
     console.warn('⚠️  DEV: COOKIE_SECRET tidak diset. Menggunakan ephemeral secret.');
   }
 
-  app.use(express.json());
+  app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser(cookieSecret));
 
   // Global Rate Limiter
@@ -126,6 +130,42 @@ async function bootstrap() {
   });
   app.use('/api/auth/secure-login', loginLimiter);
   app.use('/api/auth/secure-register', loginLimiter);
+
+  // Password-reset specific limiters — mencegah abuse token reset / email bombing.
+  // request: 5 per 15 menit per IP; confirm: 10 per jam per IP.
+  const resetRequestLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    validate: false,
+    handler: (req, res) => {
+      securityService.logSecurityEvent('ALERT', `Reset Request Rate Limit Exceeded for IP: ${req.ip}`);
+      res.status(429).json({
+        status: 'error',
+        code: 'RESET_REQUEST_RATE_LIMIT_EXCEEDED',
+        message: 'Terlalu banyak permintaan reset kata sandi. Silakan coba lagi dalam 15 menit.'
+      });
+    }
+  });
+  app.use('/api/auth/reset-password-request', resetRequestLimiter);
+
+  const resetConfirmLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    validate: false,
+    handler: (req, res) => {
+      securityService.logSecurityEvent('ALERT', `Reset Confirm Rate Limit Exceeded for IP: ${req.ip}`);
+      res.status(429).json({
+        status: 'error',
+        code: 'RESET_CONFIRM_RATE_LIMIT_EXCEEDED',
+        message: 'Terlalu banyak percobaan konfirmasi reset. Silakan coba lagi nanti.'
+      });
+    }
+  });
+  app.use('/api/auth/reset-password-confirm', resetConfirmLimiter);
 
   // CSRF Protection
   function csrfProtection(req: any, res: any, next: any) {
