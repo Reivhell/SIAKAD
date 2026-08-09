@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { KrsRepository, AdminKrsItem } from './krs.repository';
 import { SecurityService } from '../security/security.service';
 import { AuditService } from '../audit/audit.service';
+import crypto from 'crypto';
 
 export interface CourseDetail {
   kode: string;
@@ -44,7 +45,7 @@ export class KrsService {
     if (!krs) {
       // Create a default draft KRS
       const newKrs: AdminKrsItem = {
-        id: 'krs-' + Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
         studentNim: '101' + Math.floor(10000 + Math.random() * 90000).toString(),
         studentName,
         studentEmail: email,

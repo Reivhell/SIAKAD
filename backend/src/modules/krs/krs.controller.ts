@@ -5,12 +5,22 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
+const COURSE_CODE_PATTERN = /^[A-Z0-9]{2,10}$/;
+
+function normalizeCourseCode(courseCode: unknown): string {
+  if (typeof courseCode !== 'string' || !COURSE_CODE_PATTERN.test(courseCode.toUpperCase())) {
+    throw new HttpException('Kode mata kuliah tidak valid.', HttpStatus.BAD_REQUEST);
+  }
+  return courseCode.toUpperCase();
+}
+
 @Controller('api/krs')
 @UseGuards(AuthGuard, RolesGuard)
 export class KrsController {
   constructor(@Inject(KrsService) private readonly krsService: KrsService) {}
 
   @Get()
+  @Roles('student')
   async getKrs(@Req() req: express.Request) {
     const user = (req as any).user;
     const krs = await this.krsService.getKrsByEmail(user.email, user.name);
@@ -21,14 +31,11 @@ export class KrsController {
   }
 
   @Post('add-course')
+  @Roles('student')
   @HttpCode(HttpStatus.OK)
   async addCourse(@Req() req: express.Request, @Body() body: any) {
     const user = (req as any).user;
-    const { courseCode } = body;
-
-    if (!courseCode) {
-      throw new HttpException('Kode mata kuliah wajib diisi.', HttpStatus.BAD_REQUEST);
-    }
+    const courseCode = normalizeCourseCode(body?.courseCode);
 
     const krs = await this.krsService.addCourse(
       user.email,
@@ -47,14 +54,11 @@ export class KrsController {
   }
 
   @Post('remove-course')
+  @Roles('student')
   @HttpCode(HttpStatus.OK)
   async removeCourse(@Req() req: express.Request, @Body() body: any) {
     const user = (req as any).user;
-    const { courseCode } = body;
-
-    if (!courseCode) {
-      throw new HttpException('Kode mata kuliah wajib diisi.', HttpStatus.BAD_REQUEST);
-    }
+    const courseCode = normalizeCourseCode(body?.courseCode);
 
     const krs = await this.krsService.removeCourse(
       user.email,
@@ -73,6 +77,7 @@ export class KrsController {
   }
 
   @Post('submit')
+  @Roles('student')
   @HttpCode(HttpStatus.OK)
   async submitKrs(@Req() req: express.Request) {
     const user = (req as any).user;
@@ -128,14 +133,19 @@ export class KrsController {
   @HttpCode(HttpStatus.OK)
   async approveKrs(@Req() req: express.Request, @Body() body: any) {
     const user = (req as any).user;
-    const { studentNim, approve } = body;
+    const { studentNim, approve } = body || {};
 
-    if (!studentNim || approve === undefined) {
-      throw new HttpException('NIM mahasiswa dan status persetujuan (approve) wajib diisi.', HttpStatus.BAD_REQUEST);
+    if (typeof studentNim !== 'string' || !studentNim.trim() || studentNim.length > 30) {
+      throw new HttpException('NIM mahasiswa tidak valid.', HttpStatus.BAD_REQUEST);
+    }
+    // `approve` HARUS boolean sungguhan. String "false" adalah truthy —
+    // tanpa cek ini sebuah KRS bisa "disetujui" oleh nilai yang tidak valid.
+    if (typeof approve !== 'boolean') {
+      throw new HttpException('Parameter approve harus bertipe boolean (true/false).', HttpStatus.BAD_REQUEST);
     }
 
     const krs = await this.krsService.approveKrs(
-      studentNim,
+      studentNim.trim(),
       approve,
       req.ip || '127.0.0.1',
       req.headers['user-agent'] || 'Unknown',
