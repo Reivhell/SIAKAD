@@ -10,8 +10,8 @@ import cookieParser from 'cookie-parser';
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import crypto from 'crypto';
 
-const STUDENT_EMAIL = 'mahasiswa@kampus.ac.id';
-const STUDENT_NAME = 'Faisal Akbar';
+const STUDENT_EMAIL = 'ahmad.syafiq@mahasiswa.ac.id';
+const STUDENT_NAME = 'Ahmad Syafiq';
 
 async function persistStudentKrs(
   app: INestApplication,
@@ -116,7 +116,7 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/secure-login')
         .send({
-          email: 'mahasiswa@kampus.ac.id',
+          email: 'ahmad.syafiq@mahasiswa.ac.id',
           password: process.env.DEFAULT_SEED_PASSWORD || 'Test_SIAKAD_2026!',
         })
         .expect(403);
@@ -128,14 +128,14 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
         .set('Cookie', csrfCookie)
         .set('x-csrf-token', csrfToken)
         .send({
-          username: 'mahasiswa@kampus.ac.id',
+          username: 'ahmad.syafiq@mahasiswa.ac.id',
           password: process.env.DEFAULT_SEED_PASSWORD || 'Test_SIAKAD_2026!',
         })
         .expect(200);
 
       expect(res.body.status).toBe('success');
       expect(res.body.user.role).toBe('student');
-      expect(res.body.user.email).toBe('mahasiswa@kampus.ac.id');
+      expect(res.body.user.email).toBe('ahmad.syafiq@mahasiswa.ac.id');
 
       // Capture auth cookies (token and refreshToken)
       const cookies = res.headers['set-cookie'];
@@ -193,7 +193,7 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
 
       expect(res.body.status).toBe('success');
       expect(res.body.krs).toBeDefined();
-      expect(res.body.krs.studentEmail).toBe('mahasiswa@kampus.ac.id');
+      expect(res.body.krs.studentEmail).toBe('ahmad.syafiq@mahasiswa.ac.id');
     });
 
     it('should allow student to add a valid course when state is editable', async () => {

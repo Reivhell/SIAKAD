@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     env: {
+      DATABASE_URL: 'file:./test.db',
       DEFAULT_SEED_PASSWORD: 'Test_SIAKAD_2026!',
       JWT_ACCESS_SECRET: 'test-access-secret-min-32-chars-long!!',
       JWT_REFRESH_SECRET: 'test-refresh-secret-min-32-chars-long!',
