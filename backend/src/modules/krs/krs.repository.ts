@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { IBaseRepository } from '../../common/prisma/base.repository';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -14,15 +14,8 @@ export interface AdminKrsItem {
 }
 
 @Injectable()
-export class KrsRepository implements IBaseRepository<AdminKrsItem>, OnModuleInit {
+export class KrsRepository implements IBaseRepository<AdminKrsItem> {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
-
-  async onModuleInit() {
-    const count = await this.prisma.krsItem.count();
-    if (count === 0) {
-      await this.seedDefaultKrs();
-    }
-  }
 
   private toDomain(record: any): AdminKrsItem {
     return {
@@ -132,44 +125,5 @@ export class KrsRepository implements IBaseRepository<AdminKrsItem>, OnModuleIni
       limit,
       totalPages: Math.ceil(total / limit),
     };
-  }
-
-  private async seedDefaultKrs() {
-    const seedData: AdminKrsItem[] = [
-      {
-        id: 'krs-1',
-        studentNim: '10118001',
-        studentName: 'Faisal Akbar',
-        studentEmail: 'mahasiswa@kampus.ac.id',
-        prodi: 'Teknik Informatika',
-        sksDiambil: 8,
-        status: 'Diajukan',
-        courses: ['IF3110', 'IF3150', 'KU2071'],
-      },
-      {
-        id: 'krs-2',
-        studentNim: '10118002',
-        studentName: 'Dian Safitri',
-        studentEmail: 'student2@kampus.ac.id',
-        prodi: 'Sistem Informasi',
-        sksDiambil: 3,
-        status: 'Disetujui',
-        courses: ['SI2101'],
-      },
-      {
-        id: 'krs-3',
-        studentNim: '10118003',
-        studentName: 'Aditya Pratama',
-        studentEmail: 'student3@kampus.ac.id',
-        prodi: 'Teknik Elektro',
-        sksDiambil: 4,
-        status: 'Draft',
-        courses: ['EE4102'],
-      },
-    ];
-
-    for (const data of seedData) {
-      await this.prisma.krsItem.create({ data: this.toPrisma(data) });
-    }
   }
 }

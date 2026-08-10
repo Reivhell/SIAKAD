@@ -36,7 +36,7 @@ var import_reflect_metadata = require("reflect-metadata");
 var import_core2 = require("@nestjs/core");
 
 // src/app.module.ts
-var import_common22 = require("@nestjs/common");
+var import_common20 = require("@nestjs/common");
 
 // src/common/prisma/prisma.module.ts
 var import_common2 = require("@nestjs/common");
@@ -79,9 +79,7 @@ var import_common4 = require("@nestjs/common");
 var import_common3 = require("@nestjs/common");
 var import_jsonwebtoken = __toESM(require("jsonwebtoken"), 1);
 var import_argon2 = __toESM(require("argon2"), 1);
-var import_bcrypt = __toESM(require("bcrypt"), 1);
 var import_crypto = __toESM(require("crypto"), 1);
-var import_ioredis = __toESM(require("ioredis"), 1);
 var SecurityService = class {
   jwtAccessSecret = process.env.JWT_ACCESS_SECRET || "";
   jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || "";
@@ -96,45 +94,14 @@ var SecurityService = class {
   };
   securityLogs = [];
   invalidPasswordResetTokens = /* @__PURE__ */ new Set();
-  redis = null;
   onModuleInit() {
     this.initializeSecrets();
-    if (process.env.REDIS_URL) {
-      this.redis = new import_ioredis.default(process.env.REDIS_URL, {
-        retryStrategy(times) {
-          if (times > 3) return null;
-          return Math.min(times * 50, 2e3);
-        },
-        maxRetriesPerRequest: 1
-      });
-      this.redis.on("error", (err) => {
-      });
-    }
     this.logSecurityEvent("INFO", "SIAKAD Modern Security System Initialized via NestJS.", "0.0.0.0");
   }
-  onModuleDestroy() {
-    if (this.redis) {
-      this.redis.quit();
-    }
-  }
-  async invalidateToken(token, expirySeconds = 600) {
-    try {
-      if (this.redis && this.redis.status === "ready") {
-        await this.redis.set(`bl:${token}`, "1", "EX", expirySeconds);
-        return;
-      }
-    } catch (e) {
-    }
+  invalidateToken(token, expirySeconds = 600) {
     this.invalidPasswordResetTokens.add(token);
   }
-  async isTokenInvalid(token) {
-    try {
-      if (this.redis && this.redis.status === "ready") {
-        const exists = await this.redis.get(`bl:${token}`);
-        return !!exists;
-      }
-    } catch (e) {
-    }
+  isTokenInvalid(token) {
     return this.invalidPasswordResetTokens.has(token);
   }
   initializeSecrets() {
@@ -211,34 +178,20 @@ var SecurityService = class {
   }
   // Passwords
   async secureHash(password) {
-    try {
-      const hash = await import_argon2.default.hash(password, {
-        type: import_argon2.default.argon2id,
-        memoryCost: 2 ** 12,
-        // 4MB
-        timeCost: 3,
-        parallelism: 1
-      });
-      return { hash, algo: "argon2" };
-    } catch (error) {
-      const salt = await import_bcrypt.default.genSalt(10);
-      const hash = await import_bcrypt.default.hash(password, salt);
-      return { hash, algo: "bcrypt" };
-    }
+    const hash = await import_argon2.default.hash(password, {
+      type: import_argon2.default.argon2id,
+      memoryCost: 2 ** 12,
+      // 4MB
+      timeCost: 3,
+      parallelism: 1
+    });
+    return { hash, algo: "argon2" };
   }
   async secureVerify(password, hash, algo) {
     try {
-      if (algo === "argon2") {
-        return await import_argon2.default.verify(hash, password);
-      } else {
-        return await import_bcrypt.default.compare(password, hash);
-      }
+      return await import_argon2.default.verify(hash, password);
     } catch (err) {
-      try {
-        return await import_bcrypt.default.compare(password, hash);
-      } catch {
-        return false;
-      }
+      return false;
     }
   }
   rotateAllSecrets() {
@@ -328,12 +281,8 @@ UserRepository = __decorateClass([
 
 // src/modules/users/users.service.ts
 var UsersService = class {
-  constructor(securityService, userRepository) {
-    this.securityService = securityService;
+  constructor(userRepository) {
     this.userRepository = userRepository;
-  }
-  async onModuleInit() {
-    await this.seedDefaultUsers();
   }
   async findByUsername(username) {
     return this.userRepository.findByUsername(username);
@@ -344,46 +293,17 @@ var UsersService = class {
   async create(user) {
     return this.userRepository.create(user);
   }
+  async updatePassword(id, passwordHash, hashingAlgo) {
+    const result = await this.userRepository.update(id, { passwordHash, hashingAlgo });
+    return result !== null;
+  }
   async count() {
     return this.userRepository.count();
-  }
-  async seedDefaultUsers() {
-    const existingCount = await this.userRepository.count();
-    if (existingCount > 0) {
-      return;
-    }
-    const defaultPassword = "Admin_SIAKAD_2026!";
-    const usersToSeed = [
-      { id: "u10", username: "mahasiswa@kampus.ac.id", email: "mahasiswa@kampus.ac.id", name: "Faisal Akbar", role: "student", phone: "0812-3456-7890", department: "Teknik Informatika" },
-      { id: "u3", username: "ahmad.syafiq@mahasiswa.ac.id", email: "ahmad.syafiq@mahasiswa.ac.id", name: "Ahmad Syafiq", role: "student", phone: "0812-3456-7890", department: "Teknik Informatika" },
-      { id: "u2", username: "budi.rahardjo@kampus.ac.id", email: "budi.rahardjo@kampus.ac.id", name: "Dr. Budi Rahardjo", role: "lecturer", phone: "0811-2233-4455", department: "Teknik Informatika" },
-      { id: "u4", username: "kaprodi@kampus.ac.id", email: "kaprodi@kampus.ac.id", name: "Dr. Budi Rahardjo", role: "kaprodi", phone: "0813-4567-8901", department: "Teknik Informatika" },
-      { id: "u5", username: "dekan@kampus.ac.id", email: "dekan@kampus.ac.id", name: "Prof. Dr. Ir. Faisal Akbar", role: "dekan", phone: "0812-7777-6666", department: "Fakultas Teknologi Informasi" },
-      { id: "u1", username: "admin@kampus.ac.id", email: "admin@kampus.ac.id", name: "Hendra Wijaya, M.T.", role: "admin", phone: "0812-9988-7766", department: "Direktorat Sistem Informasi" },
-      { id: "u6", username: "rian.hidayat@alumni.ac.id", email: "rian.hidayat@alumni.ac.id", name: "Rian Hidayat, S.Kom", role: "alumni", phone: "0812-3456-7890", department: "Teknik Informatika" },
-      { id: "u7", username: "baak@kampus.ac.id", email: "baak@kampus.ac.id", name: "Admin BAAK", role: "baak", phone: "0812-1122-3344", department: "Administrasi Akademik" },
-      { id: "u8", username: "bauk@kampus.ac.id", email: "bauk@kampus.ac.id", name: "Admin BAUK", role: "bauk", phone: "0812-5566-7788", department: "Biro Keuangan" },
-      { id: "u9", username: "rian@gmail.com", email: "rian@gmail.com", name: "Rian Hidayat (Calon Maba)", role: "applicant", phone: "0812-3456-7890", department: "Penerimaan Mahasiswa Baru" }
-    ];
-    for (const user of usersToSeed) {
-      const { hash, algo } = await this.securityService.secureHash(defaultPassword);
-      await this.userRepository.create({
-        ...user,
-        passwordHash: hash,
-        hashingAlgo: algo
-      });
-    }
-    this.securityService.logSecurityEvent(
-      "INFO",
-      `Successfully seeded ${await this.userRepository.count()} secure user accounts in NestJS context.`,
-      "0.0.0.0"
-    );
   }
 };
 UsersService = __decorateClass([
   (0, import_common6.Injectable)(),
-  __decorateParam(0, (0, import_common6.Inject)(SecurityService)),
-  __decorateParam(1, (0, import_common6.Inject)(UserRepository))
+  __decorateParam(0, (0, import_common6.Inject)(UserRepository))
 ], UsersService);
 
 // src/modules/users/users.module.ts
@@ -398,7 +318,7 @@ UsersModule = __decorateClass([
 ], UsersModule);
 
 // src/modules/auth/auth.module.ts
-var import_common17 = require("@nestjs/common");
+var import_common15 = require("@nestjs/common");
 
 // src/modules/auth/auth.controller.ts
 var import_common10 = require("@nestjs/common");
@@ -769,6 +689,9 @@ var AuthController = class {
     if (!token) {
       throw new import_common10.HttpException({ status: "error", message: "Token pemulihan diperlukan." }, import_common10.HttpStatus.BAD_REQUEST);
     }
+    if (!newPassword || newPassword.length < 8) {
+      throw new import_common10.HttpException({ status: "error", message: "Kata sandi baru minimal 8 karakter." }, import_common10.HttpStatus.BAD_REQUEST);
+    }
     if (await this.securityService.isTokenInvalid(token)) {
       const replayDetails = `REPLAY ATTACK BLOCKED: Deteksi upaya penggunaan ulang token reset kata sandi yang telah kedaluwarsa/terpakai! IP: ${ip}`;
       this.securityService.logSecurityEvent("ALERT", replayDetails, ip);
@@ -803,6 +726,11 @@ var AuthController = class {
         status: "error",
         message: "Token pemulihan tidak valid atau telah melewati batas kedaluwarsa ketat 10 menit."
       }, import_common10.HttpStatus.BAD_REQUEST);
+    }
+    const { hash, algo } = await this.securityService.secureHash(newPassword);
+    const updated = await this.usersService.updatePassword(decoded.id, hash, algo);
+    if (!updated) {
+      throw new import_common10.HttpException({ status: "error", message: "Gagal memperbarui kata sandi. Silakan coba lagi." }, import_common10.HttpStatus.INTERNAL_SERVER_ERROR);
     }
     await this.securityService.invalidateToken(token);
     const successDetails = `Password reset completed successfully using JWT_RESET_PASSWORD_SECRET. User ID ${decoded.id} has secure new password.`;
@@ -886,9 +814,9 @@ AuthController = __decorateClass([
 ], AuthController);
 
 // src/modules/audit/audit.module.ts
-var import_common16 = require("@nestjs/common");
+var import_common14 = require("@nestjs/common");
 
-// src/modules/audit/telemetry.controller.ts
+// src/modules/audit/audit.controller.ts
 var import_common13 = require("@nestjs/common");
 
 // src/common/guards/roles.guard.ts
@@ -937,300 +865,7 @@ RolesGuard = __decorateClass([
 var import_common12 = require("@nestjs/common");
 var Roles = (...roles) => (0, import_common12.SetMetadata)("roles", roles);
 
-// src/modules/audit/telemetry.controller.ts
-var TelemetryController = class {
-  constructor(securityService, usersService) {
-    this.securityService = securityService;
-    this.usersService = usersService;
-  }
-  async getTelemetry() {
-    return {
-      status: "success",
-      telemetry: {
-        helmetActive: true,
-        corsActive: true,
-        rateLimitConfig: {
-          windowMinutes: 15,
-          maxRequests: 200
-        },
-        algorithms: {
-          jwt: "HS256",
-          passwordHashing: "Argon2id (Fallback: Bcrypt)"
-        },
-        systemUsersCount: await this.usersService.count()
-      }
-    };
-  }
-};
-__decorateClass([
-  (0, import_common13.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common13.Get)("telemetry")
-], TelemetryController.prototype, "getTelemetry", 1);
-TelemetryController = __decorateClass([
-  (0, import_common13.Controller)("api/security")
-], TelemetryController);
-
-// src/modules/audit/infrastructure.controller.ts
-var import_common14 = require("@nestjs/common");
-var import_crypto3 = __toESM(require("crypto"), 1);
-var InfrastructureController = class {
-  constructor(securityService, auditService) {
-    this.securityService = securityService;
-    this.auditService = auditService;
-  }
-  getCachePerformance() {
-    const heap = process.memoryUsage();
-    return {
-      status: "success",
-      metrics: {
-        cacheStore: "Redis Distributed Cluster (v7.2)",
-        cacheNodes: 3,
-        hitRate: "94.2%",
-        totalKeys: 42810,
-        memoryUsageMB: Math.round(heap.heapUsed / 1024 / 1024),
-        systemLoad: this.osLoadPercentage(),
-        activeThreads: 8,
-        queryResponseLatencyMs: 1.4
-        // < 2ms latency on indexed tables!
-      }
-    };
-  }
-  osLoadPercentage() {
-    return Math.round(15 + Math.random() * 8);
-  }
-  scaleSimulate(req, body) {
-    const activeUsers = body.activeUsers || 2500;
-    const isRedisEnabled = body.redisEnabled !== false;
-    const user = req.user;
-    const baseLatency = isRedisEnabled ? 2.5 : 85.4;
-    const jitter = Math.random() * 1.5;
-    const avgResponseTimeMs = Number((baseLatency + jitter).toFixed(2));
-    const loadBalancerReplicas = activeUsers > 3e3 ? 8 : activeUsers > 1500 ? 5 : 2;
-    const queueLength = activeUsers > 4e3 && !isRedisEnabled ? activeUsers - 3e3 : 0;
-    const details = `Horizontal Scaling Simulation: Traffic of ${activeUsers} concurrent users handled with ${loadBalancerReplicas} active nodes.`;
-    this.securityService.logSecurityEvent("INFO", details);
-    this.auditService.log(
-      user.id,
-      user.email,
-      "SYS_SCALE_SIMULATE",
-      "infrastructure",
-      details,
-      req.ip || "127.0.0.1",
-      req.headers["user-agent"] || "Unknown",
-      void 0,
-      JSON.stringify({ concurrentUsers: activeUsers, replicas: loadBalancerReplicas })
-    );
-    return {
-      status: "success",
-      simulation: {
-        concurrentUsers: activeUsers,
-        cachingActive: isRedisEnabled,
-        averageLatencyMs: avgResponseTimeMs,
-        autoscalingReplicas: loadBalancerReplicas,
-        loadBalancerStatus: "HEALTHY",
-        bufferQueueLength: queueLength,
-        redisThroughputRPS: isRedisEnabled ? activeUsers * 8 : activeUsers,
-        cpuLoadPercentage: Math.min(100, Math.round(activeUsers / (loadBalancerReplicas * 800) * 100))
-      }
-    };
-  }
-  transactionValidate(req, body) {
-    const { studentId, courseId, action } = body;
-    const ip = req.ip || "127.0.0.1";
-    const user = req.user;
-    this.securityService.logSecurityEvent("INFO", `Starting ACID Database Transaction [TX-${Math.random().toString(36).substr(2, 5).toUpperCase()}] for Student enrollment.`, ip);
-    const currentSks = 21;
-    const newCourseSks = 4;
-    if (action === "enroll_fail") {
-      const rollbackDetails = `TX-ROLLBACK: Student attempted to exceed 24 SKS limit (Current: ${currentSks}, Requested: ${newCourseSks}). Database constraint triggered. Transaction rolled back automatically.`;
-      this.securityService.logSecurityEvent("WARNING", rollbackDetails, ip);
-      this.auditService.log(
-        user.id,
-        user.email,
-        "DB_TX_ROLLBACK",
-        "database",
-        rollbackDetails,
-        ip,
-        req.headers["user-agent"] || "Unknown"
-      );
-      throw new import_common14.HttpException({
-        status: "error",
-        code: "TX_ROLLBACK_CONSTRAINT",
-        message: "Transaksi database BATAL & ROLLED-BACK! Kuota SKS melebihi batas maksimum 24 SKS. Konsistensi data terjaga.",
-        transactionState: {
-          lockReleased: true,
-          foreignKeyChecked: true,
-          changesCommitted: false,
-          rollbackExecuted: true
-        }
-      }, import_common14.HttpStatus.BAD_REQUEST);
-    }
-    const commitDetails = "TX-COMMIT: Course enrollment successfully committed. Rows updated atomically with ROW-LEVEL locks.";
-    this.securityService.logSecurityEvent("INFO", commitDetails, ip);
-    this.auditService.log(
-      user.id,
-      user.email,
-      "DB_TX_COMMIT",
-      "database",
-      commitDetails,
-      ip,
-      req.headers["user-agent"] || "Unknown"
-    );
-    return {
-      status: "success",
-      message: "Transaksi database BERHASIL & COMMITTED! Relasi entitas (Mahasiswa, KRS, Mata Kuliah) diperbarui secara atomik.",
-      transactionState: {
-        lockReleased: true,
-        foreignKeyChecked: true,
-        changesCommitted: true,
-        rollbackExecuted: false
-      }
-    };
-  }
-  getBackupRecovery() {
-    return {
-      status: "success",
-      backupConfig: {
-        strategy: "Automated Daily Logical & Physical Backups",
-        pitrRetentionDays: 14,
-        lastFullBackup: new Date(Date.now() - 12 * 60 * 60 * 1e3).toISOString(),
-        // 12 hours ago
-        nextScheduledBackup: new Date(Date.now() + 12 * 60 * 60 * 1e3).toISOString(),
-        replicationLagSeconds: 0.12,
-        backupVerifyStatus: "VERIFIED_AND_INTEGRIFIED",
-        recoverySLA: {
-          RTO: "15 Menit (Recovery Time Objective)",
-          RPO: "1 Menit (Recovery Point Objective)"
-        },
-        backupsList: [
-          { id: "BAK-20260628-00", type: "LOGICAL", size: "1.45 GB", status: "COMPLETED", checksum: "sha256-a18bf...b9" },
-          { id: "BAK-20260627-00", type: "PHYSICAL_FULL", size: "22.8 GB", status: "COMPLETED", checksum: "sha256-fc45d...11" },
-          { id: "BAK-20260626-00", type: "INCREMENTAL", size: "342 MB", status: "COMPLETED", checksum: "sha256-78eec...f2" }
-        ]
-      }
-    };
-  }
-  getJwtSecretsStatus() {
-    return {
-      status: "success",
-      secrets: [
-        {
-          name: "JWT_ACCESS_SECRET",
-          configured: this.securityService.secretsMetadata.JWT_ACCESS_SECRET.configured,
-          source: this.securityService.secretsMetadata.JWT_ACCESS_SECRET.source,
-          strength: "512-bit (64 bytes preferred)",
-          entropy: "Maksimum (Kriptografis Secure)",
-          maskedValue: this.securityService.jwtAccessSecret.substring(0, 6) + "..." + this.securityService.jwtAccessSecret.substring(this.securityService.jwtAccessSecret.length - 6),
-          lifespan: "15 Menit (Short-Lived)",
-          purpose: "Otentikasi Utama & Hak Akses Sesi Akademik"
-        },
-        {
-          name: "JWT_REFRESH_SECRET",
-          configured: this.securityService.secretsMetadata.JWT_REFRESH_SECRET.configured,
-          source: this.securityService.secretsMetadata.JWT_REFRESH_SECRET.source,
-          strength: "512-bit (64 bytes preferred)",
-          entropy: "Maksimum (Kriptografis Secure)",
-          maskedValue: this.securityService.jwtRefreshSecret.substring(0, 6) + "..." + this.securityService.jwtRefreshSecret.substring(this.securityService.jwtRefreshSecret.length - 6),
-          lifespan: "7 Hari (Long-Lived)",
-          purpose: "Pembaruan Sesi Otomatis & Regenerasi Access Token"
-        },
-        {
-          name: "JWT_RESET_PASSWORD_SECRET",
-          configured: this.securityService.secretsMetadata.JWT_RESET_PASSWORD_SECRET.configured,
-          source: this.securityService.secretsMetadata.JWT_RESET_PASSWORD_SECRET.source,
-          strength: "512-bit (64 bytes preferred)",
-          entropy: "Maksimum (Kriptografis Secure)",
-          maskedValue: this.securityService.jwtResetPasswordSecret.substring(0, 6) + "..." + this.securityService.jwtResetPasswordSecret.substring(this.securityService.jwtResetPasswordSecret.length - 6),
-          lifespan: "10 Menit (Strict Expiration)",
-          purpose: "Verifikasi Pemulihan Sandi Satu Kali Pakai (One-Time Use)"
-        }
-      ],
-      blastRadiusMitigation: {
-        isolatedSecrets: this.securityService.jwtAccessSecret !== this.securityService.jwtRefreshSecret && this.securityService.jwtAccessSecret !== this.securityService.jwtResetPasswordSecret,
-        oneTimeResetUsageEnforced: true,
-        replayAttackMitigationActive: true
-      }
-    };
-  }
-  generateKey() {
-    const key = import_crypto3.default.randomBytes(64).toString("hex");
-    return {
-      status: "success",
-      key,
-      length: key.length,
-      strength: "512-bit / 64-byte high-entropy",
-      method: "crypto.randomBytes(64).toString('hex')"
-    };
-  }
-  rotateSecrets(req) {
-    const ip = req.ip || "127.0.0.1";
-    const user = req.user;
-    this.securityService.rotateAllSecrets();
-    const rotationAlert = "CREDENTIAL ROTATION: Administrator melakukan rotasi paksa semua kunci JWT sistem seumur hidup!";
-    this.securityService.logSecurityEvent("ALERT", rotationAlert, ip);
-    this.securityService.logSecurityEvent("INFO", "Semua sesi pengguna, token akses, dan token pembaruan sebelumnya telah DI-INVALIDASI.", ip);
-    this.auditService.log(
-      user.id,
-      user.email,
-      "SYS_ROTATE_SECRETS",
-      "credentials",
-      rotationAlert,
-      ip,
-      req.headers["user-agent"] || "Unknown"
-    );
-    return {
-      status: "success",
-      message: "Rotasi Kunci Berhasil! Semua kunci enkripsi JWT di-rotate dengan kunci 512-bit baru. Sesi lama tidak berlaku lagi, mengisolasi kebocoran kredensial.",
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
-    };
-  }
-};
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin", "dekan", "kaprodi", "lecturer"),
-  (0, import_common14.Get)("cache-performance")
-], InfrastructureController.prototype, "getCachePerformance", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common14.Post)("scale-simulate"),
-  __decorateParam(0, (0, import_common14.Req)()),
-  __decorateParam(1, (0, import_common14.Body)())
-], InfrastructureController.prototype, "scaleSimulate", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard),
-  (0, import_common14.Post)("transaction-validate"),
-  __decorateParam(0, (0, import_common14.Req)()),
-  __decorateParam(1, (0, import_common14.Body)())
-], InfrastructureController.prototype, "transactionValidate", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common14.Get)("backup-recovery")
-], InfrastructureController.prototype, "getBackupRecovery", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common14.Get)("jwt-secrets-status")
-], InfrastructureController.prototype, "getJwtSecretsStatus", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common14.Post)("generate-key")
-], InfrastructureController.prototype, "generateKey", 1);
-__decorateClass([
-  (0, import_common14.UseGuards)(AuthGuard, RolesGuard),
-  Roles("admin"),
-  (0, import_common14.Post)("rotate-secrets"),
-  __decorateParam(0, (0, import_common14.Req)())
-], InfrastructureController.prototype, "rotateSecrets", 1);
-InfrastructureController = __decorateClass([
-  (0, import_common14.Controller)("api/enterprise")
-], InfrastructureController);
-
 // src/modules/audit/audit.controller.ts
-var import_common15 = require("@nestjs/common");
 var AuditController = class {
   constructor(auditService) {
     this.auditService = auditService;
@@ -1245,31 +880,27 @@ var AuditController = class {
   }
 };
 __decorateClass([
-  (0, import_common15.UseGuards)(AuthGuard, RolesGuard),
+  (0, import_common13.UseGuards)(AuthGuard, RolesGuard),
   Roles("admin", "dekan"),
-  (0, import_common15.Get)("audit-logs"),
-  __decorateParam(0, (0, import_common15.Query)("limit")),
-  __decorateParam(1, (0, import_common15.Query)("action")),
-  __decorateParam(2, (0, import_common15.Query)("email"))
+  (0, import_common13.Get)("audit-logs"),
+  __decorateParam(0, (0, import_common13.Query)("limit")),
+  __decorateParam(1, (0, import_common13.Query)("action")),
+  __decorateParam(2, (0, import_common13.Query)("email"))
 ], AuditController.prototype, "getAuditLogs", 1);
 AuditController = __decorateClass([
-  (0, import_common15.Controller)("api/system")
+  (0, import_common13.Controller)("api/system")
 ], AuditController);
 
 // src/modules/audit/audit.module.ts
 var AuditModule = class {
 };
 AuditModule = __decorateClass([
-  (0, import_common16.Module)({
+  (0, import_common14.Module)({
     imports: [
-      PrismaModule,
-      SecurityModule,
-      UsersModule
+      PrismaModule
     ],
     providers: [AuditService],
     controllers: [
-      TelemetryController,
-      InfrastructureController,
       AuditController
     ],
     exports: [AuditService]
@@ -1280,32 +911,26 @@ AuditModule = __decorateClass([
 var AuthModule = class {
 };
 AuthModule = __decorateClass([
-  (0, import_common17.Module)({
+  (0, import_common15.Module)({
     imports: [UsersModule, SecurityModule, AuditModule],
     controllers: [AuthController]
   })
 ], AuthModule);
 
 // src/modules/krs/krs.module.ts
-var import_common21 = require("@nestjs/common");
-
-// src/modules/krs/krs.controller.ts
-var import_common20 = require("@nestjs/common");
-
-// src/modules/krs/krs.service.ts
 var import_common19 = require("@nestjs/common");
 
-// src/modules/krs/krs.repository.ts
+// src/modules/krs/krs.controller.ts
 var import_common18 = require("@nestjs/common");
+
+// src/modules/krs/krs.service.ts
+var import_common17 = require("@nestjs/common");
+
+// src/modules/krs/krs.repository.ts
+var import_common16 = require("@nestjs/common");
 var KrsRepository = class {
   constructor(prisma) {
     this.prisma = prisma;
-  }
-  async onModuleInit() {
-    const count = await this.prisma.krsItem.count();
-    if (count === 0) {
-      await this.seedDefaultKrs();
-    }
   }
   toDomain(record) {
     return {
@@ -1399,47 +1024,10 @@ var KrsRepository = class {
       totalPages: Math.ceil(total / limit)
     };
   }
-  async seedDefaultKrs() {
-    const seedData = [
-      {
-        id: "krs-1",
-        studentNim: "10118001",
-        studentName: "Faisal Akbar",
-        studentEmail: "mahasiswa@kampus.ac.id",
-        prodi: "Teknik Informatika",
-        sksDiambil: 8,
-        status: "Diajukan",
-        courses: ["IF3110", "IF3150", "KU2071"]
-      },
-      {
-        id: "krs-2",
-        studentNim: "10118002",
-        studentName: "Dian Safitri",
-        studentEmail: "student2@kampus.ac.id",
-        prodi: "Sistem Informasi",
-        sksDiambil: 3,
-        status: "Disetujui",
-        courses: ["SI2101"]
-      },
-      {
-        id: "krs-3",
-        studentNim: "10118003",
-        studentName: "Aditya Pratama",
-        studentEmail: "student3@kampus.ac.id",
-        prodi: "Teknik Elektro",
-        sksDiambil: 4,
-        status: "Draft",
-        courses: ["EE4102"]
-      }
-    ];
-    for (const data of seedData) {
-      await this.prisma.krsItem.create({ data: this.toPrisma(data) });
-    }
-  }
 };
 KrsRepository = __decorateClass([
-  (0, import_common18.Injectable)(),
-  __decorateParam(0, (0, import_common18.Inject)(PrismaService))
+  (0, import_common16.Injectable)(),
+  __decorateParam(0, (0, import_common16.Inject)(PrismaService))
 ], KrsRepository);
 
 // src/modules/krs/krs.service.ts
@@ -1481,17 +1069,17 @@ var KrsService = class {
   async addCourse(email, studentName, courseCode, ip, userAgent, actorId) {
     const krs = await this.getKrsByEmail(email, studentName);
     if (krs.status !== "Draft" && krs.status !== "Revisi") {
-      throw new import_common19.HttpException(
+      throw new import_common17.HttpException(
         "KRS tidak dapat diubah karena status saat ini bukan Draft atau Revisi.",
-        import_common19.HttpStatus.BAD_REQUEST
+        import_common17.HttpStatus.BAD_REQUEST
       );
     }
     if (krs.courses.includes(courseCode)) {
-      throw new import_common19.HttpException("Mata kuliah sudah ada di dalam KRS Anda.", import_common19.HttpStatus.BAD_REQUEST);
+      throw new import_common17.HttpException("Mata kuliah sudah ada di dalam KRS Anda.", import_common17.HttpStatus.BAD_REQUEST);
     }
     const course = this.availableCourses.find((c) => c.kode === courseCode);
     if (!course) {
-      throw new import_common19.HttpException("Kode mata kuliah tidak ditemukan.", import_common19.HttpStatus.NOT_FOUND);
+      throw new import_common17.HttpException("Kode mata kuliah tidak ditemukan.", import_common17.HttpStatus.NOT_FOUND);
     }
     const currentSks = this.calculateTotalSks(krs.courses);
     if (currentSks + course.sks > 24) {
@@ -1506,9 +1094,9 @@ var KrsService = class {
         ip,
         userAgent
       );
-      throw new import_common19.HttpException(
+      throw new import_common17.HttpException(
         "Batas SKS terlampaui! Anda tidak diperbolehkan mengambil lebih dari 24 SKS dalam satu semester.",
-        import_common19.HttpStatus.BAD_REQUEST
+        import_common17.HttpStatus.BAD_REQUEST
       );
     }
     krs.courses.push(courseCode);
@@ -1532,13 +1120,13 @@ var KrsService = class {
   async removeCourse(email, studentName, courseCode, ip, userAgent, actorId) {
     const krs = await this.getKrsByEmail(email, studentName);
     if (krs.status !== "Draft" && krs.status !== "Revisi") {
-      throw new import_common19.HttpException(
+      throw new import_common17.HttpException(
         "KRS tidak dapat diubah karena status saat ini bukan Draft atau Revisi.",
-        import_common19.HttpStatus.BAD_REQUEST
+        import_common17.HttpStatus.BAD_REQUEST
       );
     }
     if (!krs.courses.includes(courseCode)) {
-      throw new import_common19.HttpException("Mata kuliah tidak ditemukan dalam KRS Anda.", import_common19.HttpStatus.BAD_REQUEST);
+      throw new import_common17.HttpException("Mata kuliah tidak ditemukan dalam KRS Anda.", import_common17.HttpStatus.BAD_REQUEST);
     }
     krs.courses = krs.courses.filter((code) => code !== courseCode);
     krs.sksDiambil = this.calculateTotalSks(krs.courses);
@@ -1561,13 +1149,13 @@ var KrsService = class {
   async submitKrs(email, studentName, ip, userAgent, actorId) {
     const krs = await this.getKrsByEmail(email, studentName);
     if (krs.status !== "Draft" && krs.status !== "Revisi") {
-      throw new import_common19.HttpException(
+      throw new import_common17.HttpException(
         "Hanya KRS dengan status Draft atau Revisi yang dapat diajukan.",
-        import_common19.HttpStatus.BAD_REQUEST
+        import_common17.HttpStatus.BAD_REQUEST
       );
     }
     if (krs.courses.length === 0) {
-      throw new import_common19.HttpException("KRS tidak dapat diajukan karena kosong (0 SKS diambil).", import_common19.HttpStatus.BAD_REQUEST);
+      throw new import_common17.HttpException("KRS tidak dapat diajukan karena kosong (0 SKS diambil).", import_common17.HttpStatus.BAD_REQUEST);
     }
     krs.status = "Diajukan";
     await this.krsRepository.update(krs.id, krs);
@@ -1609,10 +1197,10 @@ var KrsService = class {
   async approveKrs(studentNim, approve, ip, userAgent, actorId, actorEmail) {
     const krs = await this.krsRepository.findByStudentNim(studentNim);
     if (!krs) {
-      throw new import_common19.HttpException("KRS Mahasiswa tidak ditemukan.", import_common19.HttpStatus.NOT_FOUND);
+      throw new import_common17.HttpException("KRS Mahasiswa tidak ditemukan.", import_common17.HttpStatus.NOT_FOUND);
     }
     if (krs.status !== "Diajukan") {
-      throw new import_common19.HttpException("Hanya KRS berstatus Diajukan yang dapat ditinjau.", import_common19.HttpStatus.BAD_REQUEST);
+      throw new import_common17.HttpException("Hanya KRS berstatus Diajukan yang dapat ditinjau.", import_common17.HttpStatus.BAD_REQUEST);
     }
     krs.status = approve ? "Disetujui" : "Revisi";
     await this.krsRepository.update(krs.id, krs);
@@ -1641,10 +1229,10 @@ var KrsService = class {
   }
 };
 KrsService = __decorateClass([
-  (0, import_common19.Injectable)(),
-  __decorateParam(0, (0, import_common19.Inject)(KrsRepository)),
-  __decorateParam(1, (0, import_common19.Inject)(SecurityService)),
-  __decorateParam(2, (0, import_common19.Inject)(AuditService))
+  (0, import_common17.Injectable)(),
+  __decorateParam(0, (0, import_common17.Inject)(KrsRepository)),
+  __decorateParam(1, (0, import_common17.Inject)(SecurityService)),
+  __decorateParam(2, (0, import_common17.Inject)(AuditService))
 ], KrsService);
 
 // src/modules/krs/krs.controller.ts
@@ -1664,7 +1252,7 @@ var KrsController = class {
     const user = req.user;
     const { courseCode } = body;
     if (!courseCode) {
-      throw new import_common20.HttpException("Kode mata kuliah wajib diisi.", import_common20.HttpStatus.BAD_REQUEST);
+      throw new import_common18.HttpException("Kode mata kuliah wajib diisi.", import_common18.HttpStatus.BAD_REQUEST);
     }
     const krs = await this.krsService.addCourse(
       user.email,
@@ -1684,7 +1272,7 @@ var KrsController = class {
     const user = req.user;
     const { courseCode } = body;
     if (!courseCode) {
-      throw new import_common20.HttpException("Kode mata kuliah wajib diisi.", import_common20.HttpStatus.BAD_REQUEST);
+      throw new import_common18.HttpException("Kode mata kuliah wajib diisi.", import_common18.HttpStatus.BAD_REQUEST);
     }
     const krs = await this.krsService.removeCourse(
       user.email,
@@ -1719,10 +1307,10 @@ var KrsController = class {
     const parsedPage = page ? Number(page) : 1;
     const parsedLimit = limit ? Number(limit) : 10;
     if (Number.isNaN(parsedPage) || parsedPage < 1) {
-      throw new import_common20.HttpException("Parameter page harus berupa angka bulat positif.", import_common20.HttpStatus.BAD_REQUEST);
+      throw new import_common18.HttpException("Parameter page harus berupa angka bulat positif.", import_common18.HttpStatus.BAD_REQUEST);
     }
     if (Number.isNaN(parsedLimit) || parsedLimit < 1) {
-      throw new import_common20.HttpException("Parameter limit harus berupa angka bulat positif.", import_common20.HttpStatus.BAD_REQUEST);
+      throw new import_common18.HttpException("Parameter limit harus berupa angka bulat positif.", import_common18.HttpStatus.BAD_REQUEST);
     }
     const result = await this.krsService.getAllKrsPaginated(parsedPage, parsedLimit, search, status);
     return {
@@ -1740,7 +1328,7 @@ var KrsController = class {
     const user = req.user;
     const { studentNim, approve } = body;
     if (!studentNim || approve === void 0) {
-      throw new import_common20.HttpException("NIM mahasiswa dan status persetujuan (approve) wajib diisi.", import_common20.HttpStatus.BAD_REQUEST);
+      throw new import_common18.HttpException("NIM mahasiswa dan status persetujuan (approve) wajib diisi.", import_common18.HttpStatus.BAD_REQUEST);
     }
     const krs = await this.krsService.approveKrs(
       studentNim,
@@ -1759,52 +1347,52 @@ var KrsController = class {
   }
 };
 __decorateClass([
-  (0, import_common20.Get)(),
-  __decorateParam(0, (0, import_common20.Req)())
+  (0, import_common18.Get)(),
+  __decorateParam(0, (0, import_common18.Req)())
 ], KrsController.prototype, "getKrs", 1);
 __decorateClass([
-  (0, import_common20.Post)("add-course"),
-  (0, import_common20.HttpCode)(import_common20.HttpStatus.OK),
-  __decorateParam(0, (0, import_common20.Req)()),
-  __decorateParam(1, (0, import_common20.Body)())
+  (0, import_common18.Post)("add-course"),
+  (0, import_common18.HttpCode)(import_common18.HttpStatus.OK),
+  __decorateParam(0, (0, import_common18.Req)()),
+  __decorateParam(1, (0, import_common18.Body)())
 ], KrsController.prototype, "addCourse", 1);
 __decorateClass([
-  (0, import_common20.Post)("remove-course"),
-  (0, import_common20.HttpCode)(import_common20.HttpStatus.OK),
-  __decorateParam(0, (0, import_common20.Req)()),
-  __decorateParam(1, (0, import_common20.Body)())
+  (0, import_common18.Post)("remove-course"),
+  (0, import_common18.HttpCode)(import_common18.HttpStatus.OK),
+  __decorateParam(0, (0, import_common18.Req)()),
+  __decorateParam(1, (0, import_common18.Body)())
 ], KrsController.prototype, "removeCourse", 1);
 __decorateClass([
-  (0, import_common20.Post)("submit"),
-  (0, import_common20.HttpCode)(import_common20.HttpStatus.OK),
-  __decorateParam(0, (0, import_common20.Req)())
+  (0, import_common18.Post)("submit"),
+  (0, import_common18.HttpCode)(import_common18.HttpStatus.OK),
+  __decorateParam(0, (0, import_common18.Req)())
 ], KrsController.prototype, "submitKrs", 1);
 __decorateClass([
-  (0, import_common20.Get)("students"),
+  (0, import_common18.Get)("students"),
   Roles("admin", "dekan", "kaprodi", "lecturer"),
-  __decorateParam(0, (0, import_common20.Query)("page")),
-  __decorateParam(1, (0, import_common20.Query)("limit")),
-  __decorateParam(2, (0, import_common20.Query)("search")),
-  __decorateParam(3, (0, import_common20.Query)("status"))
+  __decorateParam(0, (0, import_common18.Query)("page")),
+  __decorateParam(1, (0, import_common18.Query)("limit")),
+  __decorateParam(2, (0, import_common18.Query)("search")),
+  __decorateParam(3, (0, import_common18.Query)("status"))
 ], KrsController.prototype, "getAllKrs", 1);
 __decorateClass([
-  (0, import_common20.Post)("approve"),
+  (0, import_common18.Post)("approve"),
   Roles("admin", "dekan", "kaprodi", "lecturer"),
-  (0, import_common20.HttpCode)(import_common20.HttpStatus.OK),
-  __decorateParam(0, (0, import_common20.Req)()),
-  __decorateParam(1, (0, import_common20.Body)())
+  (0, import_common18.HttpCode)(import_common18.HttpStatus.OK),
+  __decorateParam(0, (0, import_common18.Req)()),
+  __decorateParam(1, (0, import_common18.Body)())
 ], KrsController.prototype, "approveKrs", 1);
 KrsController = __decorateClass([
-  (0, import_common20.Controller)("api/krs"),
-  (0, import_common20.UseGuards)(AuthGuard, RolesGuard),
-  __decorateParam(0, (0, import_common20.Inject)(KrsService))
+  (0, import_common18.Controller)("api/krs"),
+  (0, import_common18.UseGuards)(AuthGuard, RolesGuard),
+  __decorateParam(0, (0, import_common18.Inject)(KrsService))
 ], KrsController);
 
 // src/modules/krs/krs.module.ts
 var KrsModule = class {
 };
 KrsModule = __decorateClass([
-  (0, import_common21.Module)({
+  (0, import_common19.Module)({
     imports: [PrismaModule, SecurityModule, AuditModule],
     controllers: [KrsController],
     providers: [KrsService, KrsRepository],
@@ -1816,7 +1404,7 @@ KrsModule = __decorateClass([
 var AppModule = class {
 };
 AppModule = __decorateClass([
-  (0, import_common22.Module)({
+  (0, import_common20.Module)({
     imports: [
       PrismaModule,
       SecurityModule,
@@ -1829,7 +1417,7 @@ AppModule = __decorateClass([
 ], AppModule);
 
 // src/common/interceptors/logging.interceptor.ts
-var import_common23 = require("@nestjs/common");
+var import_common21 = require("@nestjs/common");
 var import_operators = require("rxjs/operators");
 var LoggingInterceptor = class {
   constructor(securityService) {
@@ -1864,14 +1452,14 @@ var LoggingInterceptor = class {
   }
 };
 LoggingInterceptor = __decorateClass([
-  (0, import_common23.Injectable)()
+  (0, import_common21.Injectable)()
 ], LoggingInterceptor);
 
 // server.ts
 var import_cookie_parser = __toESM(require("cookie-parser"), 1);
 var import_cors = __toESM(require("cors"), 1);
 var import_helmet = __toESM(require("helmet"), 1);
-var import_crypto4 = __toESM(require("crypto"), 1);
+var import_crypto3 = __toESM(require("crypto"), 1);
 var import_express_rate_limit = __toESM(require("express-rate-limit"), 1);
 var import_express = __toESM(require("express"), 1);
 async function bootstrap() {
@@ -1926,7 +1514,7 @@ async function bootstrap() {
       console.error("\u274C CRITICAL: COOKIE_SECRET environment variable tidak diset di production. Exiting...");
       process.exit(1);
     }
-    cookieSecret = import_crypto4.default.randomBytes(32).toString("hex");
+    cookieSecret = import_crypto3.default.randomBytes(32).toString("hex");
     console.warn("\u26A0\uFE0F  DEV: COOKIE_SECRET tidak diset. Menggunakan ephemeral secret.");
   }
   app.use(import_express.default.json());
@@ -1969,7 +1557,7 @@ async function bootstrap() {
     const safeMethods = ["GET", "HEAD", "OPTIONS"];
     if (safeMethods.includes(req.method)) {
       if (!req.cookies.csrfToken) {
-        const csrfToken = import_crypto4.default.randomBytes(32).toString("hex");
+        const csrfToken = import_crypto3.default.randomBytes(32).toString("hex");
         req.csrfToken = csrfToken;
         res.cookie("csrfToken", csrfToken, {
           secure: process.env.NODE_ENV === "production",

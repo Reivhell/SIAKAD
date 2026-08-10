@@ -10,8 +10,8 @@ import cookieParser from 'cookie-parser';
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import crypto from 'crypto';
 
-const STUDENT_EMAIL = 'ahmad.syafiq@mahasiswa.ac.id';
-const STUDENT_NAME = 'Ahmad Syafiq';
+const STUDENT_EMAIL = 'itest.mahasiswa@mahasiswa.ac.id';
+const STUDENT_NAME = 'Ivan Mahasiswa';
 
 async function persistStudentKrs(
   app: INestApplication,
@@ -38,6 +38,7 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    
     app.use(cookieParser('siakad_secure_cookie_signer_salt_9988'));
 
     // Register replica of CSRF Double-Submit Protection Middleware globally
@@ -87,6 +88,21 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
   });
 
   afterAll(async () => {
+    // Kembalikan KRS akun uji ke kondisi kanonik seed supaya spec lain
+    // (presensi, akademik) selalu melihat data awal, apapun urutan eksekusi.
+    try {
+      const krsService = app.get(KrsService);
+      const krsRepository = app.get(KrsRepository);
+      const krs = await krsService.getKrsByEmail(STUDENT_EMAIL, STUDENT_NAME);
+      await krsRepository.update(krs.id, {
+        ...krs,
+        status: 'Diajukan',
+        sksDiambil: 2,
+        courses: ['KU2071'],
+      });
+    } catch {
+      // Abaikan: mungkin DB sudah di-reset oleh vitest globalSetup berikutnya.
+    }
     await app.close();
   });
 
@@ -116,7 +132,7 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/secure-login')
         .send({
-          email: 'ahmad.syafiq@mahasiswa.ac.id',
+          email: 'itest.mahasiswa@mahasiswa.ac.id',
           password: process.env.DEFAULT_SEED_PASSWORD || 'Test_SIAKAD_2026!',
         })
         .expect(403);
@@ -128,14 +144,14 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
         .set('Cookie', csrfCookie)
         .set('x-csrf-token', csrfToken)
         .send({
-          username: 'ahmad.syafiq@mahasiswa.ac.id',
+          username: 'itest.mahasiswa@mahasiswa.ac.id',
           password: process.env.DEFAULT_SEED_PASSWORD || 'Test_SIAKAD_2026!',
         })
         .expect(200);
 
       expect(res.body.status).toBe('success');
       expect(res.body.user.role).toBe('student');
-      expect(res.body.user.email).toBe('ahmad.syafiq@mahasiswa.ac.id');
+      expect(res.body.user.email).toBe('itest.mahasiswa@mahasiswa.ac.id');
 
       // Capture auth cookies (token and refreshToken)
       const cookies = res.headers['set-cookie'];
@@ -193,7 +209,7 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
 
       expect(res.body.status).toBe('success');
       expect(res.body.krs).toBeDefined();
-      expect(res.body.krs.studentEmail).toBe('ahmad.syafiq@mahasiswa.ac.id');
+      expect(res.body.krs.studentEmail).toBe('itest.mahasiswa@mahasiswa.ac.id');
     });
 
     it('should allow student to add a valid course when state is editable', async () => {
@@ -465,13 +481,13 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
     });
 
     it('should allow admin to approve a student KRS', async () => {
-      // Seeded Faisal Akbar has NIM 10118001
+      // KRS khusus uji integrasi (krs-itest) NIM 10118099
       const res = await request(app.getHttpServer())
         .post('/api/krs/approve')
         .set('Cookie', [adminAuthCookie, csrfCookie].join('; '))
         .set('x-csrf-token', csrfToken)
         .send({
-          studentNim: '10118001',
+          studentNim: '10118099',
           approve: true,
         })
         .expect(200);
@@ -481,13 +497,13 @@ describe('SIAKAD Full-Stack Integration Tests (Auth & KRS)', () => {
     });
 
     it('should block review if the KRS is not currently submitted', async () => {
-      // NIM 10118001 is now 'Disetujui', so reviewing again should fail
+      // NIM 10118099 is now 'Disetujui', so reviewing again should fail
       await request(app.getHttpServer())
         .post('/api/krs/approve')
         .set('Cookie', [adminAuthCookie, csrfCookie].join('; '))
         .set('x-csrf-token', csrfToken)
         .send({
-          studentNim: '10118001',
+          studentNim: '10118099',
           approve: false,
         })
         .expect(400);

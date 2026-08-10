@@ -24,6 +24,7 @@ model User {
   // Versi sesi untuk rotasi refresh token & revocation terpusat.
   // Naikkan nilai ini saat logout / reset password → semua token lama hangus.
   refreshVersion Int    @default(0)
+  isActive       Boolean @default(true)
 }
 
 model KrsItem {
@@ -60,6 +61,7 @@ model AcademicPeriod {
   code     String  @unique // e.g. "2025/2026-Ganjil"
   label    String
   isActive Boolean @default(false)
+  isKrsOpen Boolean @default(false)
 }
 
 model CourseOffering {
@@ -98,4 +100,202 @@ model StudentGpaHistory {
   ipk     Float
 
   @@unique([nim, semester])
+}
+
+// ── Presensi Perkuliahan ────────────────────────────────────────────
+// Sesi kehadiran satu pertemuan (satu kelas / satu tanggal).
+// `rosterJson` menyimpan snapshot mahasiswa terdaftar saat sesi dibuka,
+// sehingga daftar hadir tetap valid meskipun KRS berubah setelahnya.
+model AttendanceSession {
+  id            String  @id @default(uuid())
+  courseCode    String
+  courseName    String
+  meetingNumber Int
+  date          String // ISO yyyy-mm-dd
+  topic         String? // Materi/BAP diisi dosen saat membuka sesi
+  lecturerEmail String
+  lecturerName  String
+  status        String  @default("open") // open | closed
+  openedAt      String
+  closedAt      String?
+  rosterJson    String // JSON array [{ nim, name }] snapshot saat dibuka
+  records       AttendanceRecord[]
+
+  @@unique([courseCode, date])
+}
+
+model AttendanceRecord {
+  id          String @id @default(uuid())
+  sessionId   String
+  session     AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentNim  String
+  studentName String
+  status      String // Hadir | Izin | Sakit | Alpha
+  notes       String?
+  updatedAt   String
+
+  @@unique([sessionId, studentNim])
+}
+
+// ── Domain Akademik umum ────────────────────────────────────────────
+// Tabel pendukung yang menggerakkan seluruh halaman (dashboard per peran,
+// master data admin, modul dosen & mahasiswa) sehingga tidak ada lagi
+// konstanta mock di sisi frontend.
+
+model Prodi {
+  id         String @id @default(uuid())
+  kode       String @unique
+  nama       String
+  jenjang    String // D3 | S1 | S2 | S3
+  akreditasi String // Unggul | A | B | C
+}
+
+model Room {
+  id        String @id @default(uuid())
+  kode      String @unique
+  nama      String
+  kapasitas Int
+  lokasi    String
+  status    String @default("Tersedia") // Tersedia | Digunakan | Perbaikan
+}
+
+model Announcement {
+  id        String @id @default(uuid())
+  title     String
+  content   String
+  target    String @default("Semua") // Semua | Mahasiswa | Dosen | Admin
+  date      String
+  author    String
+  createdAt String
+}
+
+model AcademicDate {
+  id     String @id @default(uuid())
+  title  String
+  date   String
+  period String
+}
+
+model LecturerProfile {
+  userId       String @id
+  nidn         String @unique
+  jabatan      String
+  prodi        String
+  address      String
+  phone        String
+  riwayatJson  String // JSON array riwayat pendidikan
+}
+
+model CourseMaterial {
+  id            String @id @default(uuid())
+  courseCode    String
+  title         String
+  type          String // PDF | PPT | Video | Modul
+  fileName      String
+  fileSize      String
+  uploadedAt    String
+  lecturerEmail String
+}
+
+model Assignment {
+  id            String @id @default(uuid())
+  courseCode    String
+  classLabel    String
+  title         String
+  description   String
+  deadline      String
+  lecturerEmail String
+  createdAt     String
+}
+
+model GradeRecord {
+  id          String @id @default(uuid())
+  studentNim  String
+  studentName String
+  courseCode  String
+  courseName  String
+  semester    Int
+  tugas       Float
+  kuis        Float
+  praktikum   Float
+  uts         Float
+  uas         Float
+  final       Float
+  gradeLetter String
+  updatedBy   String
+  updatedAt   String
+
+  @@unique([studentNim, courseCode, semester])
+}
+
+model ConsultationLog {
+  id           String @id @default(uuid())
+  studentNim   String
+  date         String
+  topic        String
+  notes        String
+  advisorEmail String
+}
+
+model ChatMessage {
+  id          String @id @default(uuid())
+  threadKey   String // pair sender/recipient emails terurut, dipisah ':'
+  senderEmail String
+  senderName  String
+  senderRole  String
+  text        String
+  createdAt   String
+}
+
+model Thesis {
+  id                  String  @id @default(uuid())
+  studentNim          String
+  studentName         String
+  title               String
+  progressPercentage  Int
+  status              String // Bimbingan | Siap Kolokium | Siap Sidang | Lulus
+  supervisorEmail     String
+  logsJson            String // JSON array [{ date, note, approval }]
+  seminarType         String?
+  seminarDate         String?
+  seminarRoom         String?
+  seminarTime         String?
+}
+
+model FinanceBill {
+  id          String @id @default(uuid())
+  studentNim  String
+  studentName String
+  period      String
+  description String
+  amount      Float
+  paidAmount  Float  @default(0)
+  status      String @default("Belum Lunas") // Lunas | Belum Lunas | Cicilan
+  dueDate     String
+}
+
+model Document {
+  id       String @id @default(uuid())
+  title    String
+  category String
+  fileName String
+  fileSize String
+}
+
+model HelpdeskTicket {
+  id             String  @id @default(uuid())
+  requesterEmail String
+  requesterName  String
+  subject        String
+  message        String
+  status         String  @default("Terbuka") // Terbuka | Diproses | Selesai
+  createdAt      String
+  resolution     String?
+}
+
+model RoleDashboard {
+  id        String @id @default(uuid())
+  role      String @unique
+  dataJson  String
+  updatedAt String
 }

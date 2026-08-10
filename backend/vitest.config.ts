@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    // Semua spec berbagi satu SQLite test.db; jalankan file secara sekuensial
+    // agar mutasi antar file (KRS, keuangan, dll.) tidak saling menimpa.
+    fileParallelism: false,
     env: {
       DATABASE_URL: 'file:./test.db',
       DEFAULT_SEED_PASSWORD: 'Test_SIAKAD_2026!',
