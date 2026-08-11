@@ -1,19 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
+import { getDashboardSummary, DashboardSummary } from '../../api/dashboard.api';
 import {
-  initialUsers,
-  initialStudents,
-  initialLecturers,
-  initialProdis,
-  initialCourses,
-  initialRooms,
-  initialAcademicYears,
-  initialClasses,
-  initialSchedules,
-  initialKrsData,
-  initialAnnouncements,
-  initialActivityLogs,
-  initialBillingInvoices,
+  getAdminOverview,
   AdminUser,
   AdminStudent,
   AdminLecturer,
@@ -27,7 +16,7 @@ import {
   AdminAnnouncement,
   AdminActivityLog,
   AdminBillingInvoice
-} from '../../data/adminMockData';
+} from '../../api/academic.api';
 
 // Sub Module Imports
 import { AdminMasterDataModule } from './admin/AdminMasterDataModule';
@@ -35,17 +24,8 @@ import { AdminAcademicModule } from './admin/AdminAcademicModule';
 import { AdminMonitoringModule } from './admin/AdminMonitoringModule';
 import { AdminSettingsModule } from './admin/AdminSettingsModule';
 import { AdminEnterpriseSuiteModule } from './admin/AdminEnterpriseSuiteModule';
-import { EnterpriseControlSuite } from '../widgets/EnterpriseControlSuite';
 import { 
-  LmsHybridModule, 
-  SmartCommunicationModule, 
-  StudentSelfServiceModule, 
-  SecurityComplianceModule, 
-  ModernTechModule,
-  MobilePwaControlBar
-} from '../widgets/ModernSiaFeatures';
-import { LecturerRatingModule } from '../widgets/LecturerRatingModule';
-
+  LecturerRatingModule } from '../widgets/LecturerRatingModule';
 import { 
   Users, 
   GraduationCap, 
@@ -78,26 +58,74 @@ interface AdminDashboardViewProps {
 }
 
 export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab }: AdminDashboardViewProps) {
-  // MASTER MUTABLE STATES for all SIAKAD Admin Entities
-  const [usersList, setUsersList] = useState<AdminUser[]>(initialUsers);
-  const [studentsList, setStudentsList] = useState<AdminStudent[]>(initialStudents);
-  const [lecturersList, setLecturersList] = useState<AdminLecturer[]>(initialLecturers);
-  const [prodisList, setProdisList] = useState<AdminProdi[]>(initialProdis);
-  const [coursesList, setCoursesList] = useState<AdminCourse[]>(initialCourses);
-  const [roomsList, setRoomsList] = useState<AdminRoom[]>(initialRooms);
-  const [academicYearsList, setAcademicYearsList] = useState<AdminAcademicYear[]>(initialAcademicYears);
-  const [classesList, setClassesList] = useState<AdminClass[]>(initialClasses);
-  const [schedulesList, setSchedulesList] = useState<AdminSchedule[]>(initialSchedules);
-  const [krsList, setKrsList] = useState<AdminKrsItem[]>(initialKrsData);
-  const [announcementsList, setAnnouncementsList] = useState<AdminAnnouncement[]>(initialAnnouncements);
-  const [activityLogsList, setActivityLogsList] = useState<AdminActivityLog[]>(initialActivityLogs);
-  const [invoicesList, setInvoicesList] = useState<AdminBillingInvoice[]>(initialBillingInvoices);
+  // MASTER MUTABLE STATES for all SIAKAD Admin Entities (diisi dari basis data)
+  const [usersList, setUsersList] = useState<AdminUser[]>([]);
+  const [studentsList, setStudentsList] = useState<AdminStudent[]>([]);
+  const [lecturersList, setLecturersList] = useState<AdminLecturer[]>([]);
+  const [prodisList, setProdisList] = useState<AdminProdi[]>([]);
+  const [coursesList, setCoursesList] = useState<AdminCourse[]>([]);
+  const [roomsList, setRoomsList] = useState<AdminRoom[]>([]);
+  const [academicYearsList, setAcademicYearsList] = useState<AdminAcademicYear[]>([]);
+  const [classesList, setClassesList] = useState<AdminClass[]>([]);
+  const [schedulesList, setSchedulesList] = useState<AdminSchedule[]>([]);
+  const [krsList, setKrsList] = useState<AdminKrsItem[]>([]);
+  const [announcementsList, setAnnouncementsList] = useState<AdminAnnouncement[]>([]);
+  const [activityLogsList, setActivityLogsList] = useState<AdminActivityLog[]>([]);
+  const [invoicesList, setInvoicesList] = useState<AdminBillingInvoice[]>([]);
 
-  // Curriculums state
-  const [curriculums, setCurriculums] = useState([
-    { id: 'curr-1', kode: 'KUR2020', nama: 'Kurikulum Nasional 2020', status: 'Aktif', totalSks: 144 },
-    { id: 'curr-2', kode: 'KUR-MERDEKA', nama: 'Kurikulum Merdeka Belajar', status: 'Draft', totalSks: 140 }
-  ]);
+  // Live summary from backend (falls back to real list counts while loading/on error)
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAdminOverview()
+      .then((data) => {
+        if (cancelled) return;
+        setUsersList(data.users);
+        setStudentsList(data.students);
+        setLecturersList(data.lecturers);
+        setProdisList(data.prodis);
+        setCoursesList(data.courses);
+        setRoomsList(data.rooms);
+        setAcademicYearsList(data.academicYears);
+        setClassesList(data.classes);
+        setSchedulesList(data.schedules);
+        setKrsList(data.krs);
+        setAnnouncementsList(data.announcements);
+        setActivityLogsList(data.activityLogs);
+        setInvoicesList(data.billing);
+      })
+      .catch((err) => console.error('Gagal memuat overview admin:', err));
+    getDashboardSummary()
+      .then((s) => {
+        if (!cancelled) setSummary(s);
+      })
+      .catch(() => {
+        // ringkasan tetap berasal dari daftar nyata yang sudah dimuat
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Kurikulum diturunkan dari data prodi & mata kuliah yang nyata
+  const [curriculums, setCurriculums] = useState<Array<{ id: string; kode: string; nama: string; status: string; totalSks: number }>>([]);
+  useEffect(() => {
+    if (prodisList.length && coursesList.length) {
+      setCurriculums(
+        prodisList.map((p, i) => {
+          const mk = coursesList.filter((c) => c.prodi === p.nama);
+          return {
+            id: `curr-${p.id}`,
+            kode: `KUR${p.kode}`,
+            nama: `Kurikulum ${p.nama}`,
+            status: i === 0 ? 'Aktif' : 'Draft',
+            totalSks: mk.reduce((sum, c) => sum + c.sks, 0) || 144,
+          };
+        }),
+      );
+    }
+  }, [prodisList, coursesList]);
 
   // Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -128,19 +156,30 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
 
   // Render Admin Dashboard Landing
   const renderDashboardLanding = () => {
-    // Recharts Mock Data
-    const gpaTrendData = [
-      { name: '2022', gpa: 3.31 },
-      { name: '2023', gpa: 3.42 },
-      { name: '2024', gpa: 3.48 },
-      { name: '2025', gpa: 3.55 },
-      { name: '2026', gpa: 3.58 },
-    ];
+    const s = summary;
+    // Recharts Mock Data (fallback until live data arrives)
+    const gpaTrendData = s?.gpaTrend?.length
+      ? s.gpaTrend
+      : [
+          { name: '2022', gpa: 3.31 },
+          { name: '2023', gpa: 3.42 },
+          { name: '2024', gpa: 3.48 },
+          { name: '2025', gpa: 3.55 },
+          { name: '2026', gpa: 3.58 },
+        ];
 
-    const prodiDistributionData = prodisList.map(p => {
-      const count = studentsList.filter(s => s.prodi === p.nama).length;
-      return { name: p.kode, jumlah: count || Math.floor(Math.random() * 4) + 1 };
-    });
+    const prodiDistributionData = s?.facultyDistribution?.length
+      ? s.facultyDistribution.map((f) => ({ name: f.name, jumlah: f.count }))
+      : prodisList.map(p => {
+          const count = studentsList.filter(s => s.prodi === p.nama).length;
+          return { name: p.kode, jumlah: count };
+        });
+
+    const kpi = (i: number) => s?.kpis[i]?.value;
+    const activePeriod = s?.activePeriod;
+    const periodParts = activePeriod ? activePeriod.split('-') : [];
+    const bannerSemester = periodParts[1] ?? activeSemester?.semester;
+    const bannerTahun = periodParts[0] ?? activeSemester?.tahunAjaran;
 
     return (
       <div className="space-y-6">
@@ -153,9 +192,9 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate uppercase tracking-wider">Total Mahasiswa</dt>
+                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncater">Total Mahasiswa</dt>
                   <dd className="flex items-baseline">
-                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{studentsList.length}</div>
+                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{kpi(0) ?? studentsList.length}</div>
                     <div className="ml-2 flex items-baseline text-xs font-bold text-green-600 dark:text-green-400">
                       <TrendingUp className="self-center flex-shrink-0 h-3 w-3 mr-0.5" />
                       +{activeStudentsCount} Aktif
@@ -168,15 +207,15 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
 
           <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg p-3">
-                <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate uppercase tracking-wider">Total Dosen</dt>
+                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncater">Total Dosen</dt>
                   <dd className="flex items-baseline">
-                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{lecturersList.length}</div>
-                    <div className="ml-2 flex items-baseline text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{kpi(1) ?? lecturersList.length}</div>
+                    <div className="ml-2 flex items-baseline text-xs font-bold text-blue-600 dark:text-blue-400">
                       +{activeLecturersCount} Aktif
                     </div>
                   </dd>
@@ -187,14 +226,14 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
 
           <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 rounded-lg p-3">
-                <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate uppercase tracking-wider">Mata Kuliah</dt>
+                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncater">Mata Kuliah</dt>
                   <dd className="flex items-baseline">
-                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{coursesList.length}</div>
+                    <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{kpi(2) ?? coursesList.length}</div>
                     <span className="ml-2 text-xs text-slate-400 font-bold">Terdaftar</span>
                   </dd>
                 </dl>
@@ -204,12 +243,12 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
 
           <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg p-3">
-                <ClipboardList className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                <ClipboardList className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncate uppercase tracking-wider">Kelas & Jadwal</dt>
+                  <dt className="text-xs font-bold text-slate-500 dark:text-slate-400 truncater">Kelas & Jadwal</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{classCount}</div>
                     <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">{schedulesList.length} Jadwal</span>
@@ -221,11 +260,11 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
         </div>
 
         {/* Semester Active Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
             <span className="text-[10px] font-bold tracking-widest bg-white/20 text-white px-2.5 py-1 rounded-full uppercase">Tahun Ajaran Aktif</span>
             <h3 className="text-lg md:text-xl font-extrabold">
-              Semester {activeSemester?.semester} TA {activeSemester?.tahunAjaran}
+              Semester {bannerSemester} TA {bannerTahun}
             </h3>
             <p className="text-xs text-blue-100 max-w-xl font-medium">
               Pengisian KRS sedang <span className="font-bold underline">{activeSemester?.isKrsBuka ? 'DIBUKA' : 'DITUTUP'}</span> untuk seluruh mahasiswa. Anda dapat mengelola masa akademik dan penutupan krs melalui tab Tahun Akademik.
@@ -233,7 +272,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
           </div>
           <button 
             onClick={() => onChangeTab?.('admin-tahun-akademik')}
-            className="flex items-center gap-1 bg-white hover:bg-slate-50 text-blue-700 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-all"
+            className="flex items-center gap-1 bg-white hover:bg-slate-50 text-blue-700 text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-colors"
           >
             Kelola Akademik
             <ChevronRight className="w-4 h-4" />
@@ -243,7 +282,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
         {/* Recharts Graphical ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Trend IPK */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Rata-Rata Kelulusan IPK Mahasiswa</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -254,9 +293,9 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:opacity-10" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} dy={10} />
-                  <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="dark:opacity-10" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 11}} dy={10} />
+                  <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 11}} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', color: '#fff' }}
                   />
@@ -267,14 +306,14 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
           </div>
 
           {/* Student Distribution */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Distribusi Mahasiswa per Program Studi</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={prodiDistributionData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:opacity-10" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="dark:opacity-10" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 11}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 11}} />
                   <Tooltip 
                     cursor={{fill: 'rgba(148, 163, 184, 0.05)'}}
                     contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', color: '#fff' }}
@@ -287,7 +326,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
         </div>
 
         {/* Recent Admin Logs */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Log Aktivitas Sistem Terkini</h3>
             <button 
@@ -452,46 +491,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
     if (activeTab === 'inovasi') {
       return (
         <div className="space-y-6">
-          {/* Floating PWA Optimizer Bar */}
-          <MobilePwaControlBar />
-
-          {/* Master Enterprise Suite Control Center */}
-          <div className="space-y-2">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">Fitur Utama &bull; SIAKAD Enterprise &amp; Automation Hub</span>
-            <EnterpriseControlSuite />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Integrasi LMS & Hybrid Learning */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 1 &bull; Sinkronisasi Google Classroom / Moodle API</span>
-              <LmsHybridModule />
-            </div>
-
-            {/* Smart Communication Forum & Gateway */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 2 &bull; WA Gateway &amp; Panel Pengumuman Tertarget</span>
-              <SmartCommunicationModule role="lecturer" />
-            </div>
-
-            {/* AI Plagiarism & Digital Signatures */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 3 &bull; Tanda Tangan Digital &amp; Deteksi Integritas</span>
-              <ModernTechModule />
-            </div>
-
-            {/* Student SKPI & KRS Tracker */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 4 &bull; Dashboard Kemandirian Mahasiswa (SKPI)</span>
-              <StudentSelfServiceModule />
-            </div>
-          </div>
-
-          {/* Security, 2FA & Audit Logs */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 5 &bull; Pengaturan 2FA Admin &amp; Log Audit Trail Menyeluruh</span>
-            <SecurityComplianceModule user={user} />
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Modul ini sedang dalam pengembangan.</p>
         </div>
       );
     }
@@ -500,7 +500,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
       return (
         <div className="space-y-6">
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block font-sans">Administrasi &bull; Monitor Kinerja EDOM Dosen Se-Universitas</span>
+            <span className="text-[10px] font-black text-blue-600 block font-sans">Administrasi &bull; Monitor Kinerja EDOM Dosen Se-Universitas</span>
             <LecturerRatingModule user={user} />
           </div>
         </div>
@@ -516,7 +516,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
       {/* Toast Alert Widget */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-800 dark:border-slate-100 animate-slideUp">
-          <Sparkles className="w-5 h-5 text-blue-500 animate-pulse flex-shrink-0" />
+          <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0" />
           <p className="text-xs font-bold leading-tight">{toastMessage}</p>
         </div>
       )}
@@ -524,7 +524,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
       {/* Top Banner Identity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-slate-800 pb-6">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-boldr text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full">
             SIAKAD Admin &bull; Portal Administrator Utama
           </span>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-2 leading-tight">

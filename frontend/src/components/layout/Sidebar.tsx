@@ -204,8 +204,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
       title: 'Utama',
       items: [
         { id: 'dashboard', label: 'Dashboard Dosen', icon: LayoutDashboard },
-        { id: 'inovasi', label: 'Inovasi SIAKAD Modern', icon: Sparkles },
-        { id: 'showcase', label: 'Showcase Integrasi Library', icon: Layers }
+        { id: 'inovasi', label: 'Inovasi SIAKAD Modern', icon: Sparkles }
       ]
     },
     {
@@ -264,8 +263,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
       title: 'Dashboard',
       items: [
         { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
-        { id: 'inovasi', label: 'Hub Inovasi Modern', icon: Sparkles },
-        { id: 'showcase', label: 'Showcase Integrasi Library', icon: Layers }
+        { id: 'inovasi', label: 'Hub Inovasi Modern', icon: Sparkles }
       ]
     },
     {
@@ -344,8 +342,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
       title: 'Utama',
       items: [
         { id: 'dashboard', label: 'Dashboard Kaprodi', icon: LayoutDashboard },
-        { id: 'inovasi', label: 'Inovasi & EWS', icon: Sparkles },
-        { id: 'showcase', label: 'Showcase Integrasi Library', icon: Layers }
+        { id: 'inovasi', label: 'Inovasi & EWS', icon: Sparkles }
       ]
     },
     {
@@ -378,8 +375,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
       title: 'Utama',
       items: [
         { id: 'dashboard', label: 'Dashboard Dekan', icon: LayoutDashboard },
-        { id: 'inovasi', label: 'Inovasi & BI Analitik', icon: Sparkles },
-        { id: 'showcase', label: 'Showcase Integrasi Library', icon: Layers }
+        { id: 'inovasi', label: 'Inovasi & BI Analitik', icon: Sparkles }
       ]
     },
     {
@@ -435,8 +431,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
     {
       title: 'Inovasi Canggih',
       items: [
-        { id: 'inovasi', label: 'Inovasi SIAKAD Modern', icon: Sparkles },
-        { id: 'showcase', label: 'Showcase Integrasi Library', icon: Layers }
+        { id: 'inovasi', label: 'Inovasi SIAKAD Modern', icon: Sparkles }
       ]
     },
     {
@@ -632,7 +627,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
               }));
             }}
             className={cn(
-              "flex items-center justify-between w-full px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all duration-200 outline-none focus:outline-none select-none text-left cursor-pointer border-0 bg-transparent no-underline",
+              "flex items-center justify-between w-full px-3 py-2 text-xs font-bold rounded-xl transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 select-none text-left cursor-pointer border-0 bg-transparent no-underline",
               hasActiveItem
                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold"
                 : isExpanded
@@ -642,7 +637,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
             type="button"
           >
             <span id={`sidebar-header-span-${rolePrefix}-${groupIdx}`} className="flex items-center gap-1.5">
-              {hasActiveItem && <span id={`sidebar-active-dot-${rolePrefix}-${groupIdx}`} className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-500 animate-pulse" />}
+              {hasActiveItem && <span id={`sidebar-active-dot-${rolePrefix}-${groupIdx}`} className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-500" />}
               {getGroupTitle(group.title)}
             </span>
             <ChevronRight 
@@ -677,7 +672,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
                       whileHover={isRestrictedForAlumni ? {} : { x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       className={cn(
-                        "flex items-center w-full px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer outline-none focus:outline-none border-0 no-underline bg-transparent text-left",
+                        "flex items-center w-full px-3 py-2 text-xs font-semibold rounded-xl transition-colors duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border-0 no-underline bg-transparent text-left",
                         isActive 
                           ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 font-bold" 
                           : isRestrictedForAlumni
@@ -708,7 +703,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
     <div className={cn("flex flex-col w-64 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 h-screen border-r border-slate-200 dark:border-slate-800 transition-colors duration-200", className)}>
       <div className="flex items-center gap-2 px-6 h-16 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
         <div className="bg-blue-600 p-1.5 rounded-xl text-white">
-          <Sparkles className="w-5 h-5" />
+          <GraduationCap className="w-5 h-5" />
         </div>
         <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-wider font-sans">
           SIAKAD<span className="text-blue-500">.</span>
@@ -745,7 +740,7 @@ export function Sidebar({ currentView, onChangeView, role, onLogout, className, 
           onClick={onLogout}
           whileTap={{ scale: 0.98 }}
           whileHover={{ scale: 1.01 }}
-          className="flex items-center w-full px-3 py-2.5 text-xs font-semibold rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-400 transition-colors cursor-pointer outline-none focus:outline-none border-0 no-underline bg-transparent"
+          className="flex items-center w-full px-3 py-2.5 text-xs font-semibold rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-400 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500 border-0 no-underline bg-transparent"
           type="button"
         >
           <LogOut className="mr-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />

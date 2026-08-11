@@ -75,7 +75,7 @@ export function SkeletonLoader({ darkMode = false }: SkeletonLoaderProps) {
               <div className="h-3.5 w-2/3 rounded-md bg-slate-150 dark:bg-slate-850 animate-pulse" />
             </div>
             {/* CTA Button Placeholder */}
-            <div className="w-32 h-10 rounded-2xl bg-indigo-500/20 dark:bg-indigo-500/10 border border-indigo-500/30 animate-pulse shrink-0" />
+            <div className="w-32 h-10 rounded-2xl bg-blue-500/20 dark:bg-blue-500/10 border border-blue-500/30 animate-pulse shrink-0" />
           </div>
 
           {/* KPI Dashboard Grid */}

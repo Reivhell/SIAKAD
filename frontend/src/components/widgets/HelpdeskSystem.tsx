@@ -156,7 +156,7 @@ export function HelpdeskSystem() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -174,7 +174,7 @@ export function HelpdeskSystem() {
 
         <button
           onClick={() => setIsCreating(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs hover:scale-[1.01] transition-all flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs  transition-colors flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
         >
           <Plus className="w-3.5 h-3.5" /> Buat Tiket Baru
         </button>
@@ -205,7 +205,7 @@ export function HelpdeskSystem() {
                     setActiveTicket(ticket);
                     setIsCreating(false);
                   }}
-                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer select-none ${
+                  className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer select-none ${
                     isActive
                       ? 'bg-slate-50 dark:bg-slate-850/60 border-blue-500/40 dark:border-blue-500/35 shadow-xs'
                       : 'bg-white dark:bg-slate-900 hover:bg-slate-50/40 dark:hover:bg-slate-850/50 border-slate-200/60 dark:border-slate-800/85'
@@ -256,7 +256,7 @@ export function HelpdeskSystem() {
                 className="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-xl border border-slate-100 dark:border-slate-850 space-y-3"
               >
                 <div className="flex justify-between items-center">
-                  <h5 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                  <h5 className="text-xs font-blackr text-slate-800 dark:text-white">
                     Pengajuan Tiket Masalah Baru
                   </h5>
                   <button
@@ -323,7 +323,7 @@ export function HelpdeskSystem() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/10 cursor-pointer transition-all"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/10 cursor-pointer transition-colors"
                 >
                   Submit Tiket ke Helpdesk Kampus
                 </button>
@@ -406,7 +406,7 @@ export function HelpdeskSystem() {
                     />
                     <button
                       onClick={handleAddComment}
-                      className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-blue-500/15 shrink-0"
+                      className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition-colors cursor-pointer shadow-md shadow-blue-500/15 shrink-0"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>

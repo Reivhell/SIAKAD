@@ -172,7 +172,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden transition-all duration-200">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden transition-colors duration-200">
       
       {/* Widget Toast notification */}
       {toast && (
@@ -205,7 +205,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
         {/* STUDENT: E-FORM SUBMISSION PANEL */}
         {role === 'student' && (
           <div className="lg:col-span-4 bg-slate-50 dark:bg-slate-950/40 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-4">
-            <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <h5 className="text-xs font-bold text-slate-800 dark:text-whiter flex items-center gap-1.5">
               <Plus className="w-4 h-4 text-emerald-500" />
               Isi Formulir Layanan Digital
             </h5>
@@ -277,7 +277,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
 
               <button
                 type="submit"
-                className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Send className="w-4 h-4" /> {t('form.submit_btn')}
               </button>
@@ -288,7 +288,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
         {/* STAFF/ADMIN/LECTURER: COMPREHENSIVE QUEUE LIST */}
         <div className={`${role === 'student' ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-4`}>
           <div className="flex justify-between items-center">
-            <h5 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <h5 className="text-xs font-extrabold text-slate-800 dark:text-whiter flex items-center gap-1.5">
               <FileCheck2 className="w-4.5 h-4.5 text-emerald-500" />
               {role === 'student' ? t('form.track_title') : 'Antrean Validasi Dokumen Akademik (Staf/Kaprodi)'}
             </h5>
@@ -320,7 +320,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
                   <div 
                     key={req.id}
                     onClick={() => setSelectedRequest(req)}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-colors ${
                       selectedRequest?.id === req.id 
                         ? 'bg-white dark:bg-slate-900 border-emerald-500 shadow-md' 
                         : 'bg-slate-50/50 dark:bg-slate-900/25 border-slate-150 dark:border-slate-800/80 hover:border-slate-200 dark:hover:border-slate-700'
@@ -374,7 +374,7 @@ export function DigitalFormsTracker({ role, isAlumni = false }: { role: string; 
               {selectedRequest ? (
                 <div className="space-y-4">
                   <div className="border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                    <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider block">Form Detail &amp; Progress Logs</span>
+                    <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-boldr block">Form Detail &amp; Progress Logs</span>
                     <h5 className="font-extrabold text-xs text-slate-800 dark:text-white mt-0.5">{selectedRequest.type}</h5>
                     <p className="text-[10px] text-slate-400 mt-0.5">Diajukan: {selectedRequest.studentName} &bull; {selectedRequest.submittedAt}</p>
                   </div>

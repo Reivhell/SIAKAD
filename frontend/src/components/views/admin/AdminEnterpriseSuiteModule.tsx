@@ -471,14 +471,14 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-500" /> Workflow Approval Engine (Configurable)
+                <Layers className="w-5 h-5 text-blue-500" /> Workflow Approval Engine (Configurable)
               </h3>
               <p className="text-xs text-slate-500 mt-1 font-semibold">Tentukan urutan birokrasi verifikasi dokumen / persetujuan KRS dan Wisuda se-universitas secara dinamis.</p>
             </div>
             <button
               onClick={runWorkflowSimulation}
               disabled={isWfSimulating}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-500/10 cursor-pointer disabled:opacity-55 transition-all"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-55 transition-colors"
             >
               <Play className="w-3.5 h-3.5" /> {isWfSimulating ? 'Sedang Simulasi...' : 'Mulai Simulasi Workflow'}
             </button>
@@ -487,11 +487,11 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Visual Step Configurator */}
             <div className="lg:col-span-2 space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tahapan Pengesahan Berjalan</h4>
+              <h4 className="text-xs font-bold text-slate-400r">Tahapan Pengesahan Berjalan</h4>
               <div className="space-y-3">
                 {workflowSteps.map((step, index) => (
                   <div key={step.id} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold text-xs flex items-center justify-center">
                       {index + 1}
                     </div>
                     <div className="flex-1 p-4 bg-slate-50 dark:bg-slate-950/20 border border-slate-150 dark:border-slate-800/80 rounded-2xl flex items-center justify-between">
@@ -513,19 +513,19 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
               </div>
 
               {/* Add New Step Drawer */}
-              <div className="p-4 border border-dashed border-indigo-200 dark:border-indigo-900/50 rounded-2xl bg-indigo-50/5 flex flex-col md:flex-row items-end gap-3 pt-4">
+              <div className="p-4 border border-dashed border-blue-200 dark:border-blue-900/50 rounded-2xl bg-blue-50/5 flex flex-col md:flex-row items-end gap-3 pt-4">
                 <div className="flex-1 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Jabatan Approval Baru</label>
+                  <label className="text-[10px] font-bold text-slate-400r">Nama Jabatan Approval Baru</label>
                   <input
                     type="text"
                     value={newStepName}
                     onChange={(e) => setNewStepName(e.target.value)}
                     placeholder="Contoh: Staff BAAK Utama, Ketua LPPM"
-                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:border-blue-500"
                   />
                 </div>
                 <div className="w-full md:w-44 space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Role Terkait</label>
+                  <label className="text-[10px] font-bold text-slate-400r">Role Terkait</label>
                   <select
                     value={newStepRole}
                     onChange={(e) => setNewStepRole(e.target.value)}
@@ -540,7 +540,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 </div>
                 <button
                   onClick={handleAddStep}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 rounded-xl text-xs font-extrabold flex items-center gap-1.5 h-10 w-full md:w-auto justify-center cursor-pointer transition-colors"
+                  className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 rounded-xl text-xs font-extrabold flex items-center gap-1.5 h-10 w-full md:w-auto justify-center cursor-pointer transition-colors"
                 >
                   <Plus className="w-4 h-4" /> Sisipkan
                 </button>
@@ -550,8 +550,8 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* Simulated Live Logs */}
             <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-150 dark:border-slate-900 flex flex-col justify-between">
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Compass className="w-4 h-4 text-indigo-500 animate-spin" /> Log Simulasi Transaksi
+                <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
+                  <Compass className="w-4 h-4 text-blue-500 animate-spin" /> Log Simulasi Transaksi
                 </h4>
                 <div className="font-mono text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 space-y-2 max-h-80 overflow-y-auto">
                   {wfSimulationResult.map((res, idx) => (
@@ -562,7 +562,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   )}
                 </div>
               </div>
-              <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800/80 text-[10px] font-bold text-indigo-500">
+              <div className="pt-4 border-t border-slate-200/50 dark:border-slate-800/80 text-[10px] font-bold text-blue-500">
                 Workflow Engine v3.1 &bull; Active Node
               </div>
             </div>
@@ -573,8 +573,8 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* 1. Pengajuan Dokumen Online Table */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-indigo-500" /> Pengajuan Dokumen Online & Verifikasi Berkas
+                <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-blue-500" /> Pengajuan Dokumen Online & Verifikasi Berkas
                 </h4>
                 <button 
                   onClick={() => {
@@ -589,7 +589,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     setDocumentRequests([newDoc, ...documentRequests]);
                     handleActionToast('Simulasi pengajuan dokumen baru berhasil!');
                   }}
-                  className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-extrabold cursor-pointer transition-colors"
+                  className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-extrabold cursor-pointer transition-colors"
                 >
                   + Simulasi Ajukan Dokumen
                 </button>
@@ -645,8 +645,8 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
 
             {/* 2. Tanda Tangan Elektronik (TTE) Card Simulator */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-indigo-500" /> Tanda Tangan Elektronik (TTE) & Digital Seal BSrE
+              <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-blue-500" /> Tanda Tangan Elektronik (TTE) & Digital Seal BSrE
               </h4>
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                 Gunakan modul integrasi Sertifikat Digital BSrE untuk menyematkan stempel kriptografis QR Code ke dokumen surat resmi / ijazah kelulusan secara massal.
@@ -688,7 +688,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                      setIsSigned(true);
                      handleActionToast('🔑 Dokumen berhasil ditandatangani menggunakan sertifikat digital BSrE.');
                    }}
-                   className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md"
+                   className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md"
                  >
                    Bubuhkan Tanda Tangan Elektronik (TTE)
                  </button>
@@ -699,7 +699,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                        <QrCode className="w-12 h-12 text-emerald-600" />
                      </div>
                      <div className="space-y-1">
-                       <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[8px] font-black uppercase tracking-wider">TTE BSrE Verified</span>
+                       <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[8px] font-blackr">TTE BSrE Verified</span>
                        <h5 className="text-[11px] font-black text-slate-800 dark:text-white mt-1">Stempel Kriptografi Berhasil</h5>
                        <p className="text-[9px] text-slate-400 font-mono">ID-CERT: CERT-SIAKAD-BSR-9981881729A72</p>
                      </div>
@@ -724,7 +724,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <button
               onClick={runPddiktiSync}
               disabled={isSyncing}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-500/10 cursor-pointer disabled:opacity-55 transition-all"
+              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-sky-500/10 cursor-pointer disabled:opacity-55 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} /> {isSyncing ? 'Menyinkronkan...' : 'Sinkronisasi Feeder PDDIKTI'}
             </button>
@@ -738,7 +738,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 <span>{syncProgress}%</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-sky-500 h-full transition-all duration-300" style={{ width: `${syncProgress}%` }} />
+                <div className="bg-sky-500 h-full transition-colors duration-300" style={{ width: `${syncProgress}%` }} />
               </div>
             </div>
           )}
@@ -777,7 +777,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* Sync Console Logs */}
             <div className="bg-slate-950 p-5 rounded-2xl border border-slate-900 flex flex-col justify-between">
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5 font-mono">
                   <Cpu className="w-4 h-4 text-sky-400" /> CLI Feeder Log
                 </h4>
                 <div className="font-mono text-[10px] leading-relaxed text-slate-400 space-y-2 max-h-80 overflow-y-auto">
@@ -799,7 +799,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-sky-500" /> Akademik & Student Lifecycle Management
                 </h4>
                 <p className="text-[11px] text-slate-500 font-semibold mt-0.5">Kelola status keaktifan kuliah, kalender, pengumuman, yudisium, wisuda hingga tracer study alumni.</p>
@@ -840,7 +840,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                         setIsSemesterActive(!isSemesterActive);
                         handleActionToast(`Semester Ganjil 2026/2027 ${!isSemesterActive ? 'BERHASIL DIAKTIFKAN' : 'DINONAKTIFKAN'}. Portal KRS mahasiswa otomatis terupdate.`);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-1 ${isSemesterActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'}`}
+                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors flex items-center gap-1 ${isSemesterActive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${isSemesterActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                       {isSemesterActive ? 'Aktivasi: Aktif' : 'Aktivasi: Tutup'}
@@ -864,7 +864,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Add Announcement Form */}
                     <div className="p-4 border border-slate-150 dark:border-slate-800 rounded-xl space-y-3 bg-white dark:bg-slate-900">
-                      <h6 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rilis Pengumuman Baru</h6>
+                      <h6 className="text-[10px] font-bold text-slate-400r">Rilis Pengumuman Baru</h6>
                       <div className="space-y-2">
                         <input 
                           type="text"
@@ -1155,7 +1155,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 </div>
 
                 <div className="lg:col-span-2 space-y-3">
-                  <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Pelacakan Karir Alumni (IKU-1)</h5>
+                  <h5 className="text-xs font-bold text-slate-400r">Hasil Pelacakan Karir Alumni (IKU-1)</h5>
                   <div className="overflow-x-auto border border-slate-150 dark:border-slate-850 rounded-2xl">
                     <table className="w-full text-left text-xs font-sans font-semibold border-collapse">
                       <thead>
@@ -1208,7 +1208,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 <button
                   key={sub.id}
                   onClick={() => setObeSubTab(sub.id as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${obeSubTab === sub.id ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${obeSubTab === sub.id ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                   {sub.label}
                 </button>
@@ -1220,7 +1220,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* CPL Lists */}
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Capaian Pembelajaran Lulusan (CPL) Utama</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Capaian Pembelajaran Lulusan (CPL) Utama</h4>
                 <div className="space-y-3">
                   {cplList.map((cpl) => (
                     <div key={cpl.code} className="p-4 bg-slate-50 dark:bg-slate-950/15 border border-slate-150 dark:border-slate-800/80 rounded-2xl space-y-2 font-sans">
@@ -1243,7 +1243,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
               {/* Radar Chart Visual */}
               <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-3xl border border-slate-150 dark:border-slate-800 shadow-inner flex flex-col justify-between gap-4">
                 <div className="text-center space-y-1">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Radar Grafik Pemenuhan Mutu CPL</h4>
+                  <h4 className="text-xs font-black text-slate-800 dark:text-whiter">Radar Grafik Pemenuhan Mutu CPL</h4>
                   <p className="text-[10px] text-slate-500 font-medium">Batas minimal ketercapaian borang (BPMN) adalah 75%.</p>
                 </div>
 
@@ -1251,7 +1251,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={cplList}>
                       <PolarGrid stroke="#cbd5e1" className="dark:opacity-10" />
-                      <PolarAngleAxis dataKey="code" tick={{ fontSize: 9, fill: '#64748b' }} />
+                      <PolarAngleAxis dataKey="code" tick={{ fontSize: 9, fill: 'var(--color-ink-muted)' }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 8, fill: '#94a3b8' }} />
                       <Radar name="Ketercapaian Rata-Rata" dataKey="averageAttainment" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.25} />
                       <Radar name="Target Minimum" dataKey="target" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.05} />
@@ -1270,7 +1270,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           {obeSubTab === 'cpmk' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center flex-wrap gap-2">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pemetaan &amp; Ketercapaian CPMK Kuliah</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Pemetaan &amp; Ketercapaian CPMK Kuliah</h4>
                 <button
                   onClick={() => {
                     onShowToast('Menyinkronkan data nilai tugas, UTS, UAS ke CPMK...');
@@ -1327,16 +1327,16 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Add form */}
               <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/10 dark:bg-slate-950/10 space-y-4 h-fit">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter flex items-center gap-1.5">
                   <Plus className="w-4 h-4 text-amber-500" /> Buat Rubrik Penilaian Baru
                 </h4>
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Rubrik</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Nama Rubrik</label>
                     <input type="text" placeholder="Contoh: Rubrik Proyek Akhir Web" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Penilaian</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Metode Penilaian</label>
                     <select className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none">
                       <option>Proyek Praktikum (70% Demo, 30% Laporan)</option>
                       <option>Presentasi & Keaktifan (50% Tanya Jawab, 50% Slide)</option>
@@ -1347,7 +1347,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     onClick={() => {
                       onShowToast('Rubrik penilaian berhasil dibuat dan ditambahkan ke master kurikulum.');
                     }}
-                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
                     Tambah Rubrik Asesmen
                   </button>
@@ -1356,7 +1356,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
 
               {/* Rubric lists */}
               <div className="lg:col-span-2 space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Master Rubrik Penilaian Terdaftar</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Master Rubrik Penilaian Terdaftar</h4>
                 <div className="space-y-3">
                   {[
                     { title: 'Rubrik Proyek Akhir Pemrograman Web B', method: 'Proyek Kelompok', items: 'Fungsionalitas (40%), Desain & UI (20%), Code Quality (20%), Dokumentasi (20%)' },
@@ -1366,7 +1366,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     <div key={idx} className="p-4 border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-950/20 rounded-2xl space-y-2">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-xs font-black text-slate-800 dark:text-white">{rub.title}</span>
-                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 rounded text-[8px] font-black uppercase tracking-wider">{rub.method}</span>
+                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 rounded text-[8px] font-blackr">{rub.method}</span>
                       </div>
                       <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
                         <strong>Kriteria Bobot:</strong> {rub.items}
@@ -1434,7 +1434,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                           stud.status === 'Selesai' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
                           stud.status === 'Aktif' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' :
-                          stud.status === 'Diterima' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' :
+                          stud.status === 'Diterima' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' :
                           'bg-slate-100 text-slate-500'
                         }`}>
                           {stud.status}
@@ -1467,7 +1467,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-indigo-500" /> Skripsi, Tesis, & Sidang Akhir Workflow
+                <GraduationCap className="w-5 h-5 text-blue-500" /> Skripsi, Tesis, & Sidang Akhir Workflow
               </h3>
               <p className="text-xs text-slate-500 mt-1 font-semibold">Tinjau usulan judul skripsi mahasiswa, atur pembimbing/penguji, serta kelola penjadwalan sidang kelulusan.</p>
             </div>
@@ -1477,7 +1477,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 <button
                   key={f}
                   onClick={() => setProposalFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${proposalFilter === f ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${proposalFilter === f ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70'}`}
                 >
                   {f}
                 </button>
@@ -1511,7 +1511,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                       <td className="py-3.5 px-4">{p.advisor}</td>
                       <td className="py-3.5 px-4">{p.examiner}</td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-blue-500/15 text-blue-600 dark:text-blue-400">
                           {p.stage}
                         </span>
                       </td>
@@ -1576,7 +1576,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Classroom list */}
               <div className="lg:col-span-2 space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Daftar Ruang Kuliah &amp; Status Ketersediaan</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Daftar Ruang Kuliah &amp; Status Ketersediaan</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {classroomList.map((room, idx) => (
                     <div key={idx} className="p-4 border border-slate-150 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-950/20 rounded-2xl space-y-3">
@@ -1598,7 +1598,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 </div>
 
                 <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Log Riwayat Booking Ruang</h4>
+                  <h4 className="text-xs font-bold text-slate-400r">Log Riwayat Booking Ruang</h4>
                   <div className="space-y-3">
                     {classroomBookings.map((booking) => (
                       <div key={booking.id} className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
@@ -1620,26 +1620,26 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
 
               {/* Booking Form */}
               <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/10 dark:bg-slate-950/10 space-y-4 h-fit">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter flex items-center gap-1.5">
                   <Plus className="w-4 h-4 text-rose-500" /> Ajukan Booking Ruangan
                 </h4>
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Ruangan</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Nama Ruangan</label>
                     <select id="booking-room" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none">
                       {classroomList.map((r, i) => <option key={i} value={r.name}>{r.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tujuan Peminjaman</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Tujuan Peminjaman</label>
                     <input id="booking-purpose" type="text" placeholder="Contoh: Kuliah Pengganti Aljabar" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pemohon / Penanggung Jawab</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Pemohon / Penanggung Jawab</label>
                     <input id="booking-booker" type="text" placeholder="Contoh: HMIF / Dr. Hendra" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal &amp; Waktu</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Tanggal &amp; Waktu</label>
                     <input id="booking-date" type="text" placeholder="Contoh: 2026-06-27 10:00 - 12:00" className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none" />
                   </div>
                   <button
@@ -1654,7 +1654,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                       ]);
                       onShowToast('Permohonan booking ruangan berhasil diajukan dan menunggu persetujuan BAAK.');
                     }}
-                    className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
                     Ajukan Ruang Kuliah
                   </button>
@@ -1667,7 +1667,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           {schedulingSubTab === 'inventaris' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aset &amp; Inventaris Lab Terdaftar</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Aset &amp; Inventaris Lab Terdaftar</h4>
                 <button
                   onClick={() => onShowToast('Mengekspor daftar inventaris seluruh laboratorium komputer ke PDF...')}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold cursor-pointer"
@@ -1722,7 +1722,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           {schedulingSubTab === 'exams' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Jadwal Ujian Tengah Semester (UTS) &amp; Akhir Semester (UAS)</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Jadwal Ujian Tengah Semester (UTS) &amp; Akhir Semester (UAS)</h4>
                 <button
                   onClick={() => {
                     const courses = ['Basis Data A', 'Keamanan Jaringan B', 'Aljabar Linier C'];
@@ -1737,7 +1737,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     ]);
                     onShowToast(`Sistem berhasil memplot jadwal ujian otomatis untuk ${randomCourse} di ${randomRoom}.`);
                   }}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-all shadow-xs"
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-xs"
                 >
                   Plot Jadwal Ujian Otomatis
                 </button>
@@ -1748,7 +1748,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   <div key={idx} className="p-4 border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-950/25 rounded-2xl flex flex-col justify-between gap-4 shadow-xs">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="px-2 py-0.5 bg-rose-500/10 text-rose-600 rounded text-[8px] font-black uppercase tracking-wider">{exam.type}</span>
+                        <span className="px-2 py-0.5 bg-rose-500/10 text-rose-600 rounded text-[8px] font-blackr">{exam.type}</span>
                         <span className="text-[10px] text-slate-400 font-mono font-extrabold flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" /> {exam.date}</span>
                       </div>
                       <h5 className="text-xs font-black text-slate-800 dark:text-white">{exam.course}</h5>
@@ -1777,10 +1777,10 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Input Schedule Form */}
               <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Simulasi Tambah Jadwal Baru</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Simulasi Tambah Jadwal Baru</h4>
                 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Dosen Pengajar</label>
+                  <label className="text-[10px] font-bold text-slate-400r">Pilih Dosen Pengajar</label>
                   <select
                     value={schLecturer}
                     onChange={(e) => setSchLecturer(e.target.value)}
@@ -1793,7 +1793,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Ruang Kelas</label>
+                  <label className="text-[10px] font-bold text-slate-400r">Pilih Ruang Kelas</label>
                   <select
                     value={schRoom}
                     onChange={(e) => setSchRoom(e.target.value)}
@@ -1807,7 +1807,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hari</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Hari</label>
                     <select
                       value={schDay}
                       onChange={(e) => setSchDay(e.target.value)}
@@ -1819,7 +1819,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Waktu Sesi</label>
+                    <label className="text-[10px] font-bold text-slate-400r">Waktu Sesi</label>
                     <select
                       value={schTime}
                       onChange={(e) => setSchTime(e.target.value)}
@@ -1843,7 +1843,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
               {/* Checker Screen Outputs */}
               <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-150 dark:border-slate-900 flex flex-col justify-between">
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Audit Konflik Alokasi Sumber Daya</h4>
+                  <h4 className="text-xs font-bold text-slate-400r">Hasil Audit Konflik Alokasi Sumber Daya</h4>
                   <div className="space-y-3 font-semibold text-xs leading-relaxed">
                     {schConflicts.map((conf, idx) => (
                       <div key={idx} className={`p-4 rounded-xl border ${conf.includes('🔴') ? 'bg-red-500/5 border-red-200/20 text-red-600 dark:text-red-400' : 'bg-emerald-500/5 border-emerald-200/20 text-emerald-600 dark:text-emerald-400'}`}>
@@ -1878,10 +1878,10 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Simulator Controls */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-5">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Device Hardware Control Panel</h4>
+              <h4 className="text-xs font-bold text-slate-400r">Device Hardware Control Panel</h4>
               
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jenis Terminal IoT Terkoneksi</label>
+                <label className="text-[10px] font-bold text-slate-400r block">Jenis Terminal IoT Terkoneksi</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 'RFID', label: 'RFID Reader', icon: CreditCard },
@@ -1894,7 +1894,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                       <button
                         key={dev.id}
                         onClick={() => setIotDevice(dev.id as any)}
-                        className={`p-3 border rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold cursor-pointer transition-all ${iotDevice === dev.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50'}`}
+                        className={`p-3 border rounded-xl flex flex-col items-center gap-1.5 text-xs font-bold cursor-pointer transition-colors ${iotDevice === dev.id ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50'}`}
                       >
                         <Icon className="w-4.5 h-4.5" />
                         <span>{dev.label}</span>
@@ -1905,7 +1905,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Masukkan NIM Mahasiswa / Nomor Kartu</label>
+                <label className="text-[10px] font-bold text-slate-400r">Masukkan NIM Mahasiswa / Nomor Kartu</label>
                 <input
                   type="text"
                   value={iotNIM}
@@ -1926,7 +1926,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* IoT Real-time Stream logs */}
             <div className="lg:col-span-2 bg-slate-950 p-5 rounded-2xl border border-slate-900 flex flex-col justify-between">
               <div className="space-y-3">
-                <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-mono font-bold text-slate-400r flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> Real-time IoT MQTT Logs
                 </h4>
                 <div className="font-mono text-[10px] space-y-2 max-h-72 overflow-y-auto">
@@ -1956,7 +1956,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
         <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
             <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-              <Send className="w-5 h-5 text-indigo-500" /> Unified Communication Center (Broadcast)
+              <Send className="w-5 h-5 text-blue-500" /> Unified Communication Center (Broadcast)
             </h3>
             <p className="text-xs text-slate-500 mt-1 font-semibold">Kirim pemberitahuan massal ke ribuan civitas akademika melalui integrasi Email SMTP, SMS Gateway, dan WhatsApp API.</p>
           </div>
@@ -1966,7 +1966,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="lg:col-span-2 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Media Pengiriman</label>
+                  <label className="text-[10px] font-bold text-slate-400r block">Media Pengiriman</label>
                   <div className="grid grid-cols-4 gap-1.5">
                     {[
                       { id: 'WhatsApp', label: 'WA', icon: MessageSquare },
@@ -1978,7 +1978,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                         key={chan.id}
                         type="button"
                         onClick={() => setCommChannel(chan.id as any)}
-                        className={`p-2.5 border rounded-xl flex flex-col items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-all ${commChannel === chan.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100/50'}`}
+                        className={`p-2.5 border rounded-xl flex flex-col items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-colors ${commChannel === chan.id ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100/50'}`}
                       >
                         <chan.icon className="w-4 h-4" />
                         <span>{chan.label}</span>
@@ -1988,11 +1988,11 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Penerima</label>
+                  <label className="text-[10px] font-bold text-slate-400r block">Target Penerima</label>
                   <select
                     value={commTarget}
                     onChange={(e) => setCommTarget(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:border-blue-500"
                   >
                     <option value="Semua Mahasiswa">Semua Mahasiswa (4,820 Orang)</option>
                     <option value="Dosen Tetap">Dosen Tetap & LB (142 Orang)</option>
@@ -2002,18 +2002,18 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Isi Pesan Siaran</label>
+                <label className="text-[10px] font-bold text-slate-400r block">Isi Pesan Siaran</label>
                 <textarea
                   value={commMessage}
                   onChange={(e) => setCommMessage(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none focus:border-indigo-500 resize-none leading-relaxed"
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none focus:border-blue-500 resize-none leading-relaxed"
                 />
               </div>
 
               <button
                 onClick={handleSendComm}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-500/10 cursor-pointer transition-colors"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/10 cursor-pointer transition-colors"
               >
                 <Send className="w-3.5 h-3.5" /> Kirim Pengumuman Massal
               </button>
@@ -2022,7 +2022,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* Comm previews */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/40 dark:bg-slate-950/20 flex flex-col justify-between">
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Preview di Perangkat Handphone</h4>
+                <h4 className="text-xs font-bold text-slate-400r">Live Preview di Perangkat Handphone</h4>
                 <div className="mx-auto w-48 border-[6px] border-slate-800 rounded-[2rem] bg-slate-100 p-3 shadow-xl aspect-[9/16] relative flex flex-col">
                   {/* Phone speaker */}
                   <div className="w-16 h-3 bg-slate-800 mx-auto rounded-full mb-3" />
@@ -2035,7 +2035,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     </div>
                   ) : commChannel === 'Email' ? (
                     <div className="bg-white p-2 rounded-xl border border-slate-200 text-[9px] text-slate-800 font-semibold space-y-1">
-                      <div className="text-indigo-600 font-extrabold font-sans text-[7px]">📧 Akademik Rektorat</div>
+                      <div className="text-blue-600 font-extrabold font-sans text-[7px]">📧 Akademik Rektorat</div>
                       <p className="leading-snug">{commMessage}</p>
                     </div>
                   ) : (
@@ -2067,7 +2067,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* API Credentials */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Client API Access Token</h4>
+              <h4 className="text-xs font-bold text-slate-400r">Client API Access Token</h4>
               <div className="space-y-3">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-slate-400 block uppercase">X-API-KEY Utama</span>
@@ -2105,7 +2105,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             {/* LMS Synchronizer */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 flex flex-col justify-between gap-4">
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
                   <Network className="w-4 h-4 text-emerald-500" /> LMS Integrator (Moodle / Canvas Sync)
                 </h4>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
@@ -2129,7 +2129,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   setTimeout(() => { setIsLmsSyncing(false); handleActionToast('Sinkronisasi Moodle & Canvas Sukses!'); }, 1500);
                 }}
                 disabled={isLmsSyncing}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 transition-all shadow-sm"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 transition-colors shadow-sm"
               >
                 {isLmsSyncing ? 'Sinkronisasi Berlangsung...' : 'Trigger Sinkronisasi Kelas LMS'}
               </button>
@@ -2144,7 +2144,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex justify-between items-center flex-wrap gap-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-indigo-500" /> Borang Akreditasi BAN-PT & LAM-INFOKOM
+                <FileCheck className="w-5 h-5 text-blue-500" /> Borang Akreditasi BAN-PT & LAM-INFOKOM
               </h3>
               <p className="text-xs text-slate-500 mt-1 font-semibold">Periksa tingkat pemenuhan berkas untuk 9 Kriteria Akreditasi standar BAN-PT secara otomatis dari data SIAKAD.</p>
             </div>
@@ -2168,7 +2168,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   <p className="text-[10px] text-slate-400 font-medium">{crit.count}</p>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">Skor Borang:</span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Skor Borang:</span>
                   <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded text-[9px] font-black uppercase">{crit.score}</span>
                 </div>
               </div>
@@ -2190,13 +2190,13 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tickets Lists */}
             <div className="lg:col-span-2 space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Laporan Antrean Tiket Bantuan</h4>
+              <h4 className="text-xs font-bold text-slate-400r">Laporan Antrean Tiket Bantuan</h4>
               <div className="space-y-3">
                 {tickets.map((t) => (
                   <div
                     key={t.id}
                     onClick={() => setSelectedTicketId(t.id)}
-                    className={`p-4 border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer transition-all ${selectedTicketId === t.id ? 'border-blue-600 bg-blue-500/5 shadow-sm' : 'border-slate-150 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/10 hover:bg-slate-100/50'}`}
+                    className={`p-4 border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer transition-colors ${selectedTicketId === t.id ? 'border-blue-600 bg-blue-500/5 shadow-sm' : 'border-slate-150 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-950/10 hover:bg-slate-100/50'}`}
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
@@ -2223,11 +2223,11 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 h-fit">
               {selectedTicketId ? (
                 <form onSubmit={handleTicketSubmit} className="space-y-4">
-                  <h4 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-extrabold text-slate-800 dark:text-whiter flex items-center gap-1.5">
                     <UserCheck className="w-4.5 h-4.5 text-blue-500" /> Berikan Tanggapan Akademik ({selectedTicketId})
                   </h4>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Solusi Kendala</label>
+                    <label className="text-[10px] font-bold text-slate-400r block">Solusi Kendala</label>
                     <textarea
                       value={ticketReply}
                       onChange={(e) => setTicketReply(e.target.value)}
@@ -2256,11 +2256,11 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex justify-between items-center flex-wrap gap-4">
             <div>
               <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <Eye className="w-5 h-5 text-indigo-500" /> Enterprise Audit Trail & Security Panel
+                <Eye className="w-5 h-5 text-blue-500" /> Enterprise Audit Trail & Security Panel
               </h3>
               <p className="text-xs text-slate-500 mt-1 font-semibold">Tinjau log forensik audit keamanan, audit perubahan nilai kuliah, serta atur kebijakan keamanan MFA dan Rate Limiting.</p>
             </div>
-            <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-blackr flex items-center gap-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" /> Security Node: Safe
             </span>
           </div>
@@ -2268,7 +2268,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Audit Trail Lists */}
             <div className="lg:col-span-2 space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Forensik Audit Trail (Who, What, When, IP)</h4>
+              <h4 className="text-xs font-bold text-slate-400r">Forensik Audit Trail (Who, What, When, IP)</h4>
               <div className="divide-y divide-slate-100 dark:divide-slate-800/80 max-h-96 overflow-y-auto">
                 {SECURITY_LOGS.map((log, idx) => (
                   <div key={idx} className="py-3 flex justify-between items-start gap-4 hover:bg-slate-50/40 transition-colors">
@@ -2277,7 +2277,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                       <p className="text-[10px] text-slate-400 font-medium">User: {log.who} &bull; Device: {log.device}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">{log.ip}</p>
+                      <p className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">{log.ip}</p>
                       <p className="text-[9px] text-slate-400 font-medium">{log.when}</p>
                     </div>
                   </div>
@@ -2287,8 +2287,8 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
 
             {/* Security Config Card */}
             <div className="p-5 border border-slate-150 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="w-4.5 h-4.5 text-indigo-500" /> Kebijakan Pengamanan Sistem
+              <h4 className="text-xs font-bold text-slate-400r flex items-center gap-1.5">
+                <Lock className="w-4.5 h-4.5 text-blue-500" /> Kebijakan Pengamanan Sistem
               </h4>
 
               <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs font-bold">
@@ -2297,7 +2297,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   type="checkbox"
                   checked={isMfaActive}
                   onChange={(e) => { setIsMfaActive(e.target.checked); handleActionToast(`MFA Universitas ${e.target.checked ? 'DIPAKSA AKTIF' : 'DINONAKTIFKAN'}`); }}
-                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                 />
               </div>
 
@@ -2307,12 +2307,12 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                   type="checkbox"
                   checked={isIpLockActive}
                   onChange={(e) => { setIsIpLockActive(e.target.checked); handleActionToast(`Fitur IP Lock Pencegahan Joki ${e.target.checked ? 'AKTIF' : 'NONAKTIF'}`); }}
-                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer"
+                  className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rate Limiting Gateway (Request/Menit)</label>
+                <label className="text-[10px] font-bold text-slate-400r block">Rate Limiting Gateway (Request/Menit)</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -2320,7 +2320,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                     onChange={(e) => setRateLimitRequests(Number(e.target.value))}
                     className="flex-1 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold"
                   />
-                  <button onClick={() => handleActionToast(`Rate Limit diset ke ${rateLimitRequests} req/menit.`)} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-xl">Simpan</button>
+                  <button onClick={() => handleActionToast(`Rate Limit diset ke ${rateLimitRequests} req/menit.`)} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl">Simpan</button>
                 </div>
               </div>
             </div>

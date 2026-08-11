@@ -8,7 +8,7 @@ import {
   AdminStudent,
   AdminLecturer,
   AdminRoom
-} from '../../../data/adminMockData';
+} from '../../../api/academic.api';
 import {
   Calendar,
   Clock,
@@ -317,7 +317,7 @@ export function AdminAcademicModule({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-600" />
+            <Calendar className="w-5 h-5 text-blue-600" />
             Manajemen Akademik &gt; {
               activeTab === 'admin-tahun-akademik' ? 'Tahun Akademik' :
               activeTab === 'admin-kurikulum' ? 'Kurikulum' :
@@ -333,7 +333,7 @@ export function AdminAcademicModule({
         {['admin-tahun-akademik', 'admin-kurikulum', 'admin-kelas-kuliah', 'admin-jadwal-kuliah'].includes(activeTab) && (
           <button
             onClick={handleOpenAdd}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-1"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-colors flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             Tambah Data
@@ -351,7 +351,7 @@ export function AdminAcademicModule({
               placeholder="Cari matakuliah, NIM, atau dosen..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-xs text-slate-700 dark:text-slate-300 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-xs text-slate-700 dark:text-slate-300 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
             />
           </div>
         </div>
@@ -363,13 +363,13 @@ export function AdminAcademicModule({
           {academicYears.map((year) => (
             <div
               key={year.id}
-              className={`bg-white dark:bg-slate-900 border rounded-2xl p-6 space-y-4 shadow-sm transition-all flex flex-col justify-between ${
+              className={`bg-white dark:bg-slate-900 border rounded-2xl p-6 space-y-4 shadow-sm transition-colors flex flex-col justify-between ${
                 year.isAktif ? 'ring-2 ring-blue-500 border-transparent bg-blue-50/10' : 'border-slate-200 dark:border-slate-800'
               }`}
             >
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded">
                     {year.semester}
                   </span>
                   {year.isAktif && (
@@ -399,14 +399,14 @@ export function AdminAcademicModule({
                 {!year.isAktif && (
                   <button
                     onClick={() => handleToggleYearActive(year.id)}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-md"
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-colors shadow-md"
                   >
                     Set Ganjil/Genap Aktif
                   </button>
                 )}
                 <button
                   onClick={() => handleToggleKrsBuka(year.id, year.isKrsBuka)}
-                  className={`w-full py-2 font-bold text-xs rounded-xl border transition-all ${
+                  className={`w-full py-2 font-bold text-xs rounded-xl border transition-colors ${
                     year.isKrsBuka
                       ? 'bg-red-50 text-red-700 hover:bg-red-100 border-red-200 dark:bg-red-950/20 dark:border-red-900/60 dark:text-red-400'
                       : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-950/20 dark:border-green-900/60 dark:text-green-400'
@@ -433,7 +433,7 @@ export function AdminAcademicModule({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500r border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-4">Kode Kurikulum</th>
                 <th className="px-6 py-4">Nama Dokumen Kurikulum</th>
                 <th className="px-6 py-4">SKS Kelulusan</th>
@@ -476,7 +476,7 @@ export function AdminAcademicModule({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500r border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-4">Mata Kuliah</th>
                 <th className="px-6 py-4">Kelas</th>
                 <th className="px-6 py-4">SKS</th>
@@ -490,7 +490,7 @@ export function AdminAcademicModule({
               {filteredClasses.map((cls) => (
                 <tr key={cls.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                   <td className="px-6 py-4">
-                    <span className="font-mono font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded text-[10px]">
+                    <span className="font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded text-[10px]">
                       {cls.kodeMK}
                     </span>
                     <p className="font-bold text-slate-800 dark:text-slate-200 mt-1">{cls.namaMK}</p>
@@ -516,7 +516,7 @@ export function AdminAcademicModule({
                           });
                           setIsDetailsOpen(true);
                         }}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-600 rounded flex items-center gap-1 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
+                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600 rounded flex items-center gap-1 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
                         title="Daftar Mahasiswa"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -542,7 +542,7 @@ export function AdminAcademicModule({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500r border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-4">Mata Kuliah / Kelas</th>
                 <th className="px-6 py-4">Dosen Pengampu</th>
                 <th className="px-6 py-4">Hari / Waktu</th>
@@ -558,7 +558,7 @@ export function AdminAcademicModule({
                   <tr key={sched.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded text-[10px]">
+                        <span className="font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded text-[10px]">
                           {parentClass?.kodeMK}
                         </span>
                         <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 px-1.5 py-0.5 rounded text-[10px] font-bold">
@@ -602,7 +602,7 @@ export function AdminAcademicModule({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500r border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-4">Mahasiswa (NIM)</th>
                 <th className="px-6 py-4">Program Studi</th>
                 <th className="px-6 py-4">SKS Diambil</th>
@@ -676,7 +676,7 @@ export function AdminAcademicModule({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-500r border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-4">Mahasiswa (NIM)</th>
                 <th className="px-6 py-4">Program Studi</th>
                 <th className="px-6 py-4 text-center">IP Semester (IPS)</th>
@@ -693,7 +693,7 @@ export function AdminAcademicModule({
                     <p className="font-mono text-[10px] text-slate-400 mt-0.5">NIM: {student.nim}</p>
                   </td>
                   <td className="px-6 py-4 text-slate-500 font-semibold">{student.prodi}</td>
-                  <td className="px-6 py-4 text-center font-bold text-indigo-600 dark:text-indigo-400">
+                  <td className="px-6 py-4 text-center font-bold text-blue-600 dark:text-blue-400">
                     {(student.gpa * 0.98 + 0.05).toFixed(2)} {/* simulate IPS based on GPA */}
                   </td>
                   <td className="px-6 py-4 text-center font-bold text-blue-600 dark:text-blue-400">{student.gpa.toFixed(2)}</td>
@@ -735,7 +735,7 @@ export function AdminAcademicModule({
         <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-zoomIn">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/40">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-whiter">
                 {modalMode === 'add' ? 'Tambah' : 'Ubah'} Rekap Akademik
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
@@ -749,7 +749,7 @@ export function AdminAcademicModule({
                 <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 p-3.5 rounded-xl text-xs flex gap-2">
                   <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500 animate-bounce" />
                   <div>
-                    <p className="font-extrabold text-[11px] uppercase tracking-wider">Bentrok Terdeteksi!</p>
+                    <p className="font-extrabold text-[11px]r">Bentrok Terdeteksi!</p>
                     <p className="mt-1 font-semibold leading-relaxed text-[10px]">{scheduleConflict}</p>
                   </div>
                 </div>
@@ -964,13 +964,13 @@ export function AdminAcademicModule({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all flex items-center gap-1"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-colors flex items-center gap-1"
                 >
                   <Check className="w-4 h-4" />
                   Simpan Perubahan
@@ -986,7 +986,7 @@ export function AdminAcademicModule({
         <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-zoomIn flex flex-col max-h-[85vh]">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/40 flex-shrink-0">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-whiter">
                 {activeTab === 'admin-kelas-kuliah' ? 'Peserta Kelas Perkuliahan' :
                   activeTab === 'admin-krs' ? `Detail Rencana Studi: ${detailsItem.studentName}` : `Transkrip Hasil Studi (KHS): ${detailsItem.studentName}`}
               </h3>
@@ -1014,7 +1014,7 @@ export function AdminAcademicModule({
                     </div>
                   </div>
 
-                  <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Daftar Mahasiswa Terdaftar</h4>
+                  <h4 className="text-xs font-extrabold text-slate-500r">Daftar Mahasiswa Terdaftar</h4>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-850/80 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
                     {detailsItem.studentsList.map((st: any) => (
                       <div key={st.id} className="p-3.5 flex justify-between items-center text-xs">
@@ -1045,12 +1045,12 @@ export function AdminAcademicModule({
                     </div>
                   </div>
 
-                  <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Mata Kuliah Yang Diajukan</h4>
+                  <h4 className="text-xs font-extrabold text-slate-500r">Mata Kuliah Yang Diajukan</h4>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-850/80 rounded-xl overflow-hidden">
                     {detailsItem.fullCourses.map((c: any, index: number) => (
                       <div key={index} className="p-3.5 flex justify-between items-center text-xs hover:bg-slate-50/50">
                         <div>
-                          <span className="font-mono font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded text-[10px]">
+                          <span className="font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded text-[10px]">
                             {c.kode}
                           </span>
                           <p className="font-bold text-slate-800 dark:text-slate-200 mt-1">{c.nama}</p>
@@ -1067,7 +1067,7 @@ export function AdminAcademicModule({
                           handleKrsStatus(detailsItem.id, 'Disetujui');
                           setIsDetailsOpen(false);
                         }}
-                        className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1"
+                        className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-1"
                       >
                         <Check className="w-4 h-4" />
                         Setujui KRS Sekarang
@@ -1077,7 +1077,7 @@ export function AdminAcademicModule({
                           handleKrsStatus(detailsItem.id, 'Revisi');
                           setIsDetailsOpen(false);
                         }}
-                        className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-900/60 font-bold text-xs rounded-xl transition-all"
+                        className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400 border border-red-200 dark:border-red-900/60 font-bold text-xs rounded-xl transition-colors"
                       >
                         Minta Revisi
                       </button>
@@ -1101,7 +1101,7 @@ export function AdminAcademicModule({
                     </div>
                   </div>
 
-                  <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Nilai Semester Aktif</h4>
+                  <h4 className="text-xs font-extrabold text-slate-500r">Nilai Semester Aktif</h4>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-850/80 rounded-xl overflow-hidden text-xs">
                     {detailsItem.nilai.map((n: any, idx: number) => (
                       <div key={idx} className="p-3.5 flex justify-between items-center hover:bg-slate-50/50">
@@ -1125,7 +1125,7 @@ export function AdminAcademicModule({
                       onShowToast(`Mengekspor berkas KHS Transkrip untuk ${detailsItem.studentName}...`);
                       setIsDetailsOpen(false);
                     }}
-                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center gap-1"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Cetak KHS Mahasiswa

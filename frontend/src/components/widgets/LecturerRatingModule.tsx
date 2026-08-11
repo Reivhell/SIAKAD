@@ -420,7 +420,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
             <button
               key={star}
               type="button"
-              className="cursor-pointer transition-transform duration-100 hover:scale-125 focus:outline-none"
+              className="cursor-pointer transition-transform duration-100 hover:scale-110 focus:outline-none"
               onClick={() => setScore(star)}
               onMouseEnter={() => setHoverVal(star)}
               onMouseLeave={() => setHoverVal(0)}
@@ -495,7 +495,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
                 <motion.div
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
                 >
                   <CheckCircle className="w-16 h-16 text-emerald-500 mb-4 mx-auto" />
                 </motion.div>
@@ -509,7 +509,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
 
           <div className="flex justify-between items-start mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Pengisian Evaluasi Kinerja (EDOM)</span>
+              <span className="text-[10px] font-black text-blue-600 block">Pengisian Evaluasi Kinerja (EDOM)</span>
               <h5 className="text-sm font-black text-slate-900 dark:text-white">{selectedCourse?.name}</h5>
               <p className="text-xs text-slate-400 font-medium">Dosen Pengampu: <span className="font-bold text-slate-700 dark:text-slate-300">{selectedCourse?.lecturerName}</span></p>
             </div>
@@ -523,7 +523,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
 
           <form onSubmit={handleSubmitEvaluation} className="space-y-5">
             <div className="space-y-3">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Berikan Penilaian Anda</span>
+              <span className="text-[10px] font-black text-slate-400r block mb-1">Berikan Penilaian Anda</span>
               
               {renderStarSelector(
                 pedagogikScore, 
@@ -563,7 +563,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Komentar / Saran Konstruktif (Anonim)</label>
+              <label className="text-[10px] font-black text-slate-400r block">Komentar / Saran Konstruktif (Anonim)</label>
               <textarea
                 rows={3}
                 placeholder="Tulis kritik, apresiasi, atau saran Anda demi perbaikan metode mengajar dosen di semester depan. Identitas Anda dijamin 100% rahasia..."
@@ -591,7 +591,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
             <Award className="w-36 h-36" />
           </div>
           <div className="space-y-2 relative z-10 max-w-xl">
-            <span className="text-[10px] font-black bg-blue-500 text-white px-2.5 py-1 rounded-md uppercase tracking-wider">Periode Aktif</span>
+            <span className="text-[10px] font-black bg-blue-500 text-white px-2.5 py-1 rounded-mdr">Periode Aktif</span>
             <h4 className="text-lg font-black">Evaluasi Kinerja Dosen Oleh Mahasiswa (EDOM)</h4>
             <p className="text-xs text-blue-100 leading-relaxed">
               Suara Anda sangat berharga! Berikan penilaian jujur dan saran konstruktif terhadap para dosen pengampu Anda. Evaluasi ini bersifat **100% anonim** dan dilindungi sistem enkripsi.
@@ -697,7 +697,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
         <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
           <button
             onClick={() => setLecturerSubTab('ringkasan')}
-            className={`px-4 py-2.5 text-xs font-black tracking-wider uppercase border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2.5 text-xs font-black tracking-wider uppercase border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               lecturerSubTab === 'ringkasan'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
@@ -708,7 +708,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
           </button>
           <button
             onClick={() => setLecturerSubTab('riwayat-tabel')}
-            className={`px-4 py-2.5 text-xs font-black tracking-wider uppercase border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2.5 text-xs font-black tracking-wider uppercase border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               lecturerSubTab === 'riwayat-tabel'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
@@ -725,7 +725,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
               {/* Card Overal Score */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Evaluasi Kinerja Dosen</span>
+                  <span className="text-[10px] font-black text-blue-600 block">Evaluasi Kinerja Dosen</span>
                   <h5 className="text-sm font-black text-slate-800 dark:text-white">Rangkuman Kinerja Anda</h5>
                   <p className="text-xs text-slate-400">Diupdate real-time berdasarkan survei mahasiswa semester berjalan.</p>
                 </div>
@@ -801,7 +801,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Detail Scores progress bars */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4 lg:col-span-1">
-                <h5 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Komparasi Pilar Kompetensi</h5>
+                <h5 className="text-xs font-black text-slate-800 dark:text-whiter">Komparasi Pilar Kompetensi</h5>
                 
                 <div className="space-y-3.5">
                   {[
@@ -897,7 +897,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
             </div>
 
             {/* Filter Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input 
@@ -910,7 +910,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">Semester:</span>
+                <span className="text-[10px] font-black text-slate-400r whitespace-nowrap">Semester:</span>
                 <select 
                   value={historySemesterFilter}
                   onChange={(e) => setHistorySemesterFilter(e.target.value)}
@@ -1005,7 +1005,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
                             </td>
                             <td className="p-4 text-right">
                               <button
-                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-black cursor-pointer inline-flex items-center gap-1 transition-all"
+                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-black cursor-pointer inline-flex items-center gap-1 transition-colors"
                               >
                                 {isExpanded ? 'Tutup Detail' : 'Buka Detail'}
                                 <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -1019,8 +1019,8 @@ export function LecturerRatingModule({ user }: { user: User }) {
                               <td colSpan={5} className="p-5 bg-slate-50/50 dark:bg-slate-950/20 border-t border-b border-slate-150 dark:border-slate-800">
                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                                   {/* KPIs breakdown progress bars */}
-                                  <div className="md:col-span-5 space-y-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
-                                    <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Nilai Kompetensi Detail</h6>
+                                  <div className="md:col-span-5 space-y-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+                                    <h6 className="text-[10px] font-black text-slate-400r mb-2">Nilai Kompetensi Detail</h6>
                                     
                                     {[
                                       { name: 'Pedagogik (Metodologi)', score: row.pedagogik, color: 'bg-blue-500' },
@@ -1044,11 +1044,11 @@ export function LecturerRatingModule({ user }: { user: User }) {
                                   </div>
 
                                   {/* Kualitatif Summary from AI & Students */}
-                                  <div className="md:col-span-7 space-y-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                                  <div className="md:col-span-7 space-y-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 flex flex-col justify-between">
                                     <div>
                                       <div className="flex items-center gap-1.5 mb-1.5">
                                         <FileText className="w-4 h-4 text-blue-500" />
-                                        <h6 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Komentar & Ringkasan Kualitatif Mhs</h6>
+                                        <h6 className="text-[10px] font-black text-slate-400r">Komentar & Ringkasan Kualitatif Mhs</h6>
                                       </div>
                                       <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 italic leading-relaxed">
                                         "{row.feedbackSummary}"
@@ -1094,7 +1094,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center justify-between">
             <div className="space-y-0.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Rata-rata Rating Fakultas</span>
+              <span className="text-[10px] font-black text-slate-400r block">Rata-rata Rating Fakultas</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{averageAllLecturers} <span className="text-xs font-bold text-slate-400">/ 5.0</span></span>
             </div>
             <div className="p-3 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-xl">
@@ -1104,7 +1104,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
 
           <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center justify-between">
             <div className="space-y-0.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Kuesioner Terisi</span>
+              <span className="text-[10px] font-black text-slate-400r block">Total Kuesioner Terisi</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{totalEvaluationsSum} <span className="text-xs font-bold text-slate-400">Form</span></span>
             </div>
             <div className="p-3 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -1114,7 +1114,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
 
           <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center justify-between">
             <div className="space-y-0.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Partisipasi Mahasiswa</span>
+              <span className="text-[10px] font-black text-slate-400r block">Partisipasi Mahasiswa</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{averageParticipationRate}%</span>
             </div>
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl">
@@ -1265,7 +1265,7 @@ export function LecturerRatingModule({ user }: { user: User }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* EDOM Configuration Period */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4 lg:col-span-1">
-            <h5 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <h5 className="text-xs font-black text-slate-800 dark:text-whiter flex items-center gap-1.5">
               <Settings className="w-4 h-4 text-blue-500" />
               Kontrol Periode EDOM
             </h5>

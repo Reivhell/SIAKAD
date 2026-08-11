@@ -32,7 +32,7 @@ export function SemesterProgressBar() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -66,7 +66,7 @@ export function SemesterProgressBar() {
         
         <div className="w-full bg-slate-100 dark:bg-slate-950 rounded-full h-3.5 overflow-hidden p-[2px] border border-slate-200/40 dark:border-slate-800/60">
           <div 
-            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 h-2 rounded-full transition-all duration-500 ease-out shadow-sm shadow-blue-500/20 relative"
+            className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 h-2 rounded-full transition-colors duration-500 ease-out shadow-sm shadow-blue-500/20 relative"
             style={{ width: `${percentage}%` }}
           >
             {/* Elegant glass shimmer glow overlay */}
@@ -74,7 +74,7 @@ export function SemesterProgressBar() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+        <div className="flex justify-between items-center text-[10px] text-slate-400 font-boldr">
           <span>Awal Semester</span>
           <span>Ujian Akhir Semester / Selesai</span>
         </div>

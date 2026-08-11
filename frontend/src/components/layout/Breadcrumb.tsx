@@ -32,7 +32,7 @@ const roleMeta: Record<Role, { label: string; icon: React.ReactNode; path: strin
   },
   dekan: {
     label: 'Dekan',
-    icon: <BookOpen className="w-4 h-4 text-indigo-500" />,
+    icon: <BookOpen className="w-4 h-4 text-blue-500" />,
     path: '/siakad/dekan',
   },
   alumni: {
@@ -52,7 +52,7 @@ const roleMeta: Record<Role, { label: string; icon: React.ReactNode; path: strin
   },
   applicant: {
     label: 'Calon Mahasiswa',
-    icon: <User className="w-4 h-4 text-indigo-500" />,
+    icon: <User className="w-4 h-4 text-blue-500" />,
     path: '/siakad/applicant',
   },
 };
@@ -118,7 +118,7 @@ export function Breadcrumb({ role, currentView, onNavigate }: BreadcrumbProps) {
   const currentViewLabel = viewLabelMap[currentView] || currentView;
 
   return (
-    <nav className="flex items-center space-x-2 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-sans mb-6 bg-white dark:bg-slate-900/40 px-4 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800/80 shadow-xs backdrop-blur-xs transition-all w-fit">
+    <nav className="flex items-center space-x-2 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-sans mb-6 bg-white dark:bg-slate-900/40 px-4 py-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800/80 shadow-xs transition-colors w-fit">
       {/* Level 1: Home / Portal */}
       <button
         onClick={() => onNavigate('dashboard')}

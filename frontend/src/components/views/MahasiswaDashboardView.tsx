@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, BookOpen, GraduationCap, Calendar, FileSpreadsheet, 
   CheckCircle2, CreditCard, User as UserIcon, Bell, ClipboardList, 
@@ -10,6 +10,22 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip 
 } from 'recharts';
 import { User, Course } from '../../types';
+import { getDashboardSummary, DashboardSummary } from '../../api/dashboard.api';
+import { KrsService, KrsRecord } from '../../api/krs.api';
+import {
+  getStudentOverview,
+  getMyFinance,
+  payFinanceBill,
+  StudentProfile,
+  StudentPayment,
+  LayananRequest,
+  TranskripRow,
+  StudentSemesterGpa,
+  StudentAnnouncement,
+  TodayClassItem,
+  WeeklySchedule,
+  StudentOverviewPayload,
+} from '../../api/academic.api';
 import { AcademicDatesWidget } from '../widgets/AcademicDatesWidget';
 import { SemesterProgressBar } from '../widgets/SemesterProgressBar';
 import { DegreeCreditProgressBar } from '../widgets/DegreeCreditProgressBar';
@@ -20,15 +36,6 @@ import { PsychologicalSupportCrisis } from '../widgets/PsychologicalSupportCrisi
 import { AcademicAbsenceSupport } from '../widgets/AcademicAbsenceSupport';
 import { CertifiedDigitalTranscript } from '../widgets/CertifiedDigitalTranscript';
 import { AnnouncementTicker } from '../widgets/AnnouncementTicker';
-import { EnterpriseControlSuite } from '../widgets/EnterpriseControlSuite';
-import { 
-  LmsHybridModule, 
-  SmartCommunicationModule, 
-  StudentSelfServiceModule, 
-  SecurityComplianceModule, 
-  ModernTechModule,
-  MobilePwaControlBar
-} from '../widgets/ModernSiaFeatures';
 import { LecturerRatingModule } from '../widgets/LecturerRatingModule';
 import { SksConversionModule } from '../widgets/SksConversionModule';
 import { CentralizedTasksModule } from '../widgets/CentralizedTasksModule';
@@ -41,151 +48,6 @@ interface MahasiswaDashboardViewProps {
   onChangeTab?: (tab: string) => void;
   onUserChange?: (newUser: User) => void;
 }
-
-// Mock Data Definitions
-const studentSemesterGPAs = [
-  { name: 'Smt 1', IPS: 3.40, IPK: 3.40 },
-  { name: 'Smt 2', IPS: 3.55, IPK: 3.48 },
-  { name: 'Smt 3', IPS: 3.52, IPK: 3.49 },
-  { name: 'Smt 4', IPS: 3.65, IPK: 3.53 },
-  { name: 'Smt 5', IPS: 3.78, IPK: 3.58 },
-];
-
-const mockAnnouncements = [
-  {
-    id: 1,
-    category: 'Akademik',
-    title: 'Pendaftaran Yudisium & Wisuda Periode II Tahun 2026',
-    date: '25 Juni 2026',
-    excerpt: 'Diberitahukan kepada seluruh mahasiswa tingkat akhir bahwa pendaftaran wisuda periode II dibuka hingga 15 Juli 2026.',
-    important: true,
-  },
-  {
-    id: 2,
-    category: 'Kegiatan',
-    title: 'Kuliah Umum Internasional: Masa Depan Web 3.0 & AI Terintegrasi',
-    date: '22 Juni 2026',
-    excerpt: 'Menghadirkan narasumber dari Google DeepMind dan praktisi global. Dilaksanakan secara hybrid di Aula Barat.',
-    important: false,
-  },
-  {
-    id: 3,
-    category: 'Keuangan',
-    title: 'Batas Akhir Penangguhan & Pembayaran UKT Semester Ganjil 2026/2027',
-    date: '18 Juni 2026',
-    excerpt: 'Batas akhir pembayaran UKT diperpanjang hingga tanggal 3 Agustus 2026 pukul 16:00 WIB.',
-    important: true,
-  },
-];
-
-const mockTodayClasses = [
-  { id: 'c1', code: 'IF3110', name: 'Pengembangan Aplikasi Web', sks: 3, time: '08:00 - 10:30', room: 'GKU Timur R-202', lecturer: 'Dr. Hendra Wijaya, M.T.' },
-  { id: 'c3', code: 'IF3170', name: 'Kecerdasan Buatan', sks: 3, time: '13:00 - 15:30', room: 'Lab Komputasi R-105', lecturer: 'Dr. Budi Rahardjo' },
-];
-
-const mockWeeklySchedules = {
-  'Senin': [
-    { code: 'IF3110', name: 'Pengembangan Aplikasi Web', sks: 3, time: '08:00 - 10:30', room: 'GKU Timur R-202', lecturer: 'Dr. Hendra Wijaya, M.T.' },
-    { code: 'IF3120', name: 'Interaksi Manusia dan Komputer', sks: 3, time: '13:00 - 15:30', room: 'GKU Barat R-304', lecturer: 'Rina Astuti, M.Kom.' }
-  ],
-  'Selasa': [
-    { code: 'IF3150', name: 'Manajemen Proyek Perangkat Lunak', sks: 3, time: '10:30 - 13:00', room: 'GKU Timur R-101', lecturer: 'Dra. Sri Hartati' }
-  ],
-  'Rabu': [
-    { code: 'IF3170', name: 'Kecerdasan Buatan', sks: 3, time: '13:00 - 15:30', room: 'Lab Komputasi R-105', lecturer: 'Dr. Budi Rahardjo' }
-  ],
-  'Kamis': [
-    { code: 'IF3140', name: 'Manajemen Basis Data', sks: 3, time: '08:00 - 10:30', room: 'Lab Multimedia R-201', lecturer: 'Wawan Kuswara, M.T.' }
-  ],
-  'Jumat': [
-    { code: 'KU2071', name: 'Pancasila dan Kewarganegaraan', sks: 2, time: '14:00 - 15:40', room: 'Audit Utama R-102', lecturer: 'Tim MPK' }
-  ],
-};
-
-const mockAvailableKrsCourses: Course[] = [
-  { id: 'k1', code: 'IF3110', name: 'Pengembangan Aplikasi Web', sks: 3, semester: 5, type: 'Wajib' },
-  { id: 'k2', code: 'IF3150', name: 'Manajemen Proyek Perangkat Lunak', sks: 3, semester: 5, type: 'Wajib' },
-  { id: 'k3', code: 'IF3170', name: 'Kecerdasan Buatan', sks: 3, semester: 5, type: 'Wajib' },
-  { id: 'k4', code: 'IF3140', name: 'Manajemen Basis Data', sks: 3, semester: 5, type: 'Wajib' },
-  { id: 'k5', code: 'KU2071', name: 'Pancasila dan Kewarganegaraan', sks: 2, semester: 5, type: 'Wajib' },
-  { id: 'k6', code: 'IF3180', name: 'Sistem Temu Balik Informasi', sks: 3, semester: 5, type: 'Pilihan' },
-  { id: 'k7', code: 'IF3190', name: 'Kriptografi', sks: 3, semester: 5, type: 'Pilihan' },
-  { id: 'k8', code: 'IF3210', name: 'Pemrograman Mobile Berorientasi Objek', sks: 3, semester: 5, type: 'Pilihan' },
-];
-
-const mockSemestersGrades = {
-  'Ganjil 2023/2024': {
-    ips: 3.78,
-    sksTaken: 17,
-    grades: [
-      { code: 'IF3110', name: 'Pengembangan Aplikasi Web', sks: 3, score: 92, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3150', name: 'Manajemen Proyek Perangkat Lunak', sks: 3, score: 86, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF3170', name: 'Kecerdasan Buatan', sks: 3, score: 90, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3140', name: 'Manajemen Basis Data', sks: 3, score: 81, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'KU2071', name: 'Pancasila dan Kewarganegaraan', sks: 2, score: 88, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3180', name: 'Sistem Temu Balik Informasi', sks: 3, score: 78, grade: 'B', point: 3.0, status: 'Lulus' },
-    ]
-  },
-  'Genap 2022/2023': {
-    ips: 3.65,
-    sksTaken: 22,
-    grades: [
-      { code: 'IF2210', name: 'Algoritma dan Struktur Data', sks: 4, score: 84, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF2230', name: 'Sistem Operasi', sks: 3, score: 89, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2240', name: 'Rekayasa Perangkat Lunak', sks: 3, score: 76, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2250', name: 'Pemrograman Berorientasi Objek', sks: 3, score: 95, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2270', name: 'Teori Bahasa Formal dan Otomata', sks: 3, score: 68, grade: 'C', point: 2.0, status: 'Lulus' },
-      { code: 'IF2280', name: 'Jaringan Komputer', sks: 3, score: 82, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'KU2060', name: 'Bahasa Inggris Akademik', sks: 3, score: 91, grade: 'A', point: 4.0, status: 'Lulus' },
-    ]
-  },
-  'Ganjil 2022/2023': {
-    ips: 3.52,
-    sksTaken: 21,
-    grades: [
-      { code: 'IF2110', name: 'Matematika Diskrit', sks: 3, score: 80, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2130', name: 'Arsitektur dan Organisasi Komputer', sks: 3, score: 75, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2140', name: 'Pemrograman Fungsional', sks: 3, score: 87, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF2150', name: 'Aljabar Linier dan Geometri', sks: 3, score: 93, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2160', name: 'Probabilitas dan Statistika', sks: 3, score: 82, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'KU2010', name: 'Tata Tulis Karya Ilmiah', sks: 2, score: 90, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2180', name: 'Interaksi Manusia dan Komputer', sks: 4, score: 86, grade: 'AB', point: 3.5, status: 'Lulus' },
-    ]
-  }
-};
-
-const mockTranscript = [
-  // Semester 1
-  { code: 'KU1011', name: 'Pengantar Rekayasa Desain', sks: 3, grade: 'A', point: 4.0, semester: 1, type: 'Umum' },
-  { code: 'MA1101', name: 'Kalkulus IA', sks: 4, grade: 'AB', point: 3.5, semester: 1, type: 'Umum' },
-  { code: 'FI1101', name: 'Fisika Dasar IA', sks: 4, grade: 'B', point: 3.0, semester: 1, type: 'Umum' },
-  { code: 'KI1101', name: 'Kimia Dasar IA', sks: 3, grade: 'A', point: 4.0, semester: 1, type: 'Umum' },
-  { code: 'KU1102', name: 'Pengantar Teknologi Informasi', sks: 3, grade: 'A', point: 4.0, semester: 1, type: 'Umum' },
-  // Semester 2
-  { code: 'KU1021', name: 'Pengantar Rekayasa Desain II', sks: 3, grade: 'A', point: 4.0, semester: 2, type: 'Umum' },
-  { code: 'MA1201', name: 'Kalkulus IIA', sks: 4, grade: 'A', point: 4.0, semester: 2, type: 'Umum' },
-  { code: 'FI1201', name: 'Fisika Dasar IIA', sks: 4, grade: 'B', point: 3.0, semester: 2, type: 'Umum' },
-  { code: 'IF1210', name: 'Dasar Pemrograman', sks: 4, grade: 'A', point: 4.0, semester: 2, type: 'Inti' },
-  // Semester 3
-  { code: 'IF2110', name: 'Matematika Diskrit', sks: 3, grade: 'B', point: 3.0, semester: 3, type: 'Inti' },
-  { code: 'IF2130', name: 'Arsitektur Komputer', sks: 3, grade: 'B', point: 3.0, semester: 3, type: 'Inti' },
-  { code: 'IF2140', name: 'Pemrograman Fungsional', sks: 3, grade: 'AB', point: 3.5, semester: 3, type: 'Inti' },
-  { code: 'IF2150', name: 'Aljabar Linier', sks: 3, grade: 'A', point: 4.0, semester: 3, type: 'Inti' },
-  // Semester 4
-  { code: 'IF2210', name: 'Algoritma & Struktur Data', sks: 4, grade: 'AB', point: 3.5, semester: 4, type: 'Inti' },
-  { code: 'IF2230', name: 'Sistem Operasi', sks: 3, grade: 'A', point: 4.0, semester: 4, type: 'Inti' },
-  { code: 'IF2240', name: 'Rekayasa Perangkat Lunak', sks: 3, grade: 'B', point: 3.0, semester: 4, type: 'Inti' },
-  { code: 'IF2250', name: 'Pemrograman Berorientasi Objek', sks: 3, grade: 'A', point: 4.0, semester: 4, type: 'Inti' },
-];
-
-const mockAttendance = [
-  { code: 'IF3110', name: 'Pengembangan Aplikasi Web', attendance: 14, total: 14, percentage: 100 },
-  { code: 'IF3150', name: 'Manajemen Proyek Perangkat Lunak', attendance: 13, total: 14, percentage: 92.8 },
-  { code: 'IF3170', name: 'Kecerdasan Buatan', attendance: 14, total: 14, percentage: 100 },
-  { code: 'IF3140', name: 'Manajemen Basis Data', attendance: 12, total: 14, percentage: 85.7 },
-  { code: 'KU2071', name: 'Pancasila dan Kewarganegaraan', attendance: 14, total: 14, percentage: 100 },
-  { code: 'IF3180', name: 'Sistem Temu Balik Informasi', attendance: 11, total: 14, percentage: 78.5 },
-];
 
 export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserChange }: MahasiswaDashboardViewProps) {
   const { t, lang, dir } = useLanguage();
@@ -211,74 +73,37 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
     }
   }, [user?.isGraduated]);
 
-  const handleToggleStudiSelesai = (newVal: boolean) => {
-    setStudiSelesai(newVal);
-    if (onUserChange) {
-      onUserChange({
-        ...user,
-        isGraduated: newVal
-      });
-    }
-  };
+  // ── Data nyata dari backend (getStudentOverview) ────────────────
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
 
   // 1. KRS State
-  const [selectedKrs, setSelectedKrs] = useState<Course[]>(mockAvailableKrsCourses.slice(0, 4));
+  const [availableKrsCourses, setAvailableKrsCourses] = useState<Course[]>([]);
+  const [selectedKrs, setSelectedKrs] = useState<Course[]>([]);
   const [krsStatus, setKrsStatus] = useState<'Draft' | 'Diajukan' | 'Disetujui'>('Draft');
 
   // 2. KHS State
-  const [selectedSemester, setSelectedSemester] = useState<string>('Ganjil 2023/2024');
+  const [selectedSemester, setSelectedSemester] = useState<string>('');
+  const [semesterGradeMap, setSemesterGradeMap] = useState<Record<string, { ips: number; sksTaken: number; grades: TranskripRow['grades'] }>>({});
+  const [transcriptData, setTranscriptData] = useState<Array<{ id: string; code: string; name: string; sks: number; semester: number; grade: string; point: number; type: string }>>([]);
+  const [semesterGpaData, setSemesterGpaData] = useState<StudentSemesterGpa[]>([]);
+  const [attendanceData, setAttendanceData] = useState<StudentOverviewPayload['attendance']>([]);
 
   // 3. Keuangan State
-  const [paymentHistory, setPaymentHistory] = useState([
-    { id: 'p1', semester: 'Genap 2022/2023', code: 'UKT-GNP-22', amount: 7500000, date: '12 Februari 2023', status: 'Lunas', method: 'BSI Virtual Account' },
-    { id: 'p2', semester: 'Ganjil 2022/2023', code: 'UKT-GJL-22', amount: 7500000, date: '18 Agustus 2022', status: 'Lunas', method: 'Mandiri Transfer' },
-    { id: 'p3', semester: 'Genap 2021/2022', code: 'UKT-GNP-21', amount: 7500000, date: '10 Februari 2022', status: 'Lunas', method: 'BNI Virtual Account' },
-  ]);
-  const [unpaidBill, setUnpaidBill] = useState<number | null>(7500000); // 7.5 million UKT for current semester
+  const [paymentHistory, setPaymentHistory] = useState<StudentPayment[]>([]);
+  const [unpaidBill, setUnpaidBill] = useState<number>(0);
   const [billStatus, setBillStatus] = useState<'Belum Bayar' | 'Lunas'>('Belum Bayar');
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('BSI_VA');
   const [paymentLoading, setPaymentLoading] = useState(false);
 
   // 4. Profil State
-  const [studentProfile, setStudentProfile] = useState({
-    nim: '1901001',
-    name: 'Ahmad Syafiq',
-    program: 'S1 Teknik Informatika',
-    faculty: 'Fakultas Teknik',
-    classYear: '2019',
-    advisor: 'Dr. Budi Rahardjo',
-    email: 'ahmad.syafiq@mahasiswa.ac.id',
-    phone: '0812-3456-7890',
-    address: 'Jl. Dago Asri No. 12, Bandung, Jawa Barat',
-    birthPlace: 'Bandung',
-    birthDate: '12 Maret 2001',
-    religion: 'Islam',
-    citizenId: '3273011203010005',
-    avatarUrl: '', // simulated local state file
+  const [studentProfile, setStudentProfile] = useState<StudentProfile>({
+    nim: '', name: '', program: '', faculty: '', classYear: '', advisor: '',
+    email: '', phone: '', address: '', birthPlace: '', birthDate: '', religion: '', citizenId: '', avatarUrl: '',
   });
 
-  // Sync local student profile state with global user prop changes
-  React.useEffect(() => {
-    if (user) {
-      setStudentProfile(prev => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        phone: user.phone || prev.phone,
-        avatarUrl: user.avatar || prev.avatarUrl
-      }));
-    }
-  }, [user]);
-
-  const [editingProfile, setEditingProfile] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // 5. Layanan Akademik State
-  const [layananRequests, setLayananRequests] = useState([
-    { id: 'r1', type: 'Surat Keterangan Aktif Kuliah', date: '15 Juni 2026', purpose: 'Pengurusan Tunjangan Gaji Orang Tua', status: 'Selesai', downloadUrl: '#' },
-    { id: 'r2', type: 'Pendaftaran Praktek Kerja Lapangan (PKL)', date: '21 Juni 2026', purpose: 'Magang di PT Teknologi Indonesia', status: 'Verifikasi Kaprodi', downloadUrl: null }
-  ]);
+  const [layananRequests, setLayananRequests] = useState<LayananRequest[]>([]);
   const [newLayananType, setNewLayananType] = useState('Surat Keterangan Aktif Kuliah');
   const [newLayananPurpose, setNewLayananPurpose] = useState('');
   const [layananModalOpen, setLayananModalOpen] = useState(false);
@@ -287,60 +112,164 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
   const [transcriptSearch, setTranscriptSearch] = useState('');
   const [transcriptType, setTranscriptType] = useState('Semua');
 
+  // 7. Pengumuman & Jadwal State
+  const [announcementList, setAnnouncementList] = useState<StudentAnnouncement[]>([]);
+  const [todayClassList, setTodayClassList] = useState<TodayClassItem[]>([]);
+  const [weeklySchedules, setWeeklySchedules] = useState<WeeklySchedule>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    getDashboardSummary()
+      .then((s) => {
+        if (!cancelled) setSummary(s);
+      })
+      .catch(() => {
+        // abaikan; semua data utama datang dari getStudentOverview
+      });
+    getStudentOverview()
+      .then((data) => {
+        if (cancelled) return;
+        setSemesterGpaData(data.semesterGPAs);
+        setAnnouncementList(data.announcements);
+        setTodayClassList(data.todayClasses);
+        setWeeklySchedules(data.weeklySchedules);
+        setAvailableKrsCourses(data.availableKrsCourses);
+        KrsService.getKrs()
+          .then((res) => {
+            if (cancelled) return;
+            const codes = res.krs.courses ?? [];
+            setSelectedKrs(data.availableKrsCourses.filter((c) => codes.includes(c.code)));
+            if (res.krs.status === 'Diajukan' || res.krs.status === 'Disetujui') setKrsStatus(res.krs.status);
+          })
+          .catch(() => {
+            // belum ada KRS; biarkan draf kosong
+          });
+        setAttendanceData(data.attendance);
+        setPaymentHistory(data.payments);
+        setUnpaidBill(data.unpaidBill);
+        setBillStatus(data.unpaidBill > 0 ? 'Belum Bayar' : 'Lunas');
+        setStudentProfile((prev) => ({ ...prev, ...data.profile }));
+        setLayananRequests(data.layananRequests);
+        const map: Record<string, { ips: number; sksTaken: number; grades: TranskripRow['grades'] }> = {};
+        for (const row of data.transkrip) map[row.semester] = { ips: row.ips, sksTaken: row.sksTaken, grades: row.grades };
+        setSemesterGradeMap(map);
+        const courseTypeOf = (code: string): string =>
+          data.availableKrsCourses.find((c) => c.code === code)?.type === 'Pilihan' ? 'Umum' : 'Inti';
+        setTranscriptData(
+          data.transkrip.flatMap((row, idx) =>
+            row.grades.map((g) => ({
+              id: `${row.semester}-${g.code}`,
+              code: g.code,
+              name: g.name,
+              sks: g.sks,
+              semester: idx + 1,
+              grade: g.grade,
+              point: g.point,
+              type: courseTypeOf(g.code),
+            })),
+          ),
+        );
+        if (data.transkrip.length) setSelectedSemester((prev) => prev || data.transkrip[0].semester);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const gpaHistory = summary?.gpaHistory?.length ? summary.gpaHistory : semesterGpaData;
+  const currentIpk = gpaHistory[gpaHistory.length - 1]?.IPK ?? 0;
+  const todayCourses = summary?.courses?.length
+    ? summary.courses.map((c) => ({ id: c.id, code: c.code, name: c.name, sks: c.sks, time: c.schedule, room: c.room, lecturer: '' }))
+    : todayClassList;
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Helper Toast trigger
   const triggerToast = (msg: string) => {
     setShowNotification(msg);
     setTimeout(() => setShowNotification(null), 3000);
   };
 
-  // KRS Functions
+  // KRS Functions - operasi nyata via KrsService
+  const refreshKrsStatus = (code: string, krs?: KrsRecord) => {
+    if (!krs) return;
+    setKrsStatus(krs.status === 'Disetujui' || krs.status === 'Diajukan' ? krs.status : 'Draft');
+  };
+
   const handleAddKrsCourse = (course: Course) => {
     if (krsStatus !== 'Draft') return;
     const isAlreadyAdded = selectedKrs.some(c => c.id === course.id);
     if (isAlreadyAdded) return;
-    
+
     const currentSKS = selectedKrs.reduce((acc, c) => acc + c.sks, 0);
     if (currentSKS + course.sks > 24) {
       triggerToast("Gagal! Batas maksimum SKS untuk semester ini adalah 24 SKS.");
       return;
     }
 
-    setSelectedKrs([...selectedKrs, course]);
-    triggerToast(`Mata kuliah ${course.name} berhasil ditambahkan.`);
+    KrsService.addCourse(course.code)
+      .then((res) => {
+        setSelectedKrs((prev) => [...prev, course]);
+        refreshKrsStatus(course.code, res.krs);
+        triggerToast(`Mata kuliah ${course.name} berhasil ditambahkan ke KRS.`);
+      })
+      .catch(() => triggerToast("Gagal menambahkan mata kuliah. Silakan coba lagi."));
   };
 
   const handleRemoveKrsCourse = (courseId: string) => {
     if (krsStatus !== 'Draft') return;
-    setSelectedKrs(selectedKrs.filter(c => c.id !== courseId));
-    triggerToast("Mata kuliah dihapus dari draf.");
+    const course = selectedKrs.find(c => c.id === courseId);
+    KrsService.removeCourse(courseId)
+      .then((res) => {
+        setSelectedKrs(selectedKrs.filter(c => c.id !== courseId));
+        refreshKrsStatus(courseId, res.krs);
+        triggerToast("Mata kuliah dihapus dari draf.");
+      })
+      .catch(() => triggerToast("Gagal menghapus mata kuliah. Silakan coba lagi."));
   };
 
   const handleAjukanKrs = () => {
-    setKrsStatus('Diajukan');
-    triggerToast("KRS berhasil diajukan ke Dosen Wali Dr. Budi Rahardjo.");
+    KrsService.submitKrs()
+      .then((res) => {
+        setKrsStatus(res.krs.status === 'Diajukan' ? 'Diajukan' : 'Draft');
+        triggerToast("KRS berhasil diajukan ke Dosen Wali.");
+      })
+      .catch(() => triggerToast("Gagal mengajukan KRS. Silakan coba lagi."));
   };
 
-  // Financial Payment Simulation
+  // Pembayaran tagihan via API keuangan asli
   const handleProcessPayment = () => {
     setPaymentLoading(true);
-    setTimeout(() => {
-      setPaymentLoading(false);
-      setPaymentModalOpen(false);
-      setBillStatus('Lunas');
-      setUnpaidBill(null);
-      // add to history
-      const newHistoryItem = {
-        id: `p${Date.now()}`,
-        semester: 'Ganjil 2023/2024',
-        code: 'UKT-GJL-23',
-        amount: 7500000,
-        date: '24 Juni 2026',
-        status: 'Lunas',
-        method: paymentMethod.replace('_', ' ')
-      };
-      setPaymentHistory([newHistoryItem, ...paymentHistory]);
-      triggerToast("Pembayaran UKT Rp 7.500.000,- Berhasil Di-verifikasi!");
-    }, 1200);
+    getMyFinance()
+      .then(({ bills }) => {
+        const target = bills.find((b) => b.paidAmount < b.amount);
+        if (!target) throw new Error('Tidak ada tagihan yang belum dibayar');
+        return payFinanceBill(target.id, target.amount - target.paidAmount);
+      })
+      .then((bill) => {
+        const newHistoryItem: StudentPayment = {
+          id: bill.id,
+          semester: bill.period,
+          code: bill.description,
+          amount: bill.amount,
+          date: 'Sekarang',
+          status: 'Lunas',
+          method: paymentMethod.replace('_', ' '),
+        };
+        setPaymentHistory((prev) => [newHistoryItem, ...prev]);
+        setUnpaidBill((prev) => Math.max(0, (prev ?? 0) - bill.amount));
+        setBillStatus('Lunas');
+        setPaymentModalOpen(false);
+        triggerToast(`Pembayaran ${bill.description} berhasil diverifikasi!`);
+      })
+      .catch((err: Error) => {
+        triggerToast(err?.message ?? 'Pembayaran gagal. Coba lagi nanti.');
+      })
+      .finally(() => setPaymentLoading(false));
   };
 
   // Profile Image Upload Sim
@@ -455,28 +384,18 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
         
         <div className="space-y-1 z-10">
           <div className="flex flex-wrap items-center gap-2">
-            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${studiSelesai ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40' : 'bg-white/20 text-white border border-white/10'}`}>
-              {studiSelesai ? <CheckCircle2 className="w-3 h-3 text-emerald-450 animate-pulse" /> : <Sparkles className="w-3 h-3 text-amber-300" />}
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-boldr ${studiSelesai ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40' : 'bg-white/20 text-white border border-white/10'}`}>
+              {studiSelesai ? <CheckCircle2 className="w-3 h-3 text-emerald-450" /> : <Sparkles className="w-3 h-3 text-amber-300" />}
               {studiSelesai ? 'Alumni / Studi Selesai' : 'Portal Mahasiswa Aktif'}
             </div>
-            <button
-              onClick={() => {
-                const nextVal = !studiSelesai;
-                handleToggleStudiSelesai(nextVal);
-                triggerToast(nextVal ? "Simulasi: Berhasil menyelesaikan seluruh studi! Selamat!" : "Simulasi: Kembali ke status Mahasiswa Aktif.");
-              }}
-              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-500/40 transition-all flex items-center gap-1 cursor-pointer hover:scale-[1.02]"
-            >
-              <RefreshCw className="w-2.5 h-2.5 animate-spin-slow" />
-              {studiSelesai ? 'Kembali Aktif' : 'Simulasikan Kelulusan'}
-            </button>
+
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Selamat Datang, {studentProfile.name}
             </h2>
             {studiSelesai && (
-              <span className="inline-flex items-center gap-1 bg-amber-400 text-slate-950 text-[10.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-amber-300 shadow-md">
+              <span className="inline-flex items-center gap-1 bg-amber-400 text-slate-950 text-[10.5px] font-blackr px-3 py-1 rounded-full border border-amber-300 shadow-md">
                 <Award className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                 Alumni
               </span>
@@ -491,7 +410,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
           <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 text-right">
             <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">IP Kumulatif (IPK)</div>
             <div className="text-lg font-extrabold text-white flex items-center justify-end gap-1.5">
-              3.58 
+              {currentIpk}
               <TrendingUp className="w-4 h-4 text-green-400" />
             </div>
           </div>
@@ -537,7 +456,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl p-5 shadow-sm flex items-center gap-4">
-                  <div className={`p-3 rounded-xl transition-colors ${studiSelesai ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'}`}>
+                  <div className={`p-3 rounded-xl transition-colors ${studiSelesai ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
                     {studiSelesai ? <CheckCircle2 className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
                   </div>
                   <div>
@@ -552,7 +471,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl p-5 shadow-sm flex items-center gap-4">
-                  <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
                     <CheckSquare className="w-6 h-6" />
                   </div>
                   <div>
@@ -577,7 +496,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   </div>
                   
                   <div className="flex-1 divide-y divide-slate-100 dark:divide-slate-800">
-                    {mockTodayClasses.map((cls) => (
+                    {todayCourses.map((cls) => (
                       <div key={cls.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 px-2 py-0.5 rounded">
@@ -599,7 +518,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                       </div>
                     ))}
 
-                    {mockTodayClasses.length === 0 && (
+                    {todayCourses.length === 0 && (
                       <div className="p-8 text-center text-slate-400">
                         Tidak ada perkuliahan terjadwal untuk hari ini.
                       </div>
@@ -628,7 +547,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   </div>
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {mockAnnouncements.map((ann) => (
+                    {announcementList.map((ann) => (
                       <div key={ann.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors space-y-1.5">
                         <div className="flex justify-between items-center">
                           <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded ${
@@ -682,14 +601,14 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   </div>
                   <div className="h-60 flex-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={studentSemesterGPAs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <AreaChart data={gpaHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="studentPortalGpaGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25}/>
                             <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" dark-stroke="#1e293b" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
                         <XAxis dataKey="name" tick={{fill: '#94a3b8', fontSize: 11}} axisLine={false} tickLine={false} />
                         <YAxis domain={[3.0, 4.0]} tick={{fill: '#94a3b8', fontSize: 11}} axisLine={false} tickLine={false} />
                         <Tooltip 
@@ -732,7 +651,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 <div className="pt-2">
                   <button 
                     onClick={() => setActiveSubTab('transkrip')}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Buka Transkrip Akademik Kelulusan
@@ -789,7 +708,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                     <button
                       onClick={handleAjukanKrs}
                       disabled={selectedKrs.length === 0}
-                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/15 transition-all cursor-pointer"
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/15 transition-colors cursor-pointer"
                     >
                       Ajukan KRS ke Dosen Wali
                     </button>
@@ -800,24 +719,15 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                           setKrsStatus('Draft');
                           triggerToast("Pengajuan KRS ditarik kembali ke draf.");
                         }}
-                        className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                        className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
                       >
                         Tarik Pengajuan
-                      </button>
-                      <button
-                        onClick={() => {
-                          setKrsStatus('Disetujui');
-                          triggerToast("Simulasi: Dosen Wali menyetujui KRS Anda!");
-                        }}
-                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-green-500/10 transition-all"
-                      >
-                        [Simulasi] Setujui Dosen Wali
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => triggerPdfDownload('KRS Ganjil 2026')}
-                      className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
                     >
                       <Printer className="w-4 h-4" />
                       Unduh Bukti KRS Terverifikasi
@@ -832,7 +742,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 {/* Selected KRS List */}
                 <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
                   <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                    <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Mata Kuliah Pilihan Anda</h3>
+                    <h3 className="text-xs font-bold text-slate-800 dark:text-whiter">Mata Kuliah Pilihan Anda</h3>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       Terpilih: <span className="text-blue-600 dark:text-blue-400">{selectedKrs.reduce((sum, c) => sum + c.sks, 0)}</span> / 24 SKS
                     </span>
@@ -880,18 +790,18 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 {/* Available KRS offerings */}
                 <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col max-h-[500px]">
                   <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                    <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Daftar Penawaran Kelas</h3>
+                    <h3 className="text-xs font-bold text-slate-800 dark:text-whiter">Daftar Penawaran Kelas</h3>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Klik matakuliah untuk mendaftarkan.</p>
                   </div>
 
                   <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                    {mockAvailableKrsCourses.map((course) => {
+                    {availableKrsCourses.map((course) => {
                       const isSelected = selectedKrs.some(c => c.id === course.id);
                       return (
                         <div
                           key={course.id}
                           onClick={() => krsStatus === 'Draft' && !isSelected && handleAddKrsCourse(course)}
-                          className={`p-3.5 text-left transition-all ${
+                          className={`p-3.5 text-left transition-colors ${
                             isSelected 
                               ? 'bg-slate-50 dark:bg-slate-850/40 opacity-40 cursor-not-allowed' 
                               : krsStatus === 'Draft' ? 'hover:bg-blue-50/40 dark:hover:bg-blue-950/10 cursor-pointer' : 'cursor-not-allowed'
@@ -941,7 +851,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                       onChange={(e) => setSelectedSemester(e.target.value)}
                       className="bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-300 outline-none border-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {Object.keys(mockSemestersGrades).map((sem) => (
+                      {Object.keys(semesterGradeMap).map((sem) => (
                         <option key={sem} value={sem}>{sem}</option>
                       ))}
                     </select>
@@ -952,13 +862,13 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   <div className="text-right">
                     <div className="text-[10px] uppercase font-bold text-slate-400">IP Semester (IPS)</div>
                     <div className="text-xl font-black text-blue-600 dark:text-blue-400">
-                      {mockSemestersGrades[selectedSemester as keyof typeof mockSemestersGrades]?.ips.toFixed(2)}
+                      {semesterGradeMap[selectedSemester as keyof typeof semesterGradeMap]?.ips.toFixed(2)}
                     </div>
                   </div>
                   <div className="text-right border-l border-slate-100 dark:border-slate-800 pl-4">
                     <div className="text-[10px] uppercase font-bold text-slate-400">SKS Terlaksana</div>
                     <div className="text-xl font-black text-slate-800 dark:text-white">
-                      {mockSemestersGrades[selectedSemester as keyof typeof mockSemestersGrades]?.sksTaken} SKS
+                      {semesterGradeMap[selectedSemester as keyof typeof semesterGradeMap]?.sksTaken} SKS
                     </div>
                   </div>
                   <button 
@@ -975,7 +885,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-150 dark:divide-slate-800 text-left">
-                    <thead className="bg-slate-50/60 dark:bg-slate-900/40 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
+                    <thead className="bg-slate-50/60 dark:bg-slate-900/40 text-slate-400 text-[10px]r font-bold">
                       <tr>
                         <th className="px-6 py-3.5">Kode Matakuliah</th>
                         <th className="px-6 py-3.5">Nama Matakuliah</th>
@@ -987,7 +897,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                      {mockSemestersGrades[selectedSemester as keyof typeof mockSemestersGrades]?.grades.map((gr) => (
+                      {semesterGradeMap[selectedSemester as keyof typeof semesterGradeMap]?.grades.map((gr) => (
                         <tr key={gr.code} className="hover:bg-slate-50 dark:hover:bg-slate-800/25 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">{gr.code}</td>
                           <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-300">{gr.name}</td>
@@ -1031,7 +941,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 <div className="pt-2">
                   <button 
                     onClick={() => setActiveSubTab('transkrip')}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Buka Transkrip Akademik Kelulusan
@@ -1057,7 +967,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
                 {/* Day Grid Boards */}
                 <div className="space-y-4">
-                  {Object.entries(mockWeeklySchedules).map(([day, classes]) => (
+                  {Object.entries(weeklySchedules).map(([day, classes]) => (
                     <div key={day} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                       <div className="bg-slate-50 dark:bg-slate-950/50 px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
@@ -1148,18 +1058,9 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   <div className="flex justify-center items-center gap-4 text-[11px] font-bold text-slate-450">
                     <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 px-3 py-1 rounded-full border border-slate-200/40 dark:border-slate-700/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      Status Studi: <span className="text-amber-600 dark:text-amber-450">Belum Lulus (84 / 144 SKS)</span>
+                      Status Studi: <span className="text-amber-600 dark:text-amber-450">Belum Lulus ({transcriptData.reduce((a, r) => a + r.sks, 0)} SKS)</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      handleToggleStudiSelesai(true);
-                      triggerToast("Simulasi Kelulusan Aktif! Seluruh SKS terpenuhi dan Ijazah diterbitkan.");
-                    }}
-                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-4 py-2 rounded-xl shadow-md shadow-blue-500/10 hover:scale-[1.01] transition-all cursor-pointer"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> Simulasikan Penyelesaian Studi (Lulus)
-                  </button>
                 </div>
               )}
 
@@ -1194,7 +1095,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-150 dark:divide-slate-800 text-left">
-                    <thead className="bg-slate-50/60 dark:bg-slate-900/40 text-slate-400 text-[10px] uppercase tracking-wider font-bold">
+                    <thead className="bg-slate-50/60 dark:bg-slate-900/40 text-slate-400 text-[10px]r font-bold">
                       <tr>
                         <th className="px-6 py-3">Semester</th>
                         <th className="px-6 py-3">Kode MK</th>
@@ -1206,7 +1107,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                      {mockTranscript
+                      {transcriptData
                         .filter(item => {
                           const matchesSearch = item.name.toLowerCase().includes(transcriptSearch.toLowerCase()) || item.code.toLowerCase().includes(transcriptSearch.toLowerCase());
                           const matchesType = transcriptType === 'Semua' || item.type === transcriptType;
@@ -1258,7 +1159,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 <div className="pt-2">
                   <button 
                     onClick={() => setActiveSubTab('transkrip')}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Buka Transkrip Akademik Kelulusan
@@ -1277,7 +1178,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
                 {/* Progress visualizers */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {mockAttendance.map((item) => {
+                  {attendanceData.map((item) => {
                     const isWarning = item.percentage < 80;
                     return (
                       <div key={item.code} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3.5">
@@ -1346,12 +1247,12 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                     )}
                   </div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {studiSelesai ? 'Kliring Keuangan Kelulusan & Alumni' : 'UKT Semester Ganjil 2023/2024'}
+                    {studiSelesai ? 'Kliring Keuangan Kelulusan & Alumni' : 'Tagihan UKT Semester Berjalan'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     {studiSelesai 
                       ? 'Seluruh kewajiban finansial masa studi Anda telah Lunas & Terverifikasi (Bebas Pustaka & Keuangan Alumni Terpenuhi).'
-                      : 'Beban UKT regulatif Anda semester ini adalah sebesar Rp 7.500.000,-'
+                      : `Beban tagihan Anda saat ini adalah sebesar Rp ${unpaidBill.toLocaleString('id-ID')},-`
                     }
                   </p>
                 </div>
@@ -1366,9 +1267,9 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   {!studiSelesai && billStatus === 'Belum Bayar' && (
                     <button
                       onClick={() => setPaymentModalOpen(true)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/15 transition-all cursor-pointer"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/15 transition-colors cursor-pointer"
                     >
-                      Bayar Sekarang (Simulasi)
+                      Bayar Sekarang
                     </button>
                   )}
                 </div>
@@ -1380,7 +1281,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
               {/* Payment History Records */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Riwayat Pembayaran Registrasi UKT</h3>
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-whiter">Riwayat Pembayaran Registrasi UKT</h3>
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1409,7 +1310,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                     <div className="flex justify-between items-center">
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <DollarSign className="w-5 h-5 text-blue-500" />
-                        Simulasi Gerbang Pembayaran UKT
+                        Gerbang Pembayaran UKT
                       </h4>
                       <button 
                         onClick={() => setPaymentModalOpen(false)}
@@ -1430,12 +1331,12 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                       </div>
                       <div className="flex justify-between border-t border-dashed border-slate-200 dark:border-slate-800 pt-2 font-bold text-slate-900 dark:text-white text-sm">
                         <span>Total Tagihan</span>
-                        <span>Rp 7.500.000,-</span>
+                        <span>Rp {unpaidBill.toLocaleString('id-ID')},-</span>
                       </div>
                     </div>
 
                     <div className="space-y-2 text-xs">
-                      <label className="block font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <label className="block font-bold text-slate-500r text-[10px]">
                         Pilih Metode Pembayaran
                       </label>
                       <select
@@ -1454,7 +1355,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                     <button
                       onClick={handleProcessPayment}
                       disabled={paymentLoading}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/15 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/15 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       {paymentLoading ? (
                         <>
@@ -1479,7 +1380,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
               {/* Profile card layout */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                  <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Biodata & Informasi Profil Pribadi</h3>
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-whiter">Biodata & Informasi Profil Pribadi</h3>
                   <button
                     onClick={() => setEditingProfile(!editingProfile)}
                     className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-900/40 transition-colors cursor-pointer"
@@ -1749,7 +1650,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl">
+                    <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
                       <GraduationCap className="w-5 h-5" />
                     </div>
                     <div>
@@ -1767,7 +1668,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                    <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
                       <Award className="w-5 h-5" />
                     </div>
                     <div>
@@ -1785,7 +1686,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
+                    <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
                       <UserIcon className="w-5 h-5" />
                     </div>
                     <div>
@@ -1809,46 +1710,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
           {/* TAB 12: INOVASI & FITUR CANGGIH */}
           {activeSubTab === 'inovasi' && (
             <div className="space-y-6">
-              {/* Floating PWA Optimizer Bar */}
-              <MobilePwaControlBar />
-
-              {/* Master Enterprise Suite Control Center */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">Fitur Utama &bull; SIAKAD Enterprise &amp; Automation Hub</span>
-                <EnterpriseControlSuite />
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Integrasi LMS & Hybrid Learning */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 1 &bull; Kelas Hybrid</span>
-                  <LmsHybridModule />
-                </div>
-
-                {/* Fitur Mandiri Mahasiswa */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 2 &bull; Self-Service Mandiri</span>
-                  <StudentSelfServiceModule />
-                </div>
-
-                {/* Smart Communication Forum & Gateway */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 3 &bull; Komunikasi Cerdas</span>
-                  <SmartCommunicationModule role="student" />
-                </div>
-
-                {/* AI Plagiarism & Digital Signatures */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 4 &bull; Integritas Akademik</span>
-                  <ModernTechModule />
-                </div>
-              </div>
-
-              {/* Security, 2FA & Audit Logs */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 5 &bull; Keamanan Akun &amp; Kepatuhan Regulasi</span>
-                <SecurityComplianceModule user={user} />
-              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t('module_in_dev').replace('{view}', activeSubTab)}</p>
             </div>
           )}
 
@@ -1869,7 +1731,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                 <div className="pt-2">
                   <button 
                     onClick={() => setActiveSubTab('transkrip')}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Buka Transkrip Akademik Kelulusan
@@ -1879,7 +1741,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
             ) : (
               <div className="space-y-6">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Sistem Penjaminan Mutu &bull; Evaluasi Dosen</span>
+                  <span className="text-[10px] font-black text-blue-600 block">Sistem Penjaminan Mutu &bull; Evaluasi Dosen</span>
                   <LecturerRatingModule user={user} />
                 </div>
               </div>

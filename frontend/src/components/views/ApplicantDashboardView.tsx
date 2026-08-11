@@ -5,6 +5,7 @@ import {
   Camera, RefreshCw, ChevronRight, Eye, AlertCircle
 } from 'lucide-react';
 import { User as UserType } from '../../types';
+import { getRoleDashboard, ApplicantDashboardPayload } from '../../api/academic.api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../utils/i18n';
 
@@ -27,20 +28,16 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // State for Form PMB
-  const [nik, setNik] = useState('3273012304910003');
-  const [nisn, setNisn] = useState('0039401812');
-  const [school, setSchool] = useState('SMAN 3 Bandung');
-  const [firstProdi, setFirstProdi] = useState('Teknik Informatika');
-  const [secondProdi, setSecondProdi] = useState('Sistem Informasi');
+  // State for Form PMB (diisi dari backend RoleDashboard)
+  const [nik, setNik] = useState('');
+  const [nisn, setNisn] = useState('');
+  const [school, setSchool] = useState('');
+  const [firstProdi, setFirstProdi] = useState('');
+  const [secondProdi, setSecondProdi] = useState('');
   const [formSaved, setFormSaved] = useState(true);
 
   // State for OCR Documents Upload
-  const [documents, setDocuments] = useState([
-    { id: 'ktp', name: 'KTP / Kartu Keluarga', file: 'ktp_rian_hidayat.pdf', status: 'Terverifikasi (AI-OCR)', ocrScore: 98, error: '' },
-    { id: 'ijazah', name: 'Ijazah SMA / Sederajat', file: 'ijazah_legalisir.pdf', status: 'Terverifikasi (AI-OCR)', ocrScore: 95, error: '' },
-    { id: 'rapor', name: 'Scan Transkrip Rapor Semester 1-5', file: 'rapor_full.pdf', status: 'Menunggu Verifikasi', ocrScore: 0, error: '' }
-  ]);
+  const [documents, setDocuments] = useState<ApplicantDashboardPayload['pmb']['documents']>([]);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
 
   // State for CBT Computer Based Test
@@ -55,11 +52,30 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const testQuestions = [
-    { q: 'Manakah dari berikut ini yang merupakan struktur data Linier?', options: ['Pohon / Tree', 'Graf / Graph', 'Antrian / Queue', 'Splay Tree'], correct: 'Antrian / Queue' },
-    { q: 'Berapakah hasil biner dari penjumlahan 1010 + 0101?', options: ['1111', '1001', '1100', '1010'], correct: '1111' },
-    { q: 'Siapakah penemu konsep mesin Turing?', options: ['Alan Turing', 'Ada Lovelace', 'Steve Jobs', 'Charles Babbage'], correct: 'Alan Turing' }
-  ];
+  const [testQuestions, setTestQuestions] = useState<ApplicantDashboardPayload['testQuestions']>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getRoleDashboard<ApplicantDashboardPayload>('applicant')
+      .then((data) => {
+        if (cancelled) return;
+        if (data.pmb) {
+          setNik(data.pmb.nik ?? '');
+          setNisn(data.pmb.nisn ?? '');
+          setSchool(data.pmb.school ?? '');
+          setFirstProdi(data.pmb.firstProdi ?? '');
+          setSecondProdi(data.pmb.secondProdi ?? '');
+          setDocuments(data.pmb.documents ?? []);
+        }
+        setTestQuestions(data.testQuestions ?? []);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Simulated proctoring camera
   useEffect(() => {
@@ -141,9 +157,9 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
       if (onUserChange) {
         onUserChange({
           ...user,
-          name: 'Rian Hidayat (Maba)',
+          name: user.name || 'Calon Mahasiswa',
           role: 'student',
-          department: 'Teknik Informatika'
+          department: firstProdi || user.department || 'Teknik Informatika'
         });
       }
       triggerToast('Pembayaran UKT Pertama Selesai! NIM Berhasil Diterbitkan otomatis!');
@@ -183,7 +199,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-violet-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-violet-300 shadow-md">
+              <span className="bg-violet-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full border border-violet-300 shadow-md">
                 CALON MAHASISWA BARU (PMB)
               </span>
             </div>
@@ -204,7 +220,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 px-3 py-2 text-[11px] font-black rounded-xl transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-2 text-[11px] font-black rounded-xl transition-colors cursor-pointer ${
                 isActive 
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' 
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
@@ -225,7 +241,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
               
               {/* PMB Step Tracker */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-slate-900 dark:text-whiter">
                   Alur & Progress Seleksi PMB Anda
                 </h3>
                 
@@ -270,7 +286,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
             </div>
 
             <div className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h4 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Peringatan CBT Lockdown
               </h4>
               <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200/50 rounded-xl flex gap-3">
@@ -336,7 +352,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
               <div className="md:col-span-2 flex justify-end gap-3 pt-3">
                 <button 
                   type="submit" 
-                  className="bg-violet-600 hover:bg-violet-700 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer transition-all"
+                  className="bg-violet-600 hover:bg-violet-700 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
                 >
                   Simpan Formulir PMB
                 </button>
@@ -377,7 +393,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                       <button 
                         onClick={() => handleOcrVerification(d.id)}
                         disabled={isOcrProcessing}
-                        className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                        className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                       >
                         {isOcrProcessing ? 'Memproses...' : 'Jalankan AI-OCR'}
                       </button>
@@ -397,7 +413,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                 <div className="w-16 h-16 bg-violet-100 dark:bg-violet-950/40 text-violet-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                   <Shield className="w-8 h-8 animate-pulse" />
                 </div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-slate-900 dark:text-whiter">
                   Mulai Ujian Online (Computer Based Test)
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
@@ -405,7 +421,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                 </p>
                 <button 
                   onClick={handleStartExam}
-                  className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md transition-all cursor-pointer"
+                  className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md transition-colors cursor-pointer"
                 >
                   Izinkan Kamera & Mulai CBT
                 </button>
@@ -435,7 +451,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                           <button 
                             key={option}
                             onClick={() => handleSelectAnswer(currentQuestion, option)}
-                            className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                            className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                               isSelected 
                                 ? 'bg-violet-600 text-white border-violet-500 shadow-md' 
                                 : 'bg-white border-slate-200 dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -515,7 +531,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                   <ShieldCheck className="w-8 h-8" />
                 </div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-slate-900 dark:text-whiter">
                   Hasil Ujian CBT Anda
                 </h3>
                 <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border">
@@ -530,7 +546,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                 </p>
                 <button 
                   onClick={() => setActiveTab('register-nim')}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black px-6 py-2.5 rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
                 >
                   Daftar Ulang Sekarang <ChevronRight className="w-4 h-4" />
                 </button>
@@ -575,9 +591,9 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
                   <button 
                     onClick={handlePayUktAndGenerateNim}
                     disabled={isPayingUkt}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-350 text-white text-xs font-black py-2.5 rounded-xl shadow-md transition-all cursor-pointer text-center"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-350 text-white text-xs font-black py-2.5 rounded-xl shadow-md transition-colors cursor-pointer text-center"
                   >
-                    {isPayingUkt ? 'Menghubungi Bank & Memproses...' : 'Simulasi Pembayaran UKT via VA Bank'}
+                    {isPayingUkt ? 'Menghubungi Bank & Memproses...' : 'Bayar UKT Semester I via VA Bank'}
                   </button>
                 ) : (
                   <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-600 p-4 rounded-xl text-center text-xs font-bold">
@@ -596,7 +612,7 @@ export function ApplicantDashboardView({ user, onUserChange, activeTab: propActi
 
                 {isNimActivated ? (
                   <div className="bg-indigo-950 text-white rounded-xl p-4 space-y-2 border">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-violet-400">NOMOR INDUK MAHASISWA BARU</div>
+                    <div className="text-[9px] font-black text-violet-400">NOMOR INDUK MAHASISWA BARU</div>
                     <div className="font-mono text-xl font-black text-center tracking-widest text-indigo-300">{generatedNim}</div>
                     <div className="text-[10px] text-center text-slate-400">Status Akun: AKTIF / MAHASISWA AKADEMIK</div>
                   </div>

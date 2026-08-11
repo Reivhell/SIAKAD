@@ -5,6 +5,8 @@ import {
   ShieldCheck, Download, Users, RefreshCw, AlertTriangle
 } from 'lucide-react';
 import { User } from '../../types';
+import { getRoleDashboard, BaukDashboardPayload } from '../../api/academic.api';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../utils/i18n';
 
@@ -27,33 +29,37 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // State for Billing Configuration
-  const [billingConfigs, setBillingConfigs] = useState([
-    { group: 'UKT Golongan I', nominal: 500000, installmentAllowed: false, lateFee: 0, count: 42 },
-    { group: 'UKT Golongan II', nominal: 2500000, installmentAllowed: true, lateFee: 50000, count: 128 },
-    { group: 'UKT Golongan III', nominal: 5000000, installmentAllowed: true, lateFee: 100000, count: 540 },
-    { group: 'UKT Golongan IV', nominal: 7500000, installmentAllowed: true, lateFee: 150000, count: 310 }
-  ]);
+  // Data nyata dashboard BAUK dari backend
+  const [billingConfigs, setBillingConfigs] = useState<BaukDashboardPayload['billingConfigs']>([]);
 
   // State for Beasiswa (Scholarships)
-  const [scholarships, setScholarships] = useState([
-    { id: 'SCH-01', name: 'KIP Kuliah / Bidikmisi', source: 'Pemerintah (Kemdikbud)', discountPercent: 100, awardees: 110, status: 'Aktif' },
-    { id: 'SCH-02', name: 'Beasiswa Prestasi Unggulan', source: 'Internal Yayasan', discountPercent: 50, awardees: 45, status: 'Aktif' },
-    { id: 'SCH-03', name: 'Beasiswa Djarum Foundation', source: 'Eksternal (Mitra)', discountPercent: 75, awardees: 12, status: 'Aktif' }
-  ]);
+  const [scholarships, setScholarships] = useState<BaukDashboardPayload['scholarships']>([]);
 
   const [newSchName, setNewSchName] = useState('');
   const [newSchSource, setNewSchSource] = useState('');
   const [newSchDiscount, setNewSchDiscount] = useState(50);
 
   // State for Bank Virtual Account reconciliation
-  const [reconciledPayments, setReconciledPayments] = useState([
-    { id: 'TX-9021', name: 'Rian Hidayat', nim: '10123045', bank: 'BNI', va: '827101230459', amount: 'Rp 5.000.000', date: '2026-06-28 09:12', method: 'VA Auto-Sync', status: 'Selesai' },
-    { id: 'TX-9020', name: 'Sania Sitorus', nim: '10122012', bank: 'Mandiri', va: '881901220123', amount: 'Rp 7.500.000', date: '2026-06-28 08:44', method: 'VA Auto-Sync', status: 'Selesai' },
-    { id: 'TX-9019', name: 'Indra Gunawan', nim: '10121102', bank: 'BCA', va: '719010121102', amount: 'Rp 2.500.000', date: '2026-06-27 16:30', method: 'VA Auto-Sync', status: 'Selesai' }
-  ]);
+  const [reconciledPayments, setReconciledPayments] = useState<BaukDashboardPayload['reconciledPayments']>([]);
 
   const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getRoleDashboard<BaukDashboardPayload>('bauk')
+      .then((data) => {
+        if (cancelled) return;
+        setBillingConfigs(data.billingConfigs ?? []);
+        setScholarships(data.scholarships ?? []);
+        setReconciledPayments(data.reconciledPayments ?? []);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleRunReconciliation = () => {
     setIsSyncing(true);
@@ -95,7 +101,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-950 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-950 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-pulse">
           <ShieldCheck className="w-4 h-4 text-emerald-500" />
           {toastMessage}
         </div>
@@ -107,7 +113,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-emerald-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-300 shadow-md">
+              <span className="bg-emerald-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-300 shadow-md">
                 ADMINISTRATOR BAUK
               </span>
             </div>
@@ -128,7 +134,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-colors cursor-pointer ${
                 isActive 
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' 
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
@@ -146,28 +152,28 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
         {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Tagihan Terbit</div>
+              <div className="text-[10px] font-blackr text-slate-400">Total Tagihan Terbit</div>
               <div className="text-2xl font-black text-emerald-600 mt-1">Rp 4.85 Miliar</div>
               <p className="text-[11px] text-slate-500 mt-2">UKT Semester Ganjil 2026/2027.</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Pembayaran Terverifikasi</div>
+              <div className="text-[10px] font-blackr text-slate-400">Total Pembayaran Terverifikasi</div>
               <div className="text-2xl font-black text-indigo-600 mt-1">Rp 4.12 Miliar</div>
               <p className="text-[11px] text-slate-500 mt-2">Sinkronisasi otomatis Virtual Account bank.</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Rasio Pelunasan</div>
+              <div className="text-[10px] font-blackr text-slate-400">Rasio Pelunasan</div>
               <div className="text-2xl font-black text-blue-600 mt-1">84.9 %</div>
               <p className="text-[11px] text-slate-500 mt-2">Kenaikan 4% dari semester sebelumnya.</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Penerima Beasiswa</div>
+              <div className="text-[10px] font-blackr text-slate-400">Penerima Beasiswa</div>
               <div className="text-2xl font-black text-amber-600 mt-1">167 Mahasiswa</div>
               <p className="text-[11px] text-slate-500 mt-2">Pembebasan UKT penuh maupun sebagian.</p>
             </div>
 
             <div className="md:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h3 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Laporan Keuangan & Audit Sistem
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,7 +182,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
                     <div className="font-bold text-slate-800 dark:text-slate-250">Laporan Rekonsiliasi Harian</div>
                     <div className="text-[10px] text-slate-450 mt-0.5">Disinkronkan terakhir: Hari ini, 09:12</div>
                   </div>
-                  <button className="bg-emerald-600/15 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1">
+                  <button className="bg-emerald-600/15 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1">
                     <Download className="w-3.5 h-3.5" /> Unduh PDF
                   </button>
                 </div>
@@ -186,7 +192,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
                     <div className="font-bold text-slate-800 dark:text-slate-250">Audit Rekapitulasi Beasiswa</div>
                     <div className="text-[10px] text-slate-450 mt-0.5">Sesuai aturan Kemdikbudristek.</div>
                   </div>
-                  <button className="bg-emerald-600/15 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1">
+                  <button className="bg-emerald-600/15 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1">
                     <Download className="w-3.5 h-3.5" /> Unduh PDF
                   </button>
                 </div>
@@ -208,7 +214,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase tracking-wider text-[10px] font-black">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500r text-[10px] font-black">
                     <tr>
                       <th className="p-3">Golongan</th>
                       <th className="p-3">Nominal Per Semester</th>
@@ -248,7 +254,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
             </div>
 
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h4 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Informasi Skema Pembayaran
               </h4>
               <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -291,7 +297,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
             </div>
 
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h4 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Daftarkan Beasiswa Baru
               </h4>
               <form onSubmit={handleAddScholarship} className="space-y-3">
@@ -330,7 +336,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
                 </div>
                 <button 
                   type="submit" 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs cursor-pointer transition-all"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl text-xs cursor-pointer transition-colors"
                 >
                   Daftarkan Program Beasiswa
                 </button>
@@ -352,7 +358,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
               <button 
                 onClick={handleRunReconciliation}
                 disabled={isSyncing}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition-colors cursor-pointer flex items-center gap-2"
               >
                 {isSyncing ? 'Sedang Sinkronisasi VA...' : 'Mulai Sinkronisasi VA'}
               </button>
@@ -360,7 +366,7 @@ export function BaukDashboardView({ user, onUserChange, activeTab: propActiveTab
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase tracking-wider text-[10px] font-black">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500r text-[10px] font-black">
                   <tr>
                     <th className="p-3">ID Transaksi</th>
                     <th className="p-3">Nama Mahasiswa</th>

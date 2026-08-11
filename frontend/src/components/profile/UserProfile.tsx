@@ -173,13 +173,13 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
     const IconComponent = config.icon;
 
     return (
-      <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${config.bg} ${config.border} transition-all duration-300 shadow-sm mt-2`}>
+      <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${config.bg} ${config.border} transition-colors duration-300 shadow-sm mt-2`}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg bg-white dark:bg-slate-900 border ${config.border} ${config.text} shadow-sm`}>
             <IconComponent className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500r">
               {config.label === 'Unit Kerja' ? 'Unit Kerja' : 'Prodi / Fakultas'}
             </p>
             <p className="text-xs font-black text-slate-800 dark:text-slate-200">
@@ -188,7 +188,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
           </div>
         </div>
         <div className="text-right hidden sm:block">
-          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${config.border} ${config.bg} ${config.text} uppercase tracking-wider`}>
+          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${config.border} ${config.bg} ${config.text}r`}>
             {user.role}
           </span>
         </div>
@@ -316,7 +316,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
 
       {/* Picture Upload / Avatar Area */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400r">
           Foto Profil / Gambar Pengguna
         </label>
         
@@ -353,7 +353,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={triggerFileInput}
-              className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-155 ${
+              className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors duration-150 ${
                 isDragOver 
                   ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/15' 
                   : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/20 dark:bg-slate-950/10'
@@ -384,7 +384,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
         {/* Preset theme options in case they don't upload a picture */}
         {!avatar && (
           <div className="pt-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+            <span className="text-[10px] font-bold text-slate-400r block mb-1.5">
               Tema Profil Default
             </span>
             <div className="flex gap-2">
@@ -393,10 +393,10 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
                   key={idx}
                   type="button"
                   onClick={() => setAvatarTheme(theme.value)}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${theme.value} ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors ${theme.value} ${
                     avatarTheme === theme.value 
                       ? 'border-slate-800 dark:border-white scale-110 shadow-md' 
-                      : 'border-transparent hover:scale-105'
+                      : 'border-transparent hover:ring-2 hover:ring-blue-500/40'
                   }`}
                   title={theme.name}
                 >
@@ -412,7 +412,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
       <div className="space-y-4">
         {/* Name input */}
         <div>
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400r mb-1.5">
             Nama Lengkap / Nama Tampilan
           </label>
           <div className="relative">
@@ -440,7 +440,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
 
         {/* Email input */}
         <div>
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400r mb-1.5">
             Alamat Email Kontak
           </label>
           <div className="relative">
@@ -468,7 +468,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
 
         {/* Phone */}
         <div>
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400r mb-1.5">
             No. Telepon / HP
           </label>
           <div className="relative">
@@ -499,14 +499,14 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
 
         {/* Theme Preference Selection */}
         <div>
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400r mb-1.5">
             Preferensi Tema Tampilan
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setThemePreference('light')}
-              className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer ${
                 themePreference === 'light'
                   ? 'border-blue-500 bg-blue-50/50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400'
                   : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950'
@@ -518,7 +518,7 @@ export function UserProfile({ user, onSave, onCancel }: UserProfileProps) {
             <button
               type="button"
               onClick={() => setThemePreference('dark')}
-              className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer ${
                 themePreference === 'dark'
                   ? 'border-blue-500 bg-blue-50/50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400'
                   : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950'

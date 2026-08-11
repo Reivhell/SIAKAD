@@ -55,7 +55,7 @@ export function PsychologicalSupportCrisis() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans relative overflow-hidden">
       {/* Decorative Warm Red/Rose crisis border accent */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-400 via-rose-500 to-amber-500" />
 
@@ -103,7 +103,7 @@ export function PsychologicalSupportCrisis() {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h5 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  <h5 className="text-xs font-black text-slate-800 dark:text-whiter">
                     Laporan Berhasil Dikirimkan
                   </h5>
                   <p className="text-[11px] text-slate-550 dark:text-slate-400 leading-relaxed">
@@ -132,7 +132,7 @@ export function PsychologicalSupportCrisis() {
                     <button
                       type="button"
                       onClick={() => setIsAnonymous(!isAnonymous)}
-                      className={`w-full border px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`w-full border px-3 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                         isAnonymous
                           ? 'bg-rose-500/5 border-rose-500/30 text-rose-600 dark:text-rose-450'
                           : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300'
@@ -158,7 +158,7 @@ export function PsychologicalSupportCrisis() {
 
                 <button
                   type="submit"
-                  className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-rose-500/10 cursor-pointer transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-rose-500/10 cursor-pointer transition-colors flex items-center justify-center gap-2"
                 >
                   <Send className="w-3.5 h-3.5" /> Kirim Pengaduan Aman
                 </button>
@@ -211,7 +211,7 @@ export function PsychologicalSupportCrisis() {
               />
               <button
                 onClick={handleSendChatMessage}
-                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
                 Kirim
               </button>
@@ -226,7 +226,7 @@ export function PsychologicalSupportCrisis() {
             </div>
             <a
               href="tel:1500900"
-              className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[10.5px] transition-all shrink-0"
+              className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer text-[10.5px] transition-colors shrink-0"
             >
               <Phone className="w-3.5 h-3.5" /> Call ULT: 1500-900
             </a>

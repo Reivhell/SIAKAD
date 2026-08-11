@@ -27,7 +27,7 @@ export function CertifiedDigitalTranscript() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans relative overflow-hidden">
       {/* Decorative Golden / Emerald cert accent */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-emerald-500 to-indigo-500" />
 
@@ -49,7 +49,7 @@ export function CertifiedDigitalTranscript() {
 
         <button
           onClick={() => alert('Mengunduh berkas PDF Transkrip & Ijazah Tersertifikasi (Tanda Tangan Digital Tersimpan)...')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs hover:scale-[1.01] transition-all flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs  transition-colors flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
         >
           <Download className="w-3.5 h-3.5" /> Unduh PDF Resmi
         </button>
@@ -66,7 +66,7 @@ export function CertifiedDigitalTranscript() {
             {/* Cert Header */}
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                <span className="text-[10px] font-black text-slate-400 leading-none">
                   UNIVERSITAS AKADEMIK TERPADU
                 </span>
                 <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -132,7 +132,7 @@ export function CertifiedDigitalTranscript() {
             {/* Visual interactive QR code */}
             <div 
               onClick={() => setShowVerificationModal(true)}
-              className="bg-white p-3 rounded-2xl inline-block border border-slate-200 shadow-xs hover:scale-[1.02] active:scale-95 transition-all cursor-pointer mx-auto relative group"
+              className="bg-white p-3 rounded-2xl inline-block border border-slate-200 shadow-xs  active:scale-95 transition-colors cursor-pointer mx-auto relative group"
             >
               <div className="w-28 h-28 bg-slate-100 flex items-center justify-center relative overflow-hidden">
                 <QrCode className="w-24 h-24 text-slate-900" />
@@ -153,7 +153,7 @@ export function CertifiedDigitalTranscript() {
 
           <button
             onClick={() => setShowVerificationModal(true)}
-            className="w-full mt-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-250/30 dark:border-slate-800 text-slate-800 dark:text-slate-200 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+            className="w-full mt-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-250/30 dark:border-slate-800 text-slate-800 dark:text-slate-200 py-2 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
           >
             <Globe className="w-3.5 h-3.5 text-blue-500" /> Uji Gerbang Verifikator Pihak Ketiga
           </button>

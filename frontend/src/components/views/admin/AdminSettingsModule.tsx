@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   AdminAnnouncement,
   AdminBillingInvoice
-} from '../../../data/adminMockData';
+} from '../../../api/academic.api';
 import {
   Bell,
   Plus,
@@ -172,7 +172,7 @@ export function AdminSettingsModule({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-            <Database className="w-5 h-5 text-indigo-600" />
+            <Database className="w-5 h-5 text-blue-600" />
             Konfigurasi &amp; Penyetelan &gt; {
               activeTab === 'admin-pengumuman' ? 'Siaran Pengumuman' :
               activeTab === 'admin-keuangan' ? 'Keuangan & UKT' : 'Backup & Restore SQL'
@@ -185,7 +185,7 @@ export function AdminSettingsModule({
         {['admin-pengumuman', 'admin-keuangan'].includes(activeTab) && (
           <button
             onClick={handleOpenAdd}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-1"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-colors flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             {activeTab === 'admin-pengumuman' ? 'Buat Pengumuman Baru' : 'Terbitkan Tagihan Baru'}
@@ -201,7 +201,7 @@ export function AdminSettingsModule({
               <div key={ann.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-xs relative hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start gap-4">
                   <div className="space-y-1">
-                    <span className="text-[9px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2 py-0.5 rounded uppercase tracking-wider">
+                    <span className="text-[9px] font-extrabold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2 py-0.5 roundedr">
                       Target: {ann.target}
                     </span>
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white pt-1">
@@ -282,7 +282,7 @@ export function AdminSettingsModule({
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
+                  <tr className="text-[10px] font-bold text-slate-500r bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-6 py-4">NIM Mahasiswa</th>
                     <th className="px-6 py-4">Nominal Tagihan</th>
                     <th className="px-6 py-4">Deskripsi Billing</th>
@@ -307,7 +307,7 @@ export function AdminSettingsModule({
                       <td className="px-6 py-4 text-center">
                         <button
                           onClick={() => handleTogglePaymentStatus(inv)}
-                          className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-800 transition-all"
+                          className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-800 transition-colors"
                         >
                           Switch ke {inv.status === 'Lunas' ? 'Belum Lunas' : 'Lunas'}
                         </button>
@@ -336,8 +336,8 @@ export function AdminSettingsModule({
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
             <div className="space-y-2 max-w-lg">
-              <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <Database className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-sm font-extrabold text-slate-800 dark:text-whiter flex items-center gap-2">
+                <Database className="w-5 h-5 text-blue-600" />
                 Preservasi Data PostgreSQL &amp; Media Vault
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
@@ -348,7 +348,7 @@ export function AdminSettingsModule({
             <button
               onClick={handleTriggerBackup}
               disabled={isBackingUp}
-              className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center gap-2 flex-shrink-0 disabled:opacity-50"
+              className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-colors flex items-center gap-2 flex-shrink-0 disabled:opacity-50"
             >
               {isBackingUp ? (
                 <>
@@ -366,7 +366,7 @@ export function AdminSettingsModule({
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
             <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800">
-              <h4 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Arsip SQL Dump (.sql)</h4>
+              <h4 className="text-xs font-extrabold text-slate-800 dark:text-whiter">Arsip SQL Dump (.sql)</h4>
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -383,7 +383,7 @@ export function AdminSettingsModule({
                     </span>
                     <button
                       onClick={() => onShowToast(`Mengunduh salinan cadangan ${b.filename}...`)}
-                      className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-lg transition-all"
+                      className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-lg transition-colors"
                       title="Unduh Berkas SQL"
                     >
                       <Download className="w-4 h-4" />
@@ -394,7 +394,7 @@ export function AdminSettingsModule({
                           onShowToast('Memulihkan struktur database dari salinan arsip SQL...');
                         }
                       }}
-                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-lg transition-all text-[10px] font-bold"
+                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-lg transition-colors text-[10px] font-bold"
                       title="Kembalikan (Restore)"
                     >
                       Restore
@@ -412,7 +412,7 @@ export function AdminSettingsModule({
         <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-zoomIn">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/40">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-whiter">
                 {modalMode === 'add' ? 'Terbitkan' : 'Ubah'} Rekap Konfigurasi
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
@@ -529,13 +529,13 @@ export function AdminSettingsModule({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all flex items-center gap-1"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-colors flex items-center gap-1"
                 >
                   <Check className="w-4 h-4" />
                   Simpan Perubahan

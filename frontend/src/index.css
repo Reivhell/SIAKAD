@@ -1,97 +1,90 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --animate-shimmer: shimmer 1.6s infinite;
-  
+
+  /* ── Refined academic blue accent ────────────────────────────
+     Deeper, more authoritative than Tailwind's default blue.
+     Hue 258 — grounded blue with a hint of depth, not electric. */
+  --color-blue-50: oklch(0.96 0.025 258);
+  --color-blue-100: oklch(0.925 0.045 258);
+  --color-blue-200: oklch(0.855 0.08 258);
+  --color-blue-300: oklch(0.755 0.125 258);
+  --color-blue-400: oklch(0.635 0.17 258);
+  --color-blue-500: oklch(0.525 0.19 258);
+  --color-blue-600: oklch(0.445 0.175 258);
+  --color-blue-700: oklch(0.365 0.15 258);
+  --color-blue-800: oklch(0.285 0.11 258);
+  --color-blue-900: oklch(0.205 0.07 258);
+
+  /* ── Warm the body surface ───────────────────────────────────
+     Pure white is clinical. A whisper of warmth (chroma 0.004,
+     hue 65) makes the surface feel natural without looking
+     intentionally tinted. */
+  --color-slate-50: oklch(0.985 0.004 65);
+  --color-slate-100: oklch(0.97 0.003 65);
+
   @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 }
 
 @variant dark (&:where(.dark, .dark *));
 
-/* Premium Bespoke Light Mode Enhancements */
-html.light,
+/* ── Semantic color tokens ─────────────────────────────────────
+   These let future component work reference roles instead of
+   raw scale values. Not all components use them yet; they
+   anchor the system for incremental adoption. */
+:root {
+  /* Align data numbers in tables/KPI — dashboard-heavy UI */
+  font-variant-numeric: tabular-nums;
+
+  --color-surface: oklch(0.985 0.004 65);
+  --color-surface-elevated: #ffffff;
+  --color-surface-sidebar: oklch(0.96 0.005 258);
+  --color-ink: oklch(0.15 0.008 258);
+  --color-ink-secondary: oklch(0.4 0.01 258);
+  --color-ink-muted: oklch(0.56 0.008 258);
+  --color-border: oklch(0.9 0.004 258);
+  --color-border-light: oklch(0.94 0.003 258);
+  --color-accent: var(--color-blue-600);
+  --color-accent-hover: var(--color-blue-700);
+  --color-accent-soft: var(--color-blue-50);
+  --color-success: oklch(0.55 0.18 150);
+  --color-warning: oklch(0.7 0.2 85);
+  --color-error: oklch(0.5 0.25 25);
+  --color-info: oklch(0.55 0.16 230);
+}
+
+.dark {
+  --color-surface: oklch(0.13 0.005 258);
+  --color-surface-elevated: oklch(0.17 0.008 258);
+  --color-surface-sidebar: oklch(0.1 0.005 258);
+  --color-ink: oklch(0.92 0.005 258);
+  --color-ink-secondary: oklch(0.7 0.008 258);
+  --color-ink-muted: oklch(0.55 0.005 258);
+  --color-border: oklch(0.22 0.008 258);
+  --color-border-light: oklch(0.18 0.006 258);
+  --color-accent: var(--color-blue-400);
+  --color-accent-hover: var(--color-blue-300);
+  --color-accent-soft: var(--color-blue-950);
+  --color-success: oklch(0.6 0.15 150);
+  --color-warning: oklch(0.75 0.18 85);
+  --color-error: oklch(0.55 0.2 25);
+  --color-info: oklch(0.6 0.12 230);
+}
+
+/* ── Scrollbar styling ──────────────────────────────────────── */
 html:not(.dark) {
-  /* Override Tailwind utility colors at runtime dynamically so that all slate-50/gray-50 become pristine pure white! */
-  --color-slate-50: #ffffff !important;
-  --color-gray-50: #ffffff !important;
-  
-  /* Use a much lighter, softer blue-slate for borders and lines, avoiding harsh dark grey borders */
-  --color-slate-200: #e2e8f0 !important;
-  --color-slate-100: #f8fafc !important;
-  
-  /* Scrollbars customization */
-  scrollbar-color: #cbd5e1 #ffffff;
+  scrollbar-color: #cbd5e1 oklch(0.985 0.004 65);
 }
 
-/* Ensure the document body and primary background elements in light mode are true white */
-html.light body,
-html:not(.dark) body,
-html.light #root,
-html:not(.dark) #root {
-  background-color: #ffffff !important;
-  color: #0f172a !important; /* slate-900 */
+/* ── Base surface + heading wrap handling ───────────────────── */
+html {
+  background-color: var(--color-surface);
 }
 
-/* Make sure all components specifying bg-slate-50 get true white */
-html.light .bg-slate-50,
-html:not(.dark) .bg-slate-50 {
-  background-color: #ffffff !important;
-}
-
-html.light .bg-slate-50\/50,
-html:not(.dark) .bg-slate-50\/50 {
-  background-color: #ffffff !important;
-}
-
-html.light .bg-slate-50\/60,
-html:not(.dark) .bg-slate-50\/60 {
-  background-color: #ffffff !important;
-}
-
-/* Make card shadows and tables look crisp and premium in light mode */
-html.light .shadow-sm,
-html:not(.dark) .shadow-sm {
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03) !important;
-}
-
-html.light .shadow-md,
-html:not(.dark) .shadow-md {
-  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.04) !important;
-}
-
-html.light .shadow-lg,
-html:not(.dark) .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.04), 0 4px 6px -4px rgba(15, 23, 42, 0.04) !important;
-}
-
-html.light .shadow-xl,
-html:not(.dark) .shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.05) !important;
-}
-
-/* Beautiful custom highlight elements to look modern and hand-crafted */
-html.light .border-slate-200,
-html:not(.dark) .border-slate-200 {
-  border-color: #f1f5f9 !important;
-}
-
-html.light .border-slate-100,
-html:not(.dark) .border-slate-100 {
-  border-color: #f8fafc !important;
-}
-
-/* Ensure smooth transition of everything across theme states */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }

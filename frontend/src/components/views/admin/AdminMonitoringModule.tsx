@@ -3,7 +3,7 @@ import {
   AdminClass,
   AdminStudent,
   AdminLecturer
-} from '../../../data/adminMockData';
+} from '../../../api/academic.api';
 import {
   Activity,
   AlertCircle,
@@ -118,7 +118,7 @@ export function AdminMonitoringModule({
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex items-center gap-4 shadow-xs">
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl">
                 <Sliders className="w-6 h-6" />
               </div>
               <div>
@@ -132,10 +132,10 @@ export function AdminMonitoringModule({
           {/* Classes Table */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
             <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-              <h3 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Tingkat Kehadiran Per Kelas</h3>
+              <h3 className="text-xs font-extrabold text-slate-800 dark:text-whiter">Tingkat Kehadiran Per Kelas</h3>
               <button
                 onClick={() => handleDownloadReport('Presensi Perkuliahan')}
-                className="flex items-center gap-1 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 border border-slate-200 dark:border-slate-850 rounded-lg transition-all"
+                className="flex items-center gap-1 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 border border-slate-200 dark:border-slate-850 rounded-lg transition-colors"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
                 Ekspor Presensi
@@ -145,7 +145,7 @@ export function AdminMonitoringModule({
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
+                  <tr className="text-[10px] font-bold text-slate-500r bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-6 py-4">Kode / Mata Kuliah</th>
                     <th className="px-6 py-4">Dosen Pengampu</th>
                     <th className="px-6 py-4 text-center">Kehadiran Dosen</th>
@@ -163,7 +163,7 @@ export function AdminMonitoringModule({
                     return (
                       <tr key={cls.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                         <td className="px-6 py-4">
-                          <p className="font-mono font-bold text-indigo-600 text-[10px]">{cls.kodeMK}</p>
+                          <p className="font-mono font-bold text-blue-600 text-[10px]">{cls.kodeMK}</p>
                           <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{cls.namaMK}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5">Kelas {cls.kelas}</p>
                         </td>
@@ -181,7 +181,7 @@ export function AdminMonitoringModule({
                           {statusClass === 'Kurang' ? (
                             <button
                               onClick={() => handlePokeLecturer(cls.dosenName, cls.namaMK)}
-                              className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 text-[10px] font-extrabold border border-amber-200 dark:border-amber-900/60 rounded-lg flex items-center gap-1 mx-auto transition-all"
+                              className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 text-[10px] font-extrabold border border-amber-200 dark:border-amber-900/60 rounded-lg flex items-center gap-1 mx-auto transition-colors"
                             >
                               <Bell className="w-3.5 h-3.5" />
                               Kirim Pengingat
@@ -221,7 +221,7 @@ export function AdminMonitoringModule({
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
               <p className="text-[10px] font-bold text-slate-400 uppercase">Rata-Rata IPK</p>
-              <p className="text-lg font-extrabold text-indigo-600 mt-1">3.42</p>
+              <p className="text-lg font-extrabold text-blue-600 mt-1">3.42</p>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
                 <div className="bg-indigo-500 h-full rounded-full" style={{ width: '85%' }}></div>
               </div>
@@ -238,13 +238,13 @@ export function AdminMonitoringModule({
           {/* Classes Grade Status List */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
             <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-              <h3 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Status Input Nilai Perkuliahan</h3>
+              <h3 className="text-xs font-extrabold text-slate-800 dark:text-whiter">Status Input Nilai Perkuliahan</h3>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
+                  <tr className="text-[10px] font-bold text-slate-500r bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-6 py-4">Mata Kuliah / Kelas</th>
                     <th className="px-6 py-4">Dosen Pengampu</th>
                     <th className="px-6 py-4 text-center">Status Input</th>
@@ -259,7 +259,7 @@ export function AdminMonitoringModule({
                     return (
                       <tr key={cls.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                         <td className="px-6 py-4">
-                          <span className="font-mono font-bold text-indigo-600 text-[10px]">{cls.kodeMK}</span>
+                          <span className="font-mono font-bold text-blue-600 text-[10px]">{cls.kodeMK}</span>
                           <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{cls.namaMK}</p>
                           <p className="text-[10px] text-slate-400">Kelas {cls.kelas}</p>
                         </td>
@@ -299,7 +299,7 @@ export function AdminMonitoringModule({
       {activeTab === 'admin-laporan-akademik' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-whiter flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
               Laporan Kehadiran Universitas
             </h3>
@@ -309,14 +309,14 @@ export function AdminMonitoringModule({
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => handleDownloadReport('Rekap Kehadiran Dosen')}
-                className="flex-1 py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-1.5 transition-all"
+                className="flex-1 py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <Download className="w-4 h-4 text-slate-400" />
                 Absensi Dosen
               </button>
               <button
                 onClick={() => handleDownloadReport('Rekap Kehadiran Mahasiswa')}
-                className="flex-1 py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-1.5 transition-all"
+                className="flex-1 py-2 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <Download className="w-4 h-4 text-slate-400" />
                 Absensi Mahasiswa
@@ -325,8 +325,8 @@ export function AdminMonitoringModule({
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-whiter flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
               Sertifikasi Akreditasi &amp; Kelulusan
             </h3>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
@@ -334,7 +334,7 @@ export function AdminMonitoringModule({
             </p>
             <button
               onClick={() => handleDownloadReport('Laporan Kelulusan & Predikat')}
-              className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md hover:shadow-blue-500/20 transition-all"
+              className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md hover:shadow-blue-500/20 transition-colors"
             >
               <TrendingUp className="w-4 h-4" />
               Generate Laporan Kelulusan PDF
@@ -355,7 +355,7 @@ export function AdminMonitoringModule({
                 placeholder="Cari user, aktivitas, atau detail log..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl text-slate-700 dark:text-slate-300 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl text-slate-700 dark:text-slate-300 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
               />
             </div>
 
@@ -365,7 +365,7 @@ export function AdminMonitoringModule({
                 setSearchQuery('');
                 onShowToast('Database log aktivitas disinkronkan ulang!');
               }}
-              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl transition-all"
+              className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl transition-colors"
             >
               Refresh Database Log
             </button>
@@ -376,7 +376,7 @@ export function AdminMonitoringModule({
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
+                  <tr className="text-[10px] font-bold text-slate-500r bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-6 py-4">Waktu Kejadian (UTC)</th>
                     <th className="px-6 py-4">User Pengakses</th>
                     <th className="px-6 py-4">Aktivitas</th>

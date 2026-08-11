@@ -211,7 +211,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
       <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={isOpen ? () => setIsOpen(false) : handleOpenChat}
-          className={`relative p-4 rounded-full text-white shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center ${
+          className={`relative p-4 rounded-full text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-transform duration-150 cursor-pointer flex items-center justify-center ${
             isOpen 
               ? 'bg-rose-500 hover:bg-rose-600 rotate-90' 
               : 'bg-gradient-to-tr from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
@@ -252,7 +252,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
             <div className="px-5 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center select-none">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 rounded-xl bg-white/10 border border-white/15">
-                  <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                  <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h4 className="text-sm font-black leading-tight flex items-center gap-1.5">
@@ -278,7 +278,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                 <div key={msg.id} className="space-y-1">
                   {/* Sender Labels */}
                   {msg.sender !== 'system' && (
-                    <div className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1 ${
+                    <div className={`flex items-center gap-1.5 text-[9px] font-boldr text-slate-400 px-1 ${
                       msg.sender === 'user' ? 'justify-end' : 'justify-start'
                     }`}>
                       {msg.sender === 'user' ? (
@@ -320,7 +320,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                             {/* WIDGET 1: KRS Recommender */}
                             {msg.widget === 'krs' && (
                               <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                <span className="text-[10px] font-black text-slate-400r block">
                                   Simulasi Pengisian Mata Kuliah (SKS)
                                 </span>
                                 <div className="grid grid-cols-1 gap-2">
@@ -332,7 +332,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                                         updated[idx].checked = !updated[idx].checked;
                                         setKrsSimulated(updated);
                                       }}
-                                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
                                         course.checked
                                           ? 'border-blue-500 bg-blue-50/55 dark:bg-blue-950/25 text-blue-700 dark:text-blue-300'
                                           : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/40 hover:bg-slate-100'
@@ -578,14 +578,14 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex flex-col space-y-1">
-                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                  <div className="text-[9px] font-boldr text-slate-400 flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-blue-500" />
                     <span>Asisten SIAKAD AI sedang mengetik...</span>
                   </div>
                   <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-800 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               )}
@@ -599,48 +599,48 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                 <>
                   <button 
                     onClick={() => handleQuickPrompt('Rekomendasi KRS semester ganjil')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    📚 Rekomendasi KRS
+                    <BookOpen className="w-3 h-3" /> Rekomendasi KRS
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Bagaimana status tagihan UKT saya?')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    💳 Bayar UKT
+                    <CreditCard className="w-3 h-3" /> Bayar UKT
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Presensi kehadiran kuliah')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    🎯 Presensi Kehadiran
+                    <CheckCircle className="w-3 h-3" /> Presensi Kehadiran
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Bagaimana status skripsi saya?')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    📝 Status Skripsi
+                    <ClipboardList className="w-3 h-3" /> Status Skripsi
                   </button>
                 </>
               ) : (
                 <>
                   <button 
                     onClick={() => handleQuickPrompt('Tampilkan jadwal mengajar hari ini')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    📅 Jadwal Mengajar
+                    <Calendar className="w-3 h-3" /> Jadwal Mengajar
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Buat QR Presensi kuliah')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    ✨ Buat QR Presensi
+                    <QrCode className="w-3 h-3" /> Buat QR Presensi
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Tampilkan bimbingan skripsi')}
-                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    👥 Bimbingan Skripsi
+                    <User className="w-3 h-3" /> Bimbingan Skripsi
                   </button>
                 </>
               )}

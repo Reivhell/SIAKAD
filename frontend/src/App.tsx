@@ -10,8 +10,8 @@ import { SkeletonLoader } from './components/widgets/SkeletonLoader';
 import { motion, AnimatePresence } from 'motion/react';
 import { Breadcrumb } from './components/layout/Breadcrumb';
 import { useLanguage } from './utils/i18n';
-import { ReactLenis } from 'lenis/react';
 import { useAppStore } from './store';
+import { ReactLenis } from 'lenis/react';
 
 // Lazy load view components to optimize initial bundle size (Pilar 2 - Performance)
 const LoginView = lazy(() => import('./components/views/LoginView').then(m => ({ default: m.LoginView })));
@@ -29,7 +29,6 @@ const DekanDashboardView = lazy(() => import('./components/views/DekanDashboardV
 const BaakDashboardView = lazy(() => import('./components/views/BaakDashboardView').then(m => ({ default: m.BaakDashboardView })));
 const BaukDashboardView = lazy(() => import('./components/views/BaukDashboardView').then(m => ({ default: m.BaukDashboardView })));
 const ApplicantDashboardView = lazy(() => import('./components/views/ApplicantDashboardView').then(m => ({ default: m.ApplicantDashboardView })));
-const ShowcaseView = lazy(() => import('./components/views/ShowcaseView'));
 
 export default function App() {
   const { t } = useLanguage();
@@ -346,10 +345,6 @@ export default function App() {
   const renderViewContent = () => {
     if (!user) return null;
 
-    if (currentView === 'showcase') {
-      return <ShowcaseView />;
-    }
-
     if (user.role === 'student') {
       if (user.isGraduated) {
         return (
@@ -554,7 +549,7 @@ export default function App() {
                   initial={{ x: '-100%' }}
                   animate={{ x: 0 }}
                   exit={{ x: '-100%' }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
                   className="fixed inset-y-0 left-0 z-50 w-64 lg:hidden"
                 >
                   <Sidebar 
@@ -596,7 +591,7 @@ export default function App() {
               isSkeletonLoading={isSkeletonLoading}
             />
             
-            <ReactLenis root={false} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+            <ReactLenis className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-200" options={{ autoRaf: true }}>
               <main className="w-full">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   {/* Clean modern breadcrumb navigation above active dashboard view */}

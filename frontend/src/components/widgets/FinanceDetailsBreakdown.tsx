@@ -57,7 +57,7 @@ export function FinanceDetailsBreakdown() {
   const totalAmount = feeItems.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -100,7 +100,7 @@ export function FinanceDetailsBreakdown() {
                     key={item.id}
                     onClick={() => setSelectedFee(item)}
                     style={{ width: `${item.percentage}%` }}
-                    className={`${item.color} h-full hover:brightness-110 active:brightness-95 transition-all relative group cursor-pointer`}
+                    className={`${item.color} h-full hover:brightness-110 active:brightness-95 transition-colors relative group cursor-pointer`}
                     title={`${item.name}: ${item.percentage}%`}
                   >
                     {/* Tooltip on hover */}
@@ -138,7 +138,7 @@ export function FinanceDetailsBreakdown() {
               <div
                 key={fee.id}
                 onClick={() => setSelectedFee(isSelected ? null : fee)}
-                className={`p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
+                className={`p-3.5 rounded-xl border transition-colors cursor-pointer select-none ${
                   isSelected
                     ? 'bg-slate-50 dark:bg-slate-900/60 border-blue-500/40 dark:border-blue-500/35 shadow-xs'
                     : 'bg-white dark:bg-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-850/50 border-slate-200/60 dark:border-slate-800/80'

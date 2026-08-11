@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, User as UserIcon, Lock, ArrowRight, Shield, CheckCircle, HelpCircle, GraduationCap, Briefcase, ClipboardList, Globe, ArrowLeft, Mail, KeyRound, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, Shield, CheckCircle, HelpCircle, GraduationCap, Briefcase, ClipboardList, Globe, ArrowLeft, Mail, KeyRound, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { User, Role } from '../../types';
 import { useLanguage } from '../../utils/i18n';
 import { LanguageSwitcher } from '../layout/LanguageSwitcher';
@@ -34,7 +34,7 @@ const demoAccounts = [
     name: 'Dr. Budi Rahardjo (Kaprodi)',
     description: 'Persetujuan Kelas & Monitoring SKS',
     avatar: 'K',
-    color: 'border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 bg-indigo-50/20 dark:bg-indigo-950/5',
+    color: 'border-blue-200 dark:border-blue-900/50 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 text-blue-700 dark:text-blue-400 bg-blue-50/20 dark:bg-blue-950/5',
     icon: ClipboardList,
   },
   {
@@ -149,12 +149,12 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200" dir={dir}>
+    <div className="min-h-dvh bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200" dir={dir}>
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-2 mb-2">
           <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-500/20">
-            <Sparkles className="w-6 h-6 animate-pulse" />
+            <GraduationCap className="w-6 h-6" />
           </div>
           <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-widest">
             SIAKAD<span className="text-blue-500">.</span>
@@ -178,7 +178,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                 
                 {/* Language Switcher Section */}
                 <div id="login-language-switcher-wrapper" className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/50 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div id="login-language-switcher-label" className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div id="login-language-switcher-label" className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400r">
                     <Globe className="w-3.5 h-3.5 text-blue-500" />
                     <span>{t('login.lang_select')}</span>
                   </div>
@@ -187,7 +187,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
 
                 {/* Role Selection Switch */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     {t('login.role_preview')}
                   </label>
                   <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200/50 dark:border-slate-800">
@@ -204,7 +204,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                             'admin@kampus.ac.id';
                           setUsername(defaultEmail);
                         }}
-                        className={`py-2 text-[10px] font-bold uppercase rounded-lg transition-all cursor-pointer ${
+                        className={`py-2 text-[10px] font-bold uppercase rounded-lg transition-colors cursor-pointer ${
                           selectedRole === role
                             ? 'bg-blue-600 text-white shadow-sm'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -218,7 +218,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
 
                 {/* Username Input */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                     {t('login.username')}
                   </label>
                   <div className="relative">
@@ -230,7 +230,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       placeholder={selectedRole === 'student' ? "NIM atau Email Mahasiswa" : selectedRole === 'lecturer' ? "NIDN atau Email Dosen" : selectedRole === 'kaprodi' ? "Email Kaprodi" : "Username Admin"}
                     />
                   </div>
@@ -239,7 +239,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                 {/* Password Input */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {t('login.password')}
                     </label>
                     <a 
@@ -264,7 +264,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       placeholder="••••••••••••"
                     />
                   </div>
@@ -280,7 +280,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-500/10 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all mt-6 cursor-pointer"
+                  className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-500/10 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors mt-6 cursor-pointer"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -314,7 +314,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                         setForgotError('');
                         setForgotStep((prev) => prev - 1);
                       }}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 uppercase tracking-wider cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200r cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>{lang === 'id' ? 'Kembali' : 'Back'}</span>
@@ -327,7 +327,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                   {[1, 2].map((step) => (
                     <div
                       key={step}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-colors duration-300 ${
                         forgotStep >= step
                           ? 'bg-blue-600 dark:bg-blue-500'
                           : 'bg-slate-100 dark:bg-slate-800'
@@ -366,7 +366,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                     </p>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                         {lang === 'id' ? 'Email / Nama Pengguna' : 'Email / Username'}
                       </label>
                       <div className="relative">
@@ -378,7 +378,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                           required
                           value={forgotEmail}
                           onChange={(e) => setForgotEmail(e.target.value)}
-                          className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                          className="block w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           placeholder="ahmad.syafiq@mahasiswa.ac.id"
                         />
                       </div>
@@ -394,7 +394,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/10 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all cursor-pointer"
+                      className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl shadow-lg shadow-blue-500/10 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
                     >
                       {forgotLoading ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -428,7 +428,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                         setForgotError('');
                         setForgotEmail('');
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 transition-all cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 transition-colors cursor-pointer"
                     >
                       <ArrowLeft className="w-4 h-4 inline mr-1" />
                       {lang === 'id' ? 'Kembali ke Login' : 'Back to Login'}
@@ -444,7 +444,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
           {/* Right/Prefill Quick Access */}
           <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/80 pt-6 lg:pt-0 lg:pl-6 flex flex-col justify-between">
             <div>
-              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
                 Masuk Cepat Demo
               </h4>
@@ -461,7 +461,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                       key={acc.role}
                       type="button"
                       onClick={() => handleQuickPrefill(acc)}
-                      className={`w-full text-left p-2.5 rounded-xl border text-xs font-medium transition-all flex items-center gap-3 cursor-pointer ${acc.color} ${
+                      className={`w-full text-left p-2.5 rounded-xl border text-xs font-medium transition-colors flex items-center gap-3 cursor-pointer ${acc.color} ${
                         isSelected ? 'ring-2 ring-blue-500 border-transparent shadow-sm' : ''
                       }`}
                     >

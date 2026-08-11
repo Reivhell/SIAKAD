@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Menu, Sun, Moon, Sparkles, UserCheck, RefreshCw, Globe } from 'lucide-react';
+import { Bell, Menu, Sun, Moon, Sparkles, RefreshCw, Globe } from 'lucide-react';
 import { User, Role } from '../../types';
 import { NotificationCenter } from './NotificationCenter';
 import { GlobalSearch } from './GlobalSearch';
@@ -19,81 +19,6 @@ interface HeaderProps {
   currentView?: string;
   isSkeletonLoading?: boolean;
 }
-
-const mockUsers: Record<Role, User> = {
-  admin: {
-    id: 'u1',
-    name: 'Hendra Wijaya, M.T.',
-    email: 'admin@kampus.ac.id',
-    role: 'admin',
-    phone: '0812-9988-7766',
-    department: 'Admin'
-  },
-  lecturer: {
-    id: 'u2',
-    name: 'Dr. Budi Rahardjo',
-    email: 'budi.rahardjo@kampus.ac.id',
-    role: 'lecturer',
-    phone: '0811-2233-4455',
-    department: 'Teknik Informatika'
-  },
-  student: {
-    id: 'u3',
-    name: 'Ahmad Syafiq',
-    email: 'ahmad.syafiq@mahasiswa.ac.id',
-    role: 'student',
-    phone: '0812-3456-7890',
-    department: 'Teknik Informatika'
-  },
-  kaprodi: {
-    id: 'u4',
-    name: 'Dr. Budi Rahardjo',
-    email: 'kaprodi@kampus.ac.id',
-    role: 'kaprodi',
-    phone: '0813-4567-8901',
-    department: 'Teknik Informatika'
-  },
-  dekan: {
-    id: 'u5',
-    name: 'Prof. Dr. Ir. Faisal Akbar',
-    email: 'dekan@kampus.ac.id',
-    role: 'dekan',
-    phone: '0812-7777-6666',
-    department: 'Fakultas Teknologi Informasi'
-  },
-  alumni: {
-    id: 'u6',
-    name: 'Rian Hidayat, S.Kom',
-    email: 'rian.hidayat@alumni.ac.id',
-    role: 'alumni',
-    phone: '0812-3456-7890',
-    department: 'Teknik Informatika'
-  },
-  baak: {
-    id: 'u7',
-    name: 'Admin BAAK',
-    email: 'baak@kampus.ac.id',
-    role: 'baak',
-    phone: '0812-1122-3344',
-    department: 'Administrasi Akademik'
-  },
-  bauk: {
-    id: 'u8',
-    name: 'Admin BAUK',
-    email: 'bauk@kampus.ac.id',
-    role: 'bauk',
-    phone: '0812-5566-7788',
-    department: 'Biro Keuangan'
-  },
-  applicant: {
-    id: 'u9',
-    name: 'Rian Hidayat (Calon Maba)',
-    email: 'rian@gmail.com',
-    role: 'applicant',
-    phone: '0812-3456-7890',
-    department: 'Penerimaan Mahasiswa Baru'
-  }
-};
 
 const getRoleAvatarStyle = (role: Role) => {
   switch (role) {
@@ -330,15 +255,7 @@ export function Header({
     };
   }, []);
 
-  const handleRoleChange = (role: Role) => {
-    startProgress();
-    onUserChange(mockUsers[role]);
-    setTimeout(() => {
-      completeProgress();
-    }, 850);
-  };
-
-  if (!user) return null;
+if (!user) return null;
 
   return (
     <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 relative z-30 transition-colors duration-200">
@@ -353,18 +270,19 @@ export function Header({
               ease: active ? 'linear' : [0.16, 1, 0.3, 1],
               duration: active ? 0.25 : 0.4 
             }}
-            className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] relative"
+            className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 shadow-[0_0_8px_rgba(61,101,201,0.4)] relative"
           >
             {/* Glowing tail trailing effect */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/30 dark:to-white/20 blur-[2px]" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff,0_0_5px_#3b82f6] animate-pulse" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff,0_0_5px_#4468c9] animate-pulse" />
           </motion.div>
         </div>
       )}
       <div className="flex items-center flex-1">
-        <button 
+        <button
           onClick={onMenuToggle}
-          className="mr-4 lg:hidden p-2 rounded-md text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none"
+          aria-label="Buka menu navigasi"
+          className="mr-4 lg:hidden p-2 rounded-md text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -380,7 +298,7 @@ export function Header({
         {onTriggerSkeleton && (
           <button
             onClick={onTriggerSkeleton}
-            className="flex items-center gap-1 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 border border-blue-500/25 dark:border-blue-500/45 text-blue-600 dark:text-blue-400 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-1 bg-gradient-to-r from-blue-500/10 to-blue-700/10 hover:from-blue-500/20 hover:to-blue-700/20 border border-blue-500/25 dark:border-blue-500/45 text-blue-600 dark:text-blue-400 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
             title={t('header.sim_skeleton')}
           >
             <RefreshCw className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
@@ -391,27 +309,12 @@ export function Header({
         {/* Interactive Language Switcher */}
         <LanguageSwitcher />
 
-        {/* Interactive Role Switcher - Outstanding value for demonstration */}
-        <div className="flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-32 h-8 sm:w-40 lg:w-44 sm:h-9 flex-shrink-0 px-1 sm:px-2">
-          <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 hidden sm:inline-block" />
-          <select 
-            value={user.role} 
-            onChange={(e) => handleRoleChange(e.target.value as Role)}
-            className="bg-transparent border-none text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer focus:ring-0 py-0 px-1 text-center w-full focus:outline-none"
-          >
-            <option value="admin" className="dark:bg-slate-900 text-slate-900 dark:text-white">{t('role.admin')}</option>
-            <option value="lecturer" className="dark:bg-slate-900 text-slate-900 dark:text-white">{t('role.lecturer')}</option>
-            <option value="kaprodi" className="dark:bg-slate-900 text-slate-900 dark:text-white">{t('role.kaprodi')}</option>
-            <option value="dekan" className="dark:bg-slate-900 text-slate-900 dark:text-white">{t('role.dekan')}</option>
-            <option value="student" className="dark:bg-slate-900 text-slate-900 dark:text-white">{t('role.student')}</option>
-          </select>
-        </div>
-
         {/* Bell Button & Notification Center */}
         <div className="relative" ref={notificationRef}>
-          <button 
+          <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none relative transition-colors ${
+            aria-label={t('header.notifications') || 'Notifikasi'}
+            className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 relative transition-colors ${
               isNotificationsOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 hover:text-slate-500 dark:hover:text-slate-300'
             }`}
           >
@@ -433,14 +336,14 @@ export function Header({
         {/* Interactive User Profile Trigger */}
         <button 
           onClick={() => setIsProfileOpen(true)}
-          className="flex items-center gap-2 sm:gap-3 text-left hover:opacity-85 active:opacity-70 focus:outline-none transition-all group"
+          className="flex items-center gap-2 sm:gap-3 text-left hover:opacity-85 active:opacity-70 focus:outline-none transition-colors group"
           title="Buka Pengaturan Profil"
         >
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {user.name || 'User'}
             </span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{user.role || 'student'}</span>
+            <span className="text-[10px] text-slate-400 font-boldr">{user.role || 'student'}</span>
           </div>
           {user.avatar ? (
             <img 
@@ -449,7 +352,7 @@ export function Header({
               className="h-8 w-8 rounded-full object-cover border border-blue-200 dark:border-blue-800 select-none group-hover:border-blue-500 transition-colors"
             />
           ) : (
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold border select-none transition-all duration-300 group-hover:scale-110 group-hover:shadow-md ${getRoleAvatarStyle(user.role)}`}>
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold border select-none transition-colors duration-300 group-hover:shadow-md ${getRoleAvatarStyle(user.role)}`}>
               {(user.name || 'User').charAt(0)}
             </div>
           )}

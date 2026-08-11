@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
-import { ChatThread, StudentAcademic, JurnalItem, ChatMessage } from '../../../data/lecturerMockData';
+import React, { useState, useEffect } from 'react';
+import {
+  ChatThread,
+  StudentAcademic,
+  JurnalItem,
+  ChatMessage,
+  sendChatMessage,
+  getAcademicAnnouncements,
+  createAcademicAnnouncement,
+} from '../../../api/academic.api';
 import { 
   BarChart, 
   Bar, 
@@ -45,94 +53,92 @@ export function LecturerCommunicationModule({
   const [activeThreadNim, setActiveThreadNim] = useState<string>(chats[0]?.studentNim || '');
   const [typedMessage, setTypedMessage] = useState<string>('');
 
-  // 2. Announcement States
+  // 2. Announcement States (riwayat pengumuman nyata dari backend)
   const [announcementClass, setAnnouncementClass] = useState<string>('IF3110-A');
   const [announcementMsg, setAnnouncementMsg] = useState<string>('');
-  const [announcementList, setAnnouncementList] = useState<any[]>([
-    { classId: 'IF3110-A', date: '2026-06-23', text: 'Mengingatkan kembali besok kuis 2 tatap muka di lab 3.' },
-    { classId: 'IF3150-B', date: '2026-06-18', text: 'Tugas simulasi scheduling CPU diperpanjang hingga akhir minggu.' }
-  ]);
+  const [announcementList, setAnnouncementList] = useState<Array<{ classId: string; date: string; text: string }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAcademicAnnouncements()
+      .then((anns) => {
+        if (cancelled) return;
+        setAnnouncementList(
+          anns.map((a) => ({ classId: a.target || '-', date: a.date, text: a.content })),
+        );
+      })
+      .catch(() => {
+        // biarkan riwayat kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Active chat details
   const activeThread = chats.find(c => c.studentNim === activeThreadNim) || chats[0];
 
-  // Handle Send Chat Message with Simulated Reply
+  // Handle Send Chat Message (disimpan ke backend, tanpa balasan otomatis)
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!typedMessage.trim() || !activeThread) return;
+    const recipient = activeThread.studentEmail;
+    if (!recipient) {
+      onShowToast('Error: Penerima pesan tidak ditemukan.');
+      return;
+    }
 
-    const newMessage: ChatMessage = {
-      id: 'm_lect_' + Date.now(),
-      sender: 'lecturer',
-      text: typedMessage,
-      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    const updatedChats = chats.map(thread => {
-      if (thread.studentNim === activeThreadNim) {
-        return {
-          ...thread,
-          lastMessage: typedMessage,
-          timestamp: 'Just now',
-          messages: [...thread.messages, newMessage]
-        };
-      }
-      return thread;
-    });
-
-    setChats(updatedChats);
-    const originalTyped = typedMessage;
+    const text = typedMessage;
     setTypedMessage('');
-    onShowToast('Pesan terkirim!');
-
-    // Simulate auto-reply from student after 1.5s
-    setTimeout(() => {
-      const studentReplies = [
-        "Baik Prof, terima kasih atas arahannya.",
-        "Siap dilaksanakan Prof, besok pagi saya bawa berkas revisinya.",
-        "Terima kasih banyak atas persetujuan KRS nya Prof!",
-        "Mohon maaf mengganggu waktunya Prof, saya pelajari kembali draf Bab 4 nya."
-      ];
-      const randomReply = studentReplies[Math.floor(Math.random() * studentReplies.length)];
-      
-      const autoReplyMessage: ChatMessage = {
-        id: 'm_stud_' + Date.now(),
-        sender: 'student',
-        text: randomReply,
-        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setChats(prevChats => prevChats.map(thread => {
-        if (thread.studentNim === activeThreadNim) {
-          return {
-            ...thread,
-            lastMessage: randomReply,
-            unread: true,
-            timestamp: 'Just now',
-            messages: [...thread.messages, autoReplyMessage]
-          };
-        }
-        return thread;
-      }));
-      onShowToast(`Pesan baru dari ${activeThread.studentName}`);
-    }, 1500);
+    sendChatMessage(recipient, text)
+      .then((saved) => {
+        const newMessage: ChatMessage = {
+          id: saved.id || 'm_lect_' + Date.now(),
+          sender: 'lecturer',
+          text,
+          timestamp: saved.timestamp || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        };
+        setChats(prevChats =>
+          prevChats.map(thread => {
+            if (thread.studentNim === activeThreadNim) {
+              return {
+                ...thread,
+                lastMessage: text,
+                timestamp: 'Just now',
+                messages: [...thread.messages, newMessage],
+              };
+            }
+            return thread;
+          }),
+        );
+        onShowToast('Pesan terkirim!');
+      })
+      .catch(() => onShowToast('Gagal mengirim pesan. Silakan coba lagi.'));
   };
 
-  // Broadcast announcement
+  // Broadcast announcement (disimpan ke backend)
   const handleBroadcastAnnouncement = (e: React.FormEvent) => {
     e.preventDefault();
     if (!announcementMsg.trim()) {
       onShowToast('Error: Pesan pengumuman wajib diisi!');
       return;
     }
-    const newAnn = {
-      classId: announcementClass,
-      date: new Date().toISOString().split('T')[0],
-      text: announcementMsg
-    };
-    setAnnouncementList([newAnn, ...announcementList]);
+    const text = announcementMsg;
     setAnnouncementMsg('');
-    onShowToast(`Pengumuman kelas berhasil disiarkan ke mahasiswa ${announcementClass}!`);
+    createAcademicAnnouncement({
+      title: `Pengumuman Kelas ${announcementClass}`,
+      content: text,
+      target: announcementClass,
+      date: new Date().toISOString().split('T')[0],
+    })
+      .then((ann) => {
+        setAnnouncementList((prev) => [
+          { classId: ann.target || announcementClass, date: ann.date, text: ann.content },
+          ...prev,
+        ]);
+        onShowToast(`Pengumuman kelas berhasil disiarkan ke mahasiswa ${announcementClass}!`);
+      })
+      .catch(() => onShowToast('Gagal menyiarkan pengumuman. Silakan coba lagi.'));
   };
 
   // Grade distributions data for Recharts
@@ -141,7 +147,7 @@ export function LecturerCommunicationModule({
     { name: 'B', count: students.filter(s => s.grades.gradeLetter === 'B').length, fill: '#3b82f6' },
     { name: 'C', count: students.filter(s => s.grades.gradeLetter === 'C').length, fill: '#f59e0b' },
     { name: 'D', count: students.filter(s => s.grades.gradeLetter === 'D').length, fill: '#ef4444' },
-    { name: 'E', count: students.filter(s => s.grades.gradeLetter === 'E').length, fill: '#64748b' }
+    { name: 'E', count: students.filter(s => s.grades.gradeLetter === 'E').length, fill: 'var(--color-ink-muted)' }
   ];
 
   return (
@@ -151,7 +157,7 @@ export function LecturerCommunicationModule({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[500px]">
           {/* Threads list */}
           <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col h-full">
-            <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-3 px-1 flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-blue-500" /> Percakapan Aktif
             </h4>
             <div className="flex-1 overflow-y-auto space-y-2">
@@ -163,7 +169,7 @@ export function LecturerCommunicationModule({
                     // Mark as read
                     setChats(prev => prev.map(t => t.studentNim === thread.studentNim ? { ...t, unread: false } : t));
                   }}
-                  className={`w-full p-3 border rounded-xl text-left transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                  className={`w-full p-3 border rounded-xl text-left transition-colors cursor-pointer flex items-start justify-between gap-3 ${
                     thread.studentNim === activeThreadNim
                       ? 'bg-blue-600 border-blue-600 text-white shadow-md'
                       : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-800 dark:text-slate-300'
@@ -328,17 +334,17 @@ export function LecturerCommunicationModule({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/15">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Rata-rata Kehadiran Kelas</span>
+              <span className="text-[10px] text-slate-400 font-boldr">Rata-rata Kehadiran Kelas</span>
               <p className="text-xl font-extrabold text-slate-800 dark:text-white mt-1">94.3%</p>
               <p className="text-[10px] text-slate-500 mt-1">Keaktifan yang sangat baik.</p>
             </div>
             <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/15">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Batas Kehadiran UAS</span>
+              <span className="text-[10px] text-slate-400 font-boldr">Batas Kehadiran UAS</span>
               <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">75.0%</p>
               <p className="text-[10px] text-slate-500 mt-1">Syarat wajib lulus mengikuti ujian.</p>
             </div>
             <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/15">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mahasiswa Terancam Alpha</span>
+              <span className="text-[10px] text-slate-400 font-boldr">Mahasiswa Terancam Alpha</span>
               <p className="text-xl font-extrabold text-rose-500 mt-1">1 Orang</p>
               <p className="text-[10px] text-rose-400 mt-1">&bull; Dedi Kurniawan (NIM 13521089)</p>
             </div>
@@ -347,7 +353,7 @@ export function LecturerCommunicationModule({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                   <th className="pb-3 pl-2">Mahasiswa</th>
                   <th className="pb-3 text-center">Hadir</th>
                   <th className="pb-3 text-center">Sakit</th>
@@ -413,7 +419,7 @@ export function LecturerCommunicationModule({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                       <th className="pb-3 pl-2">Mahasiswa</th>
                       <th className="pb-3 text-center">UTS</th>
                       <th className="pb-3 text-center">UAS</th>
@@ -443,13 +449,13 @@ export function LecturerCommunicationModule({
 
             {/* Recharts Bar chart of grade distributions */}
             <div className="lg:col-span-5 bg-slate-50/50 dark:bg-slate-950/25 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4">Grafik Distribusi Huruf Kelulusan</h5>
+              <h5 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4">Grafik Distribusi Huruf Kelulusan</h5>
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={gradeDistributionData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--color-ink-muted)' }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'var(--color-ink-muted)' }} />
                     <Tooltip cursor={{ fill: 'transparent' }} />
                     <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                       {gradeDistributionData.map((entry, index) => (
@@ -486,7 +492,7 @@ export function LecturerCommunicationModule({
 
             {/* Riwayat mengajar table */}
             <div className="space-y-4">
-              <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Riwayat Pengajaran Lintas Semester</h5>
+              <h5 className="text-xs font-bold text-slate-800 dark:text-whiter">Riwayat Pengajaran Lintas Semester</h5>
               <div className="space-y-2.5">
                 <div className="p-3 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/10 rounded-xl flex items-center justify-between text-xs">
                   <div>

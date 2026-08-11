@@ -5,6 +5,8 @@ import {
   MapPin, Sparkles, ChevronRight, BarChart2, ShieldCheck, Download
 } from 'lucide-react';
 import { User } from '../../types';
+import { getRoleDashboard, BaakDashboardPayload } from '../../api/academic.api';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../utils/i18n';
 
@@ -27,37 +29,40 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // State for Scheduling
-  const [schedules, setSchedules] = useState([
-    { id: 'S1', course: 'Pemrograman Web', lecturer: 'Dr. Hendra Wijaya', room: 'Lab Komputer 3', time: 'Senin, 08:00 - 10:30', cap: '30/30', status: 'Terjadwal' },
-    { id: 'S2', course: 'Kecerdasan Buatan', lecturer: 'Dra. Sri Hartati, M.T.', room: 'Ruang Kuliah 402', time: 'Selasa, 10:00 - 12:30', cap: '40/40', status: 'Terjadwal' },
-    { id: 'S3', course: 'Arsitektur Enterprise', lecturer: 'Wawan Kuswara, M.T.', room: 'Ruang Kuliah 101', time: 'Rabu, 13:00 - 15:30', cap: '35/45', status: 'Terjadwal' }
-  ]);
+  // Data nyata dashboard BAAK dari backend
+  const [schedules, setSchedules] = useState<BaakDashboardPayload['schedules']>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationLogs, setOptimizationLogs] = useState<string[]>([]);
 
   // State for Kurikulum & OBE
-  const [courses, setCourses] = useState([
-    { code: 'IF101', name: 'Dasar Pemrograman', sks: 3, semester: 1, type: 'Wajib', preraq: '-', cpl: 'CPL-1, CPL-2' },
-    { code: 'IF203', name: 'Struktur Data', sks: 3, semester: 2, type: 'Wajib', preraq: 'Dasar Pemrograman', cpl: 'CPL-2, CPL-3' },
-    { code: 'IF305', name: 'Pemrograman Web', sks: 4, semester: 3, type: 'Wajib', preraq: 'Struktur Data', cpl: 'CPL-3, CPL-5' }
-  ]);
+  const [courses, setCourses] = useState<BaakDashboardPayload['courses']>([]);
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseCode, setNewCourseCode] = useState('');
   const [newCourseSks, setNewCourseSks] = useState(3);
   const [newCoursePrereq, setNewCoursePrereq] = useState('');
 
   // State for Cuti & Status (Mutasi & SP)
-  const [mutasiRequests, setMutasiRequests] = useState([
-    { id: 'MUT-01', name: 'Indra Gunawan', nim: '10123045', type: 'Cuti Akademik', date: '2026-06-25', status: 'Pending', reason: 'Alasan Kesehatan' },
-    { id: 'MUT-02', name: 'Sonia Sitorus', nim: '10122012', type: 'Mutasi Lintas Prodi', date: '2026-06-24', status: 'Approved', reason: 'Pindah ke Sistem Informasi' },
-    { id: 'MUT-03', name: 'Ronaldo Simanjuntak', nim: '10121088', type: 'Drop Out (DO)', date: '2026-06-20', status: 'Pending', reason: 'Melebihi Batas Studi SP3' }
-  ]);
+  const [mutasiRequests, setMutasiRequests] = useState<BaakDashboardPayload['mutasiRequests']>([]);
+  const [warningList, setWarningList] = useState<BaakDashboardPayload['warningList']>([]);
 
-  const [warningList, setWarningList] = useState([
-    { nim: '10121102', name: 'Bagus Pratoso', ipk: 1.8, spLevel: 'SP-2', status: 'Peringatan Aktif', desc: 'IPK di bawah standar kelulusan minimum' },
-    { nim: '10122044', name: 'Tommy Wijaya', ipk: 1.9, spLevel: 'SP-1', status: 'Peringatan Aktif', desc: 'Presensi di bawah 75%' }
-  ]);
+  useEffect(() => {
+    let cancelled = false;
+    getRoleDashboard<BaakDashboardPayload>('baak')
+      .then((data) => {
+        if (cancelled) return;
+        setSchedules(data.schedules ?? []);
+        setCourses(data.courses ?? []);
+        setMutasiRequests(data.mutasiRequests ?? []);
+        setWarningList(data.warningList ?? []);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   const handleRunGeneticScheduler = () => {
     setIsOptimizing(true);
@@ -113,7 +118,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
     <div className="space-y-6">
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-950 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-950 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-pulse">
           <ShieldCheck className="w-4 h-4 text-emerald-500" />
           {toastMessage}
         </div>
@@ -125,7 +130,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-cyan-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-cyan-300 shadow-md">
+              <span className="bg-cyan-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full border border-cyan-300 shadow-md">
                 ADMINISTRATOR BAAK
               </span>
             </div>
@@ -146,7 +151,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-colors cursor-pointer ${
                 isActive 
                   ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' 
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
@@ -164,17 +169,17 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
         {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Program Studi</div>
+              <div className="text-[10px] font-blackr text-slate-400">Total Program Studi</div>
               <div className="text-3xl font-black text-cyan-600 mt-1">14</div>
               <p className="text-[11px] text-slate-500 mt-2">Daftar kurikulum aktif terverifikasi OBE.</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Jadwal Kelas</div>
+              <div className="text-[10px] font-blackr text-slate-400">Total Jadwal Kelas</div>
               <div className="text-3xl font-black text-indigo-600 mt-1">340</div>
               <p className="text-[11px] text-slate-500 mt-2">Optimasi ruangan dan ketersediaan dosen pengampu.</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Cuti & Mutasi Menunggu</div>
+              <div className="text-[10px] font-blackr text-slate-400">Cuti & Mutasi Menunggu</div>
               <div className="text-3xl font-black text-amber-600 mt-1">
                 {mutasiRequests.filter(r => r.status === 'Pending').length}
               </div>
@@ -182,7 +187,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
             </div>
 
             <div className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h3 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 PEMBERITAHUAN ADMINISTRASI TERBARU
               </h3>
               <div className="space-y-3">
@@ -211,7 +216,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
               {/* Kurikulum table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase tracking-wider text-[10px] font-black">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500r text-[10px] font-black">
                     <tr>
                       <th className="p-3">Kode Matkul</th>
                       <th className="p-3">Nama Matakuliah</th>
@@ -240,7 +245,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
             </div>
 
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h4 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Tambah Mata Kuliah Baru
               </h4>
               <form onSubmit={handleAddCourse} className="space-y-3">
@@ -288,7 +293,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
                 </div>
                 <button 
                   type="submit" 
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded-xl text-xs cursor-pointer transition-all"
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded-xl text-xs cursor-pointer transition-colors"
                 >
                   Tambahkan ke Kurikulum
                 </button>
@@ -310,7 +315,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
               <button 
                 onClick={handleRunGeneticScheduler}
                 disabled={isOptimizing}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-black px-4 py-2 rounded-xl shadow-md transition-colors cursor-pointer flex items-center gap-2"
               >
                 {isOptimizing ? 'Sedang Mengoptimasi...' : 'Mulai Optimasi Penjadwalan'}
               </button>
@@ -327,7 +332,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 uppercase tracking-wider text-[10px] font-black">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500r text-[10px] font-black">
                   <tr>
                     <th className="p-3">Mata Kuliah</th>
                     <th className="p-3">Dosen Pengampu</th>
@@ -416,7 +421,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
             </div>
 
             <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <h4 className="text-xs font-blackr text-slate-800 dark:text-slate-200">
                 Peringatan Akademik (SP) & Drop Out
               </h4>
               <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -437,7 +442,7 @@ export function BaakDashboardView({ user, onUserChange, activeTab: propActiveTab
 
                     <button 
                       onClick={() => handleIssueWarning(w.nim)}
-                      className="text-[10px] font-bold text-red-600 hover:text-white hover:bg-red-600 px-3 py-1.5 border border-red-200 rounded-xl transition-all cursor-pointer shrink-0"
+                      className="text-[10px] font-bold text-red-600 hover:text-white hover:bg-red-600 px-3 py-1.5 border border-red-200 rounded-xl transition-colors cursor-pointer shrink-0"
                     >
                       Kirim SP+
                     </button>

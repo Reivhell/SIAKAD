@@ -127,14 +127,14 @@ export function SmartCourseRecommendation() {
   const currentList = mockRecommendations[selectedInterest] || [];
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans">
       
       {/* Widget Header */}
       <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
               Rekomendasi Mata Kuliah Pilihan Cerdas (AI-Driven)
@@ -161,7 +161,7 @@ export function SmartCourseRecommendation() {
                   setSelectedInterest(opt.id);
                   setActiveCourse(null);
                 }}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 select-none ${
+                className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between gap-2 select-none ${
                   isSelected
                     ? 'bg-blue-50/70 dark:bg-blue-950/20 border-blue-500/50 dark:border-blue-500/40 text-blue-700 dark:text-blue-400 font-bold'
                     : 'bg-slate-50/50 dark:bg-slate-950/40 border-slate-200/50 dark:border-slate-850 text-slate-600 dark:text-slate-450'
@@ -188,14 +188,14 @@ export function SmartCourseRecommendation() {
               <div
                 key={course.code}
                 onClick={() => setActiveCourse(course)}
-                className={`p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden select-none ${
+                className={`p-3.5 rounded-xl border transition-colors cursor-pointer relative overflow-hidden select-none ${
                   isSelected
                     ? 'bg-slate-50 dark:bg-slate-900/60 border-blue-500/40 dark:border-blue-500/35 shadow-xs'
                     : 'bg-white dark:bg-slate-900 hover:bg-slate-50/40 dark:hover:bg-slate-850/50 border-slate-200/60 dark:border-slate-800/80'
                 }`}
               >
                 {/* Score Tag */}
-                <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black">
+                <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black">
                   <Star className="w-3 h-3 fill-current" />
                   <span>{course.suitabilityScore}% Cocok</span>
                 </div>
@@ -243,7 +243,7 @@ export function SmartCourseRecommendation() {
 
                   {/* Smart reasoning explanation */}
                   <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg">
-                    <span className="text-[9px] uppercase font-bold text-indigo-500 flex items-center gap-1 mb-1 font-sans">
+                    <span className="text-[9px] uppercase font-bold text-blue-500 flex items-center gap-1 mb-1 font-sans">
                       <Award className="w-3.5 h-3.5" /> Analisis Kecocokan Akademik
                     </span>
                     <p className="text-[11px] text-slate-650 dark:text-slate-300 leading-relaxed">
@@ -292,7 +292,7 @@ export function SmartCourseRecommendation() {
                     onClick={() => {
                       alert(`Mata kuliah ${activeCourse.name} (${activeCourse.code}) berhasil ditambahkan ke usulan KRS bayangan Anda! Silakan finalisasi di menu KRS.`);
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-all text-[11px]"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-[11px]"
                   >
                     Tambah ke KRS <ArrowRight className="w-3.5 h-3.5" />
                   </button>
@@ -301,7 +301,7 @@ export function SmartCourseRecommendation() {
             ) : (
               <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center text-xs flex flex-col items-center justify-center h-full gap-2.5 min-h-[220px]">
                 <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800 flex items-center justify-center text-slate-400">
-                  <Sparkles className="w-5 h-5 animate-bounce" />
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-700 dark:text-slate-300">Pilih Mata Kuliah Rekomendasi</div>

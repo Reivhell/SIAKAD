@@ -119,7 +119,7 @@ export function KHSView() {
     <div className="space-y-6">
       {/* Toast Notification */}
       {showNotification && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700/50 dark:border-slate-200 animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700/50 dark:border-slate-200 animate-pulse">
           <Sparkles className="w-5 h-5 text-amber-400 dark:text-amber-500" />
           <span className="text-sm font-medium">{showNotification}</span>
         </div>
@@ -157,7 +157,7 @@ export function KHSView() {
             <GraduationCap className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">IPK Kumulatif</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400r">IPK Kumulatif</p>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{cumulativeGPA.toFixed(2)}</h3>
             <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-0.5 mt-0.5">
               <TrendingUp className="h-3.5 w-3.5" />
@@ -167,11 +167,11 @@ export function KHSView() {
         </div>
 
         <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-lg">
+          <div className="p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg">
             <Award className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">IPS Terakhir ({selectedSemester})</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400r">IPS Terakhir ({selectedSemester})</p>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{currentData.ips.toFixed(2)}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Beban SKS Semester: {currentData.sksTaken} SKS
@@ -180,11 +180,11 @@ export function KHSView() {
         </div>
 
         <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-lg">
+          <div className="p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg">
             <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total SKS Lulus</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400r">Total SKS Lulus</p>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{cumulativeSKS} SKS</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Target Kelulusan: 144 SKS
@@ -195,7 +195,7 @@ export function KHSView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* GPA Timeline Chart */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col justify-between">
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-slate-400" />
@@ -206,7 +206,7 @@ export function KHSView() {
           <div className="h-56 mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={ipsHistory} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" dark-stroke="#334155" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="name" tick={{fill: '#94a3b8', fontSize: 11}} />
                 <YAxis domain={[3.0, 4.0]} tick={{fill: '#94a3b8', fontSize: 11}} />
                 <Tooltip 
@@ -236,7 +236,7 @@ export function KHSView() {
 
         {/* Course Grades Table */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             {/* Header / Semester Switcher */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 dark:bg-slate-900/50">
               <div className="flex items-center gap-2">
@@ -248,7 +248,7 @@ export function KHSView() {
                   <button
                     key={sem}
                     onClick={() => setSelectedSemester(sem)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                       selectedSemester === sem
                         ? 'bg-blue-600 text-white shadow-sm'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -265,13 +265,13 @@ export function KHSView() {
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
                 <thead className="bg-slate-50/50 dark:bg-slate-800/40">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kode</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mata Kuliah</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SKS</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nilai Angka</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Grade</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Bobot</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400r">Kode</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400r">Mata Kuliah</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">SKS</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">Nilai Angka</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">Grade</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">Bobot</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">

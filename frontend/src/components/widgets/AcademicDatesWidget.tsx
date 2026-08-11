@@ -93,10 +93,10 @@ export function AcademicDatesWidget() {
         };
       default:
         return {
-          bg: 'bg-indigo-50 dark:bg-indigo-950/20',
-          border: 'border-indigo-100 dark:border-indigo-900/40',
-          text: 'text-indigo-700 dark:text-indigo-400',
-          badge: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300',
+          bg: 'bg-blue-50 dark:bg-blue-950/20',
+          border: 'border-blue-100 dark:border-blue-900/40',
+          text: 'text-blue-700 dark:text-blue-400',
+          badge: 'bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300',
           icon: <Calendar className="w-4 h-4" />,
           label: 'Akademik'
         };
@@ -104,13 +104,13 @@ export function AcademicDatesWidget() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 overflow-hidden flex flex-col h-full">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Calendar className="w-4.5 h-4.5 text-blue-500" />
           Kalender &amp; Tanggal Penting Akademik
         </h3>
-        <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 px-2 py-0.5 rounded text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 px-2 py-0.5 rounded text-[10px] font-bold text-blue-600 dark:text-blue-400r">
           <Sparkles className="w-3 h-3 text-amber-500" />
           Tahun 2026
         </span>
@@ -123,7 +123,7 @@ export function AcademicDatesWidget() {
             return (
               <div 
                 key={item.id} 
-                className={`p-4 border rounded-xl flex gap-3 items-start transition-all hover:shadow-sm ${styles.bg} ${styles.border}`}
+                className={`p-4 border rounded-xl flex gap-3 items-start transition-colors hover:shadow-sm ${styles.bg} ${styles.border}`}
               >
                 <div className={`p-2 rounded-lg bg-white dark:bg-slate-900 ${styles.text} shadow-sm border border-slate-100 dark:border-slate-800/80`}>
                   {styles.icon}

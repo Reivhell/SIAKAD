@@ -84,8 +84,6 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
@@ -108,13 +106,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg p-3">
-              <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -132,13 +128,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 rounded-lg p-3">
-              <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -153,13 +147,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-lg p-3">
-              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <AlertTriangle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -179,9 +171,7 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6"
         >
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4">Tren IPK Rata-Rata Universitas</h3>
           <div className="h-64">
@@ -189,40 +179,38 @@ export function DashboardView({ user }: DashboardViewProps) {
               <AreaChart data={gpaTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorGpa" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" dark-stroke="#334155" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis domain={[2.5, 4.0]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                <Tooltip 
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} dy={10} />
+                <YAxis domain={[2.5, 4.0]} axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} />
+                <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }}
                   itemStyle={{ color: '#fff', fontWeight: 500 }}
                 />
-                <Area type="monotone" dataKey="gpa" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorGpa)" />
+                <Area type="monotone" dataKey="gpa" stroke="var(--color-accent)" strokeWidth={2} fillOpacity={1} fill="url(#colorGpa)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6"
         >
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4">Distribusi Mahasiswa per Fakultas</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={facultyDistributionData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" dark-stroke="#334155" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} />
                 <Tooltip 
                   cursor={{fill: 'rgba(148, 163, 184, 0.1)'}}
                   contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }}
                 />
-                <Bar dataKey="count" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="count" fill="var(--color-accent)" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -230,7 +218,7 @@ export function DashboardView({ user }: DashboardViewProps) {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">Aktivitas Administrasi Terbaru</h3>
         </div>
@@ -254,7 +242,7 @@ export function DashboardView({ user }: DashboardViewProps) {
               <div className="ml-4 flex flex-col items-end">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   activity.status === 'Success' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-400' : 
-                  activity.status === 'Updated' ? 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-400' : 
+                  activity.status === 'Updated' ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-400' :
                   'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400'
                 }`}>
                   {activity.status}
@@ -274,8 +262,6 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
@@ -294,13 +280,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg p-3">
-              <Users className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -317,13 +301,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg p-3">
-              <CheckSquare className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <CheckSquare className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -338,13 +320,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-amber-100 dark:bg-amber-900/30 rounded-lg p-3">
-              <FileText className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -364,31 +344,27 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* Lecturer Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6"
+          className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6"
         >
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4">Rata-Rata Nilai Kelas yang Diampu (IP)</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={classAverageScores} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" dark-stroke="#334155" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis domain={[0, 4.0]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} dy={10} />
+                <YAxis domain={[0, 4.0]} axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} />
                 <Tooltip 
                   cursor={{fill: 'rgba(148, 163, 184, 0.1)'}}
                   contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }}
                 />
-                <Bar dataKey="rata" fill="#0284c7" radius={[4, 4, 0, 0]} barSize={50} />
+                <Bar dataKey="rata" fill="var(--color-accent)" radius={[4, 4, 0, 0]} barSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col justify-between"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between"
         >
           <div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">Status Penilaian Tugas</h3>
@@ -432,7 +408,7 @@ export function DashboardView({ user }: DashboardViewProps) {
       </div>
 
       {/* Schedules list */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/40">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">Jadwal Mengajar Hari Ini</h3>
           <span className="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
@@ -483,13 +459,11 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg p-3">
-              <Award className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <Award className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -507,8 +481,6 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
@@ -528,13 +500,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg p-3">
-              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -549,13 +519,11 @@ export function DashboardView({ user }: DashboardViewProps) {
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -4 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
-              <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+              <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
@@ -573,9 +541,7 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* Student Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6"
+          className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6"
         >
           <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-4">Tren Indeks Prestasi Semester (IPS)</h3>
           <div className="h-64">
@@ -583,27 +549,25 @@ export function DashboardView({ user }: DashboardViewProps) {
               <AreaChart data={studentSemesterGPAs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorStudentGpa" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" dark-stroke="#334155" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                <Tooltip 
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} dy={10} />
+                <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{fill: 'var(--color-ink-muted)', fontSize: 12}} />
+                <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }}
                   itemStyle={{ color: '#fff', fontWeight: 500 }}
                 />
-                <Area type="monotone" dataKey="IPS" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorStudentGpa)" />
+                <Area type="monotone" dataKey="IPS" stroke="var(--color-accent)" strokeWidth={3} fillOpacity={1} fill="url(#colorStudentGpa)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
         <motion.div 
-          whileHover={{ y: -2 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col justify-between"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between"
         >
           <div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">Status Studi & SKS</h3>
@@ -626,7 +590,7 @@ export function DashboardView({ user }: DashboardViewProps) {
                 <span className="text-slate-950 dark:text-white">12 / 20 SKS</span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-indigo-600 h-full rounded-full" style={{ width: '60%' }} />
+                <div className="bg-blue-600 h-full rounded-full" style={{ width: '60%' }} />
               </div>
             </div>
 
@@ -641,17 +605,17 @@ export function DashboardView({ user }: DashboardViewProps) {
             </div>
           </div>
           <div className="text-center text-xs text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-3 flex items-center justify-center gap-1">
-            <Bookmark className="w-3.5 h-3.5 text-indigo-500" />
+            <Bookmark className="w-3.5 h-3.5 text-blue-500" />
             Total SKS Terkumpul: 84 SKS
           </div>
         </motion.div>
       </div>
 
       {/* Course List for Current Semester */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/40">
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">Rencana Kuliah Semester Ini (Ganjil 2023/24)</h3>
-          <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">
+          <span className="text-xs text-blue-600 dark:text-blue-400 font-bold">
             Total Terpilih: 5 Mata Kuliah • 14 SKS
           </span>
         </div>
@@ -666,7 +630,7 @@ export function DashboardView({ user }: DashboardViewProps) {
             <div key={course.id} className="px-6 py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 px-2 py-0.5 rounded">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 px-2 py-0.5 rounded">
                     {course.code}
                   </span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{course.sks} SKS</span>
@@ -689,7 +653,7 @@ export function DashboardView({ user }: DashboardViewProps) {
       {/* Title block */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Akademik</h2>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Akademik</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Selamat datang kembali, <span className="font-bold text-slate-900 dark:text-white">{user.name}</span>. Peran: <span className="font-bold text-blue-600 dark:text-blue-400 capitalize">{user.role === 'admin' ? 'Staf Akademik' : user.role === 'lecturer' ? 'Dosen' : 'Mahasiswa'}</span>.
           </p>

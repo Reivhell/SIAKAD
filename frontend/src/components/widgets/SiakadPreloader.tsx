@@ -111,10 +111,10 @@ export function SiakadPreloader({ onComplete, userRole = 'student', userName = '
               <motion.div
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                 className="relative bg-gradient-to-tr from-blue-600 to-indigo-600 p-5 rounded-2xl shadow-2xl shadow-blue-500/30 text-white flex items-center justify-center w-20 h-20"
               >
-                <Sparkles className="w-10 h-10 text-white animate-pulse" />
+                <Sparkles className="w-10 h-10 text-white" />
               </motion.div>
             </div>
 
@@ -132,7 +132,7 @@ export function SiakadPreloader({ onComplete, userRole = 'student', userName = '
                 initial={{ y: 15, opacity: 0 }}
                 animate={{ y: 0, opacity: 0.7 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-xs font-semibold text-slate-400 uppercase tracking-widest"
+                className="text-xs font-semibold text-slate-400"
               >
                 Sistem Informasi Akademik Terpadu
               </motion.p>
@@ -151,8 +151,8 @@ export function SiakadPreloader({ onComplete, userRole = 'student', userName = '
                   <CurrentStepIcon className={`w-4 h-4 animate-spin ${loadingSteps[currentStepIndex]?.color}`} />
                 </div>
                 <div className="text-left flex-1">
-                  <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Status Memuat</span>
-                  <span className="text-xs font-bold text-slate-200 block transition-all duration-300">
+                  <span className="text-[10px] text-slate-500 font-bold blockr">Status Memuat</span>
+                  <span className="text-xs font-bold text-slate-200 block transition-colors duration-300">
                     {loadingSteps[currentStepIndex]?.text}
                   </span>
                 </div>

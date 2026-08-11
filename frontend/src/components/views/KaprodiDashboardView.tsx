@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import {
+  getRoleDashboard,
+  updateRoleDashboardItem,
+  KaprodiDashboardPayload,
+} from '../../api/academic.api';
+import { useEffect } from 'react';
+import {
   Users,
   BookOpen,
   GraduationCap,
@@ -18,16 +24,7 @@ import {
   ChevronRight,
   Plus
 } from 'lucide-react';
-import { 
-  LmsHybridModule, 
-  SmartCommunicationModule, 
-  StudentSelfServiceModule, 
-  SecurityComplianceModule, 
-  ModernTechModule,
-  MobilePwaControlBar
-} from '../widgets/ModernSiaFeatures';
 import { LecturerRatingModule } from '../widgets/LecturerRatingModule';
-import { EnterpriseControlSuite } from '../widgets/EnterpriseControlSuite';
 import {
   ResponsiveContainer,
   BarChart,
@@ -46,52 +43,38 @@ interface KaprodiDashboardViewProps {
   onChangeTab?: (tab: string) => void;
 }
 
-// Initial Mock Data for Kaprodi Features
-const INITIAL_CLASSES_APPROVAL = [
-  { id: 'ca-1', courseCode: 'IF301', courseName: 'Algoritma & Pemrograman II', sementer: 'Ganjil', sks: 3, classRoom: 'R-301', requestedBy: 'Dr. Ahmad Dahlan', status: 'Pending' },
-  { id: 'ca-2', courseCode: 'IF305', courseName: 'Desain & Analisis Algoritma', sementer: 'Ganjil', sks: 4, classRoom: 'R-402', requestedBy: 'Prof. Suparman', status: 'Pending' },
-  { id: 'ca-3', courseCode: 'IF310', courseName: 'Sistem Operasi Terdistribusi', sementer: 'Ganjil', sks: 3, classRoom: 'R-Lab', requestedBy: 'Dr. Indah Rahayu', status: 'Disetujui' },
-  { id: 'ca-4', courseCode: 'IF401', courseName: 'Etika Profesi IT', sementer: 'Ganjil', sks: 2, classRoom: 'R-202', requestedBy: 'Drs. Wahyu Hidayat', status: 'Pending' },
-];
-
-const INITIAL_LECTURERS_MONITORING = [
-  { id: 'lm-1', name: 'Dr. Budi Rahardjo', nip: '197508122001', role: 'Dosen Wali', baseSks: 12, addedSks: 4, journalFilled: '8 / 8 Pertemuan', rating: 4.8 },
-  { id: 'lm-2', name: 'Dr. Indah Rahayu', nip: '198103142005', role: 'Dosen Biasa', baseSks: 8, addedSks: 6, journalFilled: '7 / 8 Pertemuan', rating: 4.5 },
-  { id: 'lm-3', name: 'Prof. Suparman', nip: '196209211990', role: 'Guru Besar', baseSks: 14, addedSks: 0, journalFilled: '8 / 8 Pertemuan', rating: 4.9 },
-  { id: 'lm-4', name: 'Drs. Wahyu Hidayat', nip: '197911042008', role: 'Asisten Ahli', baseSks: 6, addedSks: 8, journalFilled: '5 / 8 Pertemuan', rating: 4.2 },
-  { id: 'lm-5', name: 'Dr. Ahmad Dahlan', nip: '198305222011', role: 'Dosen Biasa', baseSks: 10, addedSks: 2, journalFilled: '6 / 8 Pertemuan', rating: 4.6 }
-];
-
-const INITIAL_COURSES_BEBAN = [
-  { id: 'cb-1', code: 'IF301', name: 'Algoritma & Pemrograman II', sks: 3, assignedLecturer: 'Dr. Ahmad Dahlan', semester: 3 },
-  { id: 'cb-2', code: 'IF305', name: 'Desain & Analisis Algoritma', sks: 4, assignedLecturer: 'Prof. Suparman', semester: 3 },
-  { id: 'cb-3', code: 'IF310', name: 'Sistem Operasi Terdistribusi', sks: 3, assignedLecturer: 'Dr. Indah Rahayu', semester: 5 },
-  { id: 'cb-4', code: 'IF401', name: 'Etika Profesi IT', sks: 2, assignedLecturer: 'Drs. Wahyu Hidayat', semester: 7 },
-  { id: 'cb-5', code: 'IF402', name: 'Kecerdasan Buatan (AI)', sks: 3, assignedLecturer: 'Dr. Budi Rahardjo', semester: 5 }
-];
-
-const INITIAL_COURSES_NILAI = [
-  { id: 'cn-1', name: 'Algoritma II', code: 'IF301', totalStudents: 42, avgGpa: 3.45, gradeA: 15, gradeB: 20, gradeC: 5, gradeD: 2, gradeE: 0 },
-  { id: 'cn-2', name: 'Desain Algoritma', code: 'IF305', totalStudents: 38, avgGpa: 3.22, gradeA: 8, gradeB: 18, gradeC: 10, gradeD: 2, gradeE: 0 },
-  { id: 'cn-3', name: 'Sistem Terdistribusi', code: 'IF310', totalStudents: 40, avgGpa: 3.61, gradeA: 22, gradeB: 14, gradeC: 4, gradeD: 0, gradeE: 0 },
-  { id: 'cn-4', name: 'Etika Profesi IT', code: 'IF401', totalStudents: 45, avgGpa: 3.82, gradeA: 35, gradeB: 10, gradeC: 0, gradeD: 0, gradeE: 0 },
-  { id: 'cn-5', name: 'Kecerdasan Buatan', code: 'IF402', totalStudents: 35, avgGpa: 3.38, gradeA: 12, gradeB: 15, gradeC: 6, gradeD: 2, gradeE: 0 }
-];
-
-const INITIAL_PRESENSI_MONITORING = [
-  { id: 'pm-1', className: 'Algoritma II - Kelas A', code: 'IF301-A', lecturer: 'Dr. Ahmad Dahlan', attendanceRate: 94.5, sessionsCompleted: 8, sessionsPlanned: 16 },
-  { id: 'pm-2', className: 'Desain Algoritma - Kelas A', code: 'IF305-A', lecturer: 'Prof. Suparman', attendanceRate: 88.2, sessionsCompleted: 8, sessionsPlanned: 16 },
-  { id: 'pm-3', className: 'Sistem Terdistribusi - Kelas B', code: 'IF310-B', lecturer: 'Dr. Indah Rahayu', attendanceRate: 91.0, sessionsCompleted: 7, sessionsPlanned: 16 },
-  { id: 'pm-4', className: 'Etika Profesi IT - Kelas C', code: 'IF401-C', lecturer: 'Drs. Wahyu Hidayat', attendanceRate: 96.8, sessionsCompleted: 6, sessionsPlanned: 16 },
-  { id: 'pm-5', className: 'Kecerdasan Buatan - Kelas A', code: 'IF402-A', lecturer: 'Dr. Budi Rahardjo', attendanceRate: 82.4, sessionsCompleted: 8, sessionsPlanned: 16 }
-];
-
 export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTab }: KaprodiDashboardViewProps) {
-  const [classesApproval, setClassesApproval] = useState(INITIAL_CLASSES_APPROVAL);
-  const [lecturers, setLecturers] = useState(INITIAL_LECTURERS_MONITORING);
-  const [coursesBeban, setCoursesBeban] = useState(INITIAL_COURSES_BEBAN);
-  const [coursesNilai, setCoursesNilai] = useState(INITIAL_COURSES_NILAI);
-  const [presensi, setPresensi] = useState(INITIAL_PRESENSI_MONITORING);
+  // Data nyata dashboard kaprodi dari backend
+  const [classesApproval, setClassesApproval] = useState<KaprodiDashboardPayload['classesApproval']>([]);
+  const [lecturers, setLecturers] = useState<KaprodiDashboardPayload['lecturers']>([]);
+  const [coursesBeban, setCoursesBeban] = useState<KaprodiDashboardPayload['coursesBeban']>([]);
+  const [coursesNilai, setCoursesNilai] = useState<KaprodiDashboardPayload['coursesNilai']>([]);
+  const [presensi, setPresensi] = useState<KaprodiDashboardPayload['presensi']>([]);
+  const [prodiGpaTrend, setProdiGpaTrend] = useState<KaprodiDashboardPayload['prodiGpaTrend']>([]);
+  const [laporan, setLaporan] = useState<KaprodiDashboardPayload['laporan']>({ rasioDosenMahasiswa: '-', ketepatanKelulusan: '-', penyerapanLulusan: '-' });
+  const [kpis, setKpis] = useState<KaprodiDashboardPayload['kpis']>({ totalStudentsProdi: 0, totalLecturers: 0, avgProdiGpa: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    getRoleDashboard<KaprodiDashboardPayload>('kaprodi')
+      .then((data) => {
+        if (cancelled) return;
+        setClassesApproval(data.classesApproval ?? []);
+        setLecturers(data.lecturers ?? []);
+        setCoursesBeban(data.coursesBeban ?? []);
+        setCoursesNilai(data.coursesNilai ?? []);
+        setPresensi(data.presensi ?? []);
+        setProdiGpaTrend(data.prodiGpaTrend ?? []);
+        if (data.laporan) setLaporan(data.laporan);
+        if (data.kpis) setKpis(data.kpis);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Form State for Load Distribution Simulator
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -108,14 +91,16 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
     }, 3000);
   };
 
-  // 1. Approve Class Opening
+  // 1. Approve Class Opening (persist ke backend)
   const handleApproveClass = (id: string, approve: boolean) => {
-    setClassesApproval(prev =>
-      prev.map(c => c.id === id ? { ...c, status: approve ? 'Disetujui' : 'Ditolak' } : c)
-    );
-    triggerToast(
-      approve ? 'Pembukaan kelas disetujui!' : 'Pembukaan kelas ditolak.'
-    );
+    const status = approve ? 'Disetujui' : 'Ditolak';
+    updateRoleDashboardItem('kaprodi', 'classesApproval', id, status)
+      .then((data) => {
+        const list = (data as KaprodiDashboardPayload).classesApproval ?? [];
+        setClassesApproval(list);
+        triggerToast(approve ? 'Pembukaan kelas disetujui!' : 'Pembukaan kelas ditolak.');
+      })
+      .catch(() => triggerToast('Gagal memperbarui status kelas. Silakan coba lagi.'));
   };
 
   // 2. Assign Lecturer (Beban Mengajar)
@@ -151,21 +136,13 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
     setSelectedLecturerName('');
   };
 
-  // KPI Dashboard data
-  const totalStudentsProdi = 210;
-  const avgProdiGpa = 3.51;
+  // KPI Dashboard data (dihitung live oleh backend)
+  const totalStudentsProdi = kpis.totalStudentsProdi;
+  const avgProdiGpa = kpis.avgProdiGpa;
   const pendingClassApprovals = classesApproval.filter(c => c.status === 'Pending').length;
   const lowAttendanceClasses = presensi.filter(p => p.attendanceRate < 85).length;
 
   const renderDashboardLanding = () => {
-    const prodiGpaTrend = [
-      { name: 'Smt 1', IPK: 3.32 },
-      { name: 'Smt 2', IPK: 3.41 },
-      { name: 'Smt 3', IPK: 3.48 },
-      { name: 'Smt 4', IPK: 3.50 },
-      { name: 'Smt 5', IPK: 3.51 }
-    ];
-
     const distributionChartData = coursesNilai.map(c => ({
       name: c.code,
       'Grade A %': Math.round((c.gradeA / c.totalStudents) * 100),
@@ -179,7 +156,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
             <div className="flex justify-between items-center text-slate-400">
               <Users className="w-5 h-5 text-blue-500" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Mahasiswa Aktif</span>
+              <span className="text-[10px] font-boldr">Mahasiswa Aktif</span>
             </div>
             <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white">{totalStudentsProdi} Orang</h3>
             <p className="text-[10px] text-slate-500">Program Studi S1 Informatika</p>
@@ -188,7 +165,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
             <div className="flex justify-between items-center text-slate-400">
               <Award className="w-5 h-5 text-indigo-500" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">IPK Rata-Rata Prodi</span>
+              <span className="text-[10px] font-boldr">IPK Rata-Rata Prodi</span>
             </div>
             <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white">{avgProdiGpa}</h3>
             <div className="text-[10px] text-green-500 font-bold flex items-center gap-0.5">
@@ -199,7 +176,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
             <div className="flex justify-between items-center text-slate-400">
               <ClipboardList className="w-5 h-5 text-amber-500" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Antrean Persetujuan Kelas</span>
+              <span className="text-[10px] font-boldr">Antrean Persetujuan Kelas</span>
             </div>
             <h3 className={`text-2xl font-extrabold ${pendingClassApprovals > 0 ? 'text-amber-500 animate-pulse' : 'text-slate-800 dark:text-white'}`}>
               {pendingClassApprovals} Kelas
@@ -210,7 +187,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
             <div className="flex justify-between items-center text-slate-400">
               <AlertTriangle className="w-5 h-5 text-rose-500" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Peringatan Presensi Rendah</span>
+              <span className="text-[10px] font-boldr">Peringatan Presensi Rendah</span>
             </div>
             <h3 className={`text-2xl font-extrabold ${lowAttendanceClasses > 0 ? 'text-rose-500' : 'text-slate-800 dark:text-white'}`}>
               {lowAttendanceClasses} Sesi
@@ -222,7 +199,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
         {/* Dashboard Graphs and Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Prodi GPA Trend Area Chart */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Tren Indeks Prestasi Kumulatif Prodi</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -233,9 +210,9 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
                       <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:opacity-10" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
-                  <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="dark:opacity-10" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-ink-muted)', fontSize: 11 }} dy={10} />
+                  <YAxis domain={[3.0, 4.0]} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-ink-muted)', fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', color: '#fff' }}
                   />
@@ -246,14 +223,14 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           </div>
 
           {/* Grade Distribution Bar Chart */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Rasio Kelulusan &amp; Nilai A per MK</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={distributionChartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:opacity-10" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="dark:opacity-10" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-ink-muted)', fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-ink-muted)', fontSize: 11 }} />
                   <Tooltip
                     cursor={{ fill: 'rgba(148, 163, 184, 0.05)' }}
                     contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: '#0f172a', color: '#fff' }}
@@ -271,7 +248,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 space-y-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500 animate-bounce" />
-              <h4 className="text-xs font-bold text-slate-850 dark:text-slate-200 uppercase tracking-wider">Pemberitahuan: {pendingClassApprovals} Permintaan Pembukaan Kelas Baru</h4>
+              <h4 className="text-xs font-bold text-slate-850 dark:text-slate-200r">Pemberitahuan: {pendingClassApprovals} Permintaan Pembukaan Kelas Baru</h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {classesApproval.filter(c => c.status === 'Pending').map((item) => (
@@ -286,14 +263,14 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
                   <div className="flex gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => handleApproveClass(item.id, true)}
-                      className="p-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 rounded-lg transition-all"
+                      className="p-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 rounded-lg transition-colors"
                       title="Setujui Kelas"
                     >
                       <Check className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleApproveClass(item.id, false)}
-                      className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 rounded-lg transition-all"
+                      className="p-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 rounded-lg transition-colors"
                       title="Tolak Kelas"
                     >
                       <X className="w-4 h-4" />
@@ -316,7 +293,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
               <div className="p-5 border-b border-slate-150 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">Antrean Pengajuan Pembukaan Kelas Kuliah</h3>
+                <h3 className="text-xs font-bold text-slate-850 dark:text-whiter">Antrean Pengajuan Pembukaan Kelas Kuliah</h3>
               </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs font-semibold text-slate-600 dark:text-slate-400">
                 {classesApproval.map((item) => (
@@ -344,13 +321,13 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleApproveClass(item.id, true)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                           >
                             Setujui
                           </button>
                           <button
                             onClick={() => handleApproveClass(item.id, false)}
-                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 transition-all cursor-pointer"
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer"
                           >
                             Tolak
                           </button>
@@ -370,7 +347,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
               <div className="p-5 border-b border-slate-150 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">Pemantauan Kinerja &amp; Kehadiran Dosen</h3>
+                <h3 className="text-xs font-bold text-slate-850 dark:text-whiter">Pemantauan Kinerja &amp; Kehadiran Dosen</h3>
               </div>
               <div className="overflow-x-auto text-xs">
                 <table className="w-full text-left">
@@ -405,7 +382,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
                         <td className="px-6 py-4">
                           <button
                             onClick={() => triggerToast(`Mengirim email pengingat untuk mengisi jurnal ke ${lec.name}...`)}
-                            className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                            className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
                           >
                             Kirim Pengingat
                           </button>
@@ -425,7 +402,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
               <div className="p-5 border-b border-slate-150 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">Rekapitulasi Nilai &amp; Kelulusan Mata Kuliah</h3>
+                <h3 className="text-xs font-bold text-slate-850 dark:text-whiter">Rekapitulasi Nilai &amp; Kelulusan Mata Kuliah</h3>
               </div>
               <div className="overflow-x-auto text-xs">
                 <table className="w-full text-left">
@@ -474,7 +451,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm">
               <div className="p-5 border-b border-slate-150 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">Pemantauan Persentase Kehadiran Kelas</h3>
+                <h3 className="text-xs font-bold text-slate-850 dark:text-whiter">Pemantauan Persentase Kehadiran Kelas</h3>
               </div>
               <div className="overflow-x-auto text-xs font-semibold text-slate-600 dark:text-slate-350">
                 <table className="w-full text-left">
@@ -534,7 +511,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
                 </div>
                 <button
                   onClick={() => triggerToast('Mengunduh Laporan IKU Prodi (.pdf)...')}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-all"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-colors"
                 >
                   Ekspor PDF Laporan
                 </button>
@@ -567,7 +544,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Form Simulator */}
             <form onSubmit={handleAssignLecturer} className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4 text-xs font-semibold">
-              <h4 className="text-xs font-extrabold text-slate-850 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+              <h4 className="text-xs font-extrabold text-slate-850 dark:text-whiter flex items-center gap-1.5">
                 <BookMarked className="w-4 h-4 text-indigo-500" />
                 Alokasikan Dosen Pengampu
               </h4>
@@ -634,7 +611,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
             {/* Right Course List */}
             <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden text-xs font-semibold text-slate-600 dark:text-slate-350">
               <div className="p-5 border-b border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                <h4 className="text-xs font-bold text-slate-850 dark:text-white uppercase tracking-wider">Distribusi Beban Mengajar</h4>
+                <h4 className="text-xs font-bold text-slate-850 dark:text-whiter">Distribusi Beban Mengajar</h4>
               </div>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {coursesBeban.map((c) => (
@@ -667,46 +644,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
       case 'inovasi':
         return (
           <div className="space-y-6">
-            {/* Floating PWA Optimizer Bar */}
-            <MobilePwaControlBar />
-
-            {/* Master Enterprise Suite Control Center */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">Fitur Utama &bull; SIAKAD Enterprise &amp; Automation Hub</span>
-              <EnterpriseControlSuite />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Integrasi LMS & Hybrid Learning */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 1 &bull; Monitoring &amp; Link LMS Program Studi</span>
-                <LmsHybridModule />
-              </div>
-
-              {/* Smart Communication Forum & Gateway */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 2 &bull; Komunikasi Massa (Pengumuman Target &amp; WA Gateway)</span>
-                <SmartCommunicationModule role="lecturer" />
-              </div>
-
-              {/* AI Plagiarism & Digital Signatures */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 3 &bull; Tanda Tangan Elektronik &amp; Kepatuhan</span>
-                <ModernTechModule />
-              </div>
-
-              {/* Student Self-Service Hub (SKPI & KRS Tracker) */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 4 &bull; Dashboard Kinerja Mahasiswa (Self-service SKPI)</span>
-                <StudentSelfServiceModule />
-              </div>
-            </div>
-
-            {/* Security, 2FA & Audit Logs */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 5 &bull; Keamanan Sistem &amp; Audit Trail Log KPS</span>
-              <SecurityComplianceModule user={user} />
-            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Modul ini sedang dalam pengembangan.</p>
           </div>
         );
 
@@ -714,7 +652,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
         return (
           <div className="space-y-6">
             <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block font-sans">Kinerja &bull; Hasil Evaluasi Kinerja Dosen (EDOM) Program Studi</span>
+              <span className="text-[10px] font-black text-blue-600 block font-sans">Kinerja &bull; Hasil Evaluasi Kinerja Dosen (EDOM) Program Studi</span>
               <LecturerRatingModule user={user} />
             </div>
           </div>
@@ -730,7 +668,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
       {/* Toast alert widget */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-800 dark:border-slate-100 animate-slideUp">
-          <Sparkles className="w-5 h-5 text-blue-500 animate-pulse flex-shrink-0" />
+          <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0" />
           <p className="text-xs font-bold leading-tight">{toastMessage}</p>
         </div>
       )}
@@ -738,7 +676,7 @@ export function KaprodiDashboardView({ user, activeTab = 'dashboard', onChangeTa
       {/* Top Banner Identity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-slate-800 pb-6">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-boldr text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-full">
             SIAKAD Kaprodi &bull; Panel Kepala Program Studi
           </span>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-2 leading-tight">

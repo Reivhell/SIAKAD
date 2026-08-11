@@ -1,17 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
+import { getDashboardSummary, DashboardSummary } from '../../api/dashboard.api';
 
 import {
-  initialLecturerProfile,
-  initialJadwalMengajar,
-  initialKelas,
-  initialStudents,
-  initialJurnal,
-  initialTugas,
-  initialMateri,
-  initialSkripsi,
-  initialChats,
-} from '../../data/lecturerMockData';
+  getLecturerOverview,
+  LecturerProfile,
+  JadwalMengajarItem,
+  ClassItem,
+  StudentAcademic,
+  JurnalItem,
+  TugasItem,
+  MateriItem,
+  SkripsiItem,
+  ChatThread,
+  mapStudentAcademic,
+  EMPTY_LECTURER_PROFILE,
+} from '../../api/academic.api';
 
 // Sub Module Imports
 import { LecturerProfileModule } from './lecturer/LecturerProfileModule';
@@ -19,18 +23,9 @@ import { LecturerAcademicModule } from './lecturer/LecturerAcademicModule';
 import { LecturerGradeModule } from './lecturer/LecturerGradeModule';
 import { LecturerBimbinganModule } from './lecturer/LecturerBimbinganModule';
 import { LecturerCommunicationModule } from './lecturer/LecturerCommunicationModule';
-import { 
-  LmsHybridModule, 
-  SmartCommunicationModule, 
-  StudentSelfServiceModule, 
-  SecurityComplianceModule, 
-  ModernTechModule,
-  MobilePwaControlBar
-} from '../widgets/ModernSiaFeatures';
 import { LecturerRatingModule } from '../widgets/LecturerRatingModule';
 import { AcademicDatesWidget } from '../widgets/AcademicDatesWidget';
 import { AnnouncementTicker } from '../widgets/AnnouncementTicker';
-import { EnterpriseControlSuite } from '../widgets/EnterpriseControlSuite';
 import { CentralizedTasksModule } from '../widgets/CentralizedTasksModule';
 import { SksConversionModule } from '../widgets/SksConversionModule';
 
@@ -55,22 +50,78 @@ interface LecturerDashboardViewProps {
 }
 
 export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeTab, onUserChange }: LecturerDashboardViewProps) {
-  // Master states representing active lecturer database
-  const [profile, setProfile] = useState(initialLecturerProfile);
+  // Master states representing active lecturer database (diisi dari basis data)
+  const [profile, setProfile] = useState<LecturerProfile>(EMPTY_LECTURER_PROFILE);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [students, setStudents] = useState(initialStudents);
-  const [jurnal, setJurnal] = useState(initialJurnal);
-  const [tugas, setTugas] = useState(initialTugas);
-  const [materi, setMateri] = useState(initialMateri);
-  const [skripsi, setSkripsi] = useState(initialSkripsi);
-  const [chats, setChats] = useState(initialChats);
+  const [students, setStudents] = useState<StudentAcademic[]>([]);
+  const [jurnal, setJurnal] = useState<JurnalItem[]>([]);
+  const [tugas, setTugas] = useState<TugasItem[]>([]);
+  const [materi, setMateri] = useState<MateriItem[]>([]);
+  const [skripsi, setSkripsi] = useState<SkripsiItem[]>([]);
+  const [chats, setChats] = useState<ChatThread[]>([]);
 
-  const jadwal = useMemo(() => initialJadwalMengajar, []);
-  const kelas = useMemo(() => initialKelas, []);
-  const todayClasses = useMemo(() => initialJadwalMengajar.filter(j => j.day === 'Senin'), []);
-  const kelasCount = useMemo(() => initialKelas.length, []);
-  const totalStudentsCount = useMemo(() => initialStudents.length, []);
-  const pendingKrsCount = useMemo(() => initialStudents.filter((s: any) => s.krsStatus === 'Menunggu').length, []);
+  const [jadwal, setJadwal] = useState<JadwalMengajarItem[]>([]);
+  const [kelas, setKelas] = useState<ClassItem[]>([]);
+
+  // Live summary from backend (falls back to real data while loading/on error)
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getLecturerOverview()
+      .then((data) => {
+        if (cancelled) return;
+        setProfile(data.profile);
+        setJadwal(data.jadwal);
+        setKelas(data.kelas);
+        setStudents(data.students.map(mapStudentAcademic));
+        setJurnal(data.jurnal);
+        setTugas(data.tugas);
+        setMateri(data.materi);
+        setSkripsi(data.skripsi);
+        // Bangun thread percakapan dari pesan nyata, dikelompokkan per mahasiswa pengirim.
+        const studentSenders = Array.from(
+          new Map(
+            data.chats
+              .filter((m) => m.sender === 'student' && m.senderEmail)
+              .map((m) => [m.senderEmail as string, m]),
+          ).values(),
+        );
+        setChats(
+          studentSenders.map((m) => {
+            const threadMsgs = data.chats.filter((c) => c.senderEmail === m.senderEmail);
+            const match = data.students.find((s) => s.name.toLowerCase().includes((m.senderName ?? '').toLowerCase()));
+            return {
+              studentNim: match?.nim ?? (m.senderEmail ?? '').split('@')[0].replace(/\./g, '').toUpperCase(),
+              studentName: match?.name ?? m.senderName ?? m.senderEmail ?? 'Mahasiswa',
+              studentEmail: m.senderEmail ?? '',
+              lastMessage: threadMsgs.length ? threadMsgs[threadMsgs.length - 1].text : 'Belum ada percakapan',
+              timestamp: threadMsgs.length ? threadMsgs[threadMsgs.length - 1].timestamp : '-',
+              unread: false,
+              messages: threadMsgs.map((c) => ({ id: c.id, sender: c.sender, text: c.text, timestamp: c.timestamp })),
+            };
+          }),
+        );
+      })
+      .catch((err) => console.error('Gagal memuat overview dosen:', err));
+    getDashboardSummary()
+      .then((s) => {
+        if (!cancelled) setSummary(s);
+      })
+      .catch(() => {
+        // ringkasan tetap berasal dari data nyata yang sudah dimuat
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const apiSchedule = summary?.schedule?.length
+    ? summary.schedule.map((s) => ({ id: `${s.code}-${s.time}`, day: s.day, code: s.code, name: s.name, class: s.class, room: s.room, time: s.time }))
+    : null;
+  const todayClasses = useMemo(() => (apiSchedule && apiSchedule.length ? apiSchedule : jadwal.filter(j => j.day === 'Senin')), [apiSchedule, jadwal]);
+  const kelasCount = useMemo(() => summary?.kpis[0]?.value ?? kelas.length, [summary, kelas]);
+  const totalStudentsCount = useMemo(() => summary?.kpis[1]?.value ?? students.length, [summary, students]);
+  const pendingKrsCount = useMemo(() => students.filter((s: any) => s.krsStatus === 'Menunggu' || s.krs?.status === 'Pending').length, [students]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -108,8 +159,8 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
     <div className="w-full min-h-screen bg-slate-50/50 dark:bg-slate-950 p-4 md:p-8 space-y-8 font-sans transition-colors relative">
       {/* Toast Alert Widget */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce border border-slate-800 dark:border-slate-100">
-          <Sparkles className="w-5 h-5 text-blue-500 animate-pulse flex-shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-pulse border border-slate-800 dark:border-slate-100">
+          <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0" />
           <p className="text-xs font-bold leading-tight">{toastMessage}</p>
         </div>
       )}
@@ -117,7 +168,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
       {/* Top Banner Identity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-slate-800 pb-6">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-boldr text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full">
             SIAKAD Dosen &bull; Portal Utama
           </span>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-2 leading-tight">
@@ -152,7 +203,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
               <div className="flex justify-between items-center text-slate-400">
                 <BookOpen className="w-5 h-5 text-blue-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Kelas Diampu</span>
+                <span className="text-[10px] font-boldr">Kelas Diampu</span>
               </div>
               <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white">{kelasCount} Kelas</h3>
               <p className="text-[10px] text-slate-500">Semester Ganjil Aktif</p>
@@ -162,7 +213,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
               <div className="flex justify-between items-center text-slate-400">
                 <Users className="w-5 h-5 text-blue-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Mahasiswa Wali</span>
+                <span className="text-[10px] font-boldr">Mahasiswa Wali</span>
               </div>
               <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white">{totalStudentsCount} Orang</h3>
               <p className="text-[10px] text-slate-500">Bimbingan Akademik</p>
@@ -172,7 +223,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
               <div className="flex justify-between items-center text-slate-400">
                 <ClipboardCheck className="w-5 h-5 text-blue-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Persetujuan KRS</span>
+                <span className="text-[10px] font-boldr">Persetujuan KRS</span>
               </div>
               <h3 className={`text-2xl font-extrabold ${pendingKrsCount > 0 ? 'text-amber-500' : 'text-slate-800 dark:text-white'}`}>
                 {pendingKrsCount} Antrean
@@ -184,7 +235,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-2">
               <div className="flex justify-between items-center text-slate-400">
                 <Calendar className="w-5 h-5 text-blue-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Mengajar Hari Ini</span>
+                <span className="text-[10px] font-boldr">Mengajar Hari Ini</span>
               </div>
               <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white">
                 {todayClasses.length} Sesi
@@ -197,7 +248,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             {/* Today's Teaching Schedule */}
             <div className="lg:col-span-8 space-y-6">
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4 flex items-center gap-2">
                   <Calendar className="w-4.5 h-4.5 text-blue-500" /> Jadwal Mengajar Hari Ini
                 </h4>
                 <div className="space-y-4">
@@ -226,7 +277,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
 
               {/* Academic Notifications Alerts */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter flex items-center gap-2">
                   <Bell className="w-4.5 h-4.5 text-blue-500" /> Peringatan & Notifikasi Akademik
                 </h4>
                 <div className="space-y-3 text-xs">
@@ -254,7 +305,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
             {/* Campus Notices / Pengumuman Terkini & Academic Dates */}
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4">Pengumuman Kampus Terbaru</h4>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4">Pengumuman Kampus Terbaru</h4>
                 <div className="space-y-4 text-xs font-semibold">
                   <div className="border-b border-slate-100 dark:border-slate-800 pb-3 space-y-1">
                     <span className="text-[9px] text-slate-400 block font-mono">24 Juni 2026</span>
@@ -340,53 +391,14 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
       {/* 7. INOVASI & FITUR CANGGIH DOSEN */}
       {activeTab === 'inovasi' && (
         <div className="space-y-6">
-          {/* Floating PWA Optimizer Bar */}
-          <MobilePwaControlBar />
-
-          {/* Master Enterprise Suite Control Center */}
-          <div className="space-y-2">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block">Fitur Utama &bull; SIAKAD Enterprise &amp; Automation Hub</span>
-            <EnterpriseControlSuite />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Integrasi LMS & Hybrid Learning */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 1 &bull; Kelas Hybrid &amp; Sinkronisasi LMS</span>
-              <LmsHybridModule />
-            </div>
-
-            {/* Smart Communication Forum & Gateway */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 2 &bull; Komunikasi Cerdas (WA &amp; Pengumuman Blast)</span>
-              <SmartCommunicationModule role="lecturer" />
-            </div>
-
-            {/* AI Plagiarism & Digital Signatures */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 3 &bull; TTE (E-Sign) &amp; Cek Plagiarisme Tugas</span>
-              <ModernTechModule />
-            </div>
-
-            {/* Student Advising Status Monitor (Self-service perwalian viewer) */}
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 4 &bull; Log &amp; Catatan Perwalian</span>
-              <StudentSelfServiceModule />
-            </div>
-          </div>
-
-          {/* Security, 2FA & Audit Logs */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block">Inovasi 5 &bull; Keamanan Akun Dosen &amp; Log Audit Trail</span>
-            <SecurityComplianceModule user={user} />
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Modul ini sedang dalam pengembangan.</p>
         </div>
       )}
 
       {activeTab === 'edom' && (
         <div className="space-y-6">
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest block font-sans">Kinerja &bull; Hasil Evaluasi Kinerja Dosen</span>
+            <span className="text-[10px] font-black text-blue-600 block font-sans">Kinerja &bull; Hasil Evaluasi Kinerja Dosen</span>
             <LecturerRatingModule user={user} />
           </div>
         </div>

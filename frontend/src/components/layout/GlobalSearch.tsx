@@ -88,7 +88,7 @@ export function GlobalSearch() {
           value={query}
           onChange={handleSearch}
           onFocus={() => query.trim().length > 0 && setIsOpen(true)}
-          className="block w-full pl-10 pr-10 py-2 border border-slate-200 dark:border-slate-800 rounded-xl leading-5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
+          className="block w-full pl-10 pr-10 py-2 border border-slate-200 dark:border-slate-800 rounded-xl leading-5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
           placeholder="Cari NIM, mata kuliah, dosen..."
         />
         {query && (
@@ -103,8 +103,8 @@ export function GlobalSearch() {
 
       {/* Results Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 transition-all">
-          <div className="p-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50">
+        <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 transition-colors">
+          <div className="p-2 text-[10px] font-bold text-slate-400 dark:text-slate-500r bg-slate-50 dark:bg-slate-900/50">
             Hasil Pencarian ({results.length})
           </div>
           {results.map((item) => {
@@ -117,7 +117,7 @@ export function GlobalSearch() {
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${
                     item.type === 'student' ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400' :
-                    item.type === 'course' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' :
+                    item.type === 'course' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' :
                     'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
                   }`}>
                     {item.type === 'student' && <GraduationCap className="w-4 h-4" />}
@@ -130,9 +130,9 @@ export function GlobalSearch() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-boldr ${
                     item.type === 'student' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
-                    item.type === 'course' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400' :
+                    item.type === 'course' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400' :
                     'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400'
                   }`}>
                     {item.type === 'student' ? 'Mahasiswa' : item.type === 'course' ? 'Mata Kuliah' : 'Dosen'}
@@ -157,10 +157,10 @@ export function GlobalSearch() {
       {/* Detail Modal / Card when Selected */}
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transition-all duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transition-colors duration-200">
             {/* Detail Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/35">
-              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Detail Informasi</span>
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500r">Detail Informasi</span>
               <button 
                 onClick={() => setSelectedDetail(null)}
                 className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -174,7 +174,7 @@ export function GlobalSearch() {
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${
                   selectedDetail.type === 'student' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400' :
-                  selectedDetail.type === 'course' ? 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400' :
+                  selectedDetail.type === 'course' ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400' :
                   'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400'
                 }`}>
                   {selectedDetail.type === 'student' && <GraduationCap className="w-6 h-6" />}

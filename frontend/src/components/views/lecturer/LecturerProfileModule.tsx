@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LecturerProfile } from '../../../data/lecturerMockData';
+import { LecturerProfile } from '../../../api/academic.api';
 import { User, Award, Shield, FileText, CheckCircle2 } from 'lucide-react';
 
 interface LecturerProfileModuleProps {
@@ -81,11 +81,11 @@ export function LecturerProfileModule({ profile, setProfile, onShowToast, subTab
 
             <div className="w-full border-t border-slate-100 dark:border-slate-800 my-5 pt-5 space-y-4 text-left">
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Program Studi</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Program Studi</span>
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-0.5">{profile.prodi}</p>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Status Ikatan Kerja</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Status Ikatan Kerja</span>
                 <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Dosen Tetap PNS
                 </p>
@@ -149,7 +149,7 @@ export function LecturerProfileModule({ profile, setProfile, onShowToast, subTab
                 {profile.riwayatPendidikan.map((edu, idx) => (
                   <div key={idx} className="relative pl-6">
                     <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full bg-blue-600 border border-white dark:border-slate-900" />
-                    <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{edu.jenjang} - Lulus Tahun {edu.tahun}</span>
+                    <span className="text-[10px] text-blue-600 font-boldr">{edu.jenjang} - Lulus Tahun {edu.tahun}</span>
                     <h5 className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">{edu.institusi}</h5>
                     <p className="text-[11px] text-slate-500 mt-0.5">Program Studi: {edu.prodi}</p>
                   </div>

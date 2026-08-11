@@ -220,7 +220,7 @@ export function SksConversionModule({ role }: { role: string }) {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden transition-all duration-200">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6 relative overflow-hidden transition-colors duration-200">
       
       {/* Dynamic Toast Alert inside widget */}
       {toast && (
@@ -231,13 +231,13 @@ export function SksConversionModule({ role }: { role: string }) {
       )}
 
       {/* Header Accent Decorator */}
-      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600" />
+      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700" />
 
       {/* Widget Header */}
       <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/25">
-            <Award className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/25">
+            <Award className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
           </div>
           <h4 className="text-sm font-black text-slate-900 dark:text-white">
             {t('sks.title')}
@@ -255,7 +255,7 @@ export function SksConversionModule({ role }: { role: string }) {
           <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-950/40 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-blue-500" />
-              <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+              <h5 className="text-xs font-bold text-slate-800 dark:text-whiter">
                 {t('sks.lecturer_view')}
               </h5>
             </div>
@@ -264,7 +264,7 @@ export function SksConversionModule({ role }: { role: string }) {
               <div className="space-y-1.5">
                 <label className="text-[10px] text-slate-400 uppercase font-black">{t('login.username')} (Mahasiswa)</label>
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-indigo-500" /> {studentSearch}
+                  <UserCheck className="w-4 h-4 text-blue-500" /> {studentSearch}
                 </div>
               </div>
 
@@ -276,7 +276,7 @@ export function SksConversionModule({ role }: { role: string }) {
                   placeholder="Contoh: Universitas Gadjah Mada / Kampus Merdeka"
                   value={originUni}
                   onChange={(e) => setOriginUni(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-indigo-500 font-bold"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-blue-500 font-bold"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export function SksConversionModule({ role }: { role: string }) {
                     placeholder="Contoh: Pemrograman Sistem & Cloud"
                     value={originCourse}
                     onChange={(e) => setOriginCourse(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-indigo-500 font-bold"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-blue-500 font-bold"
                   />
                 </div>
                 <div className="col-span-4 space-y-1.5">
@@ -328,7 +328,7 @@ export function SksConversionModule({ role }: { role: string }) {
                   placeholder="Masukkan deskripsi mata kuliah asal atau silabus untuk mencocokkan Capaian Pembelajaran Lulusan (CPL)..."
                   value={syllabusText}
                   onChange={(e) => setSyllabusText(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-indigo-500 font-semibold resize-none"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 outline-none text-slate-800 dark:text-slate-200 focus:border-blue-500 font-semibold resize-none"
                 />
               </div>
 
@@ -337,7 +337,7 @@ export function SksConversionModule({ role }: { role: string }) {
                 <div>
                   <span className="text-[9px] uppercase text-slate-400 font-bold block">{t('sks.match_cpl')}</span>
                   {isMatching ? (
-                    <span className="text-[11px] text-indigo-600 font-bold flex items-center gap-1">
+                    <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1">
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Menganalisis...
                     </span>
                   ) : matchScore !== null ? (
@@ -360,7 +360,7 @@ export function SksConversionModule({ role }: { role: string }) {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> {t('sks.propose_btn')}
               </button>
@@ -371,11 +371,11 @@ export function SksConversionModule({ role }: { role: string }) {
         {/* HISTORIC LIST OF CONVERSIONS */}
         <div className={`${role === 'student' ? 'lg:col-span-12' : 'lg:col-span-7'} space-y-4`}>
           <div className="flex justify-between items-center">
-            <h5 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <History className="w-4.5 h-4.5 text-indigo-500" />
+            <h5 className="text-xs font-extrabold text-slate-800 dark:text-whiter flex items-center gap-1.5">
+              <History className="w-4.5 h-4.5 text-blue-500" />
               {role === 'student' ? t('sks.student_view') : t('sks.history_title')}
             </h5>
-            <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full border border-indigo-500/10">
+            <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/30 px-2.5 py-0.5 rounded-full border border-blue-500/10">
               {conversions.length} Total Records
             </span>
           </div>
@@ -415,7 +415,7 @@ export function SksConversionModule({ role }: { role: string }) {
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusColors[rec.status] || ''}`}>
                         {rec.status === 'Diajukan' ? t('sks.status.proposed') : rec.status === 'Disetujui' ? t('sks.status.approved') : rec.status}
                       </span>
-                      <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-1.5 flex items-center justify-end gap-1 font-mono">
+                      <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1.5 flex items-center justify-end gap-1 font-mono">
                         <Zap className="w-3 h-3 animate-pulse text-amber-500" /> CPL Match: {rec.cplMatchPercentage}%
                       </div>
                     </div>
@@ -435,7 +435,7 @@ export function SksConversionModule({ role }: { role: string }) {
 
                     <div className="space-y-0.5 flex-1 w-full text-center sm:text-right">
                       <span className="text-[8.5px] uppercase font-black text-slate-400">SIAKAD Sasaran</span>
-                      <div className="font-bold text-indigo-600 dark:text-indigo-400 truncate">({rec.targetCourseCode}) {rec.targetCourseName}</div>
+                      <div className="font-bold text-blue-600 dark:text-blue-400 truncate">({rec.targetCourseCode}) {rec.targetCourseName}</div>
                       <span className="text-[10px] text-slate-500 font-mono">{rec.targetSks} Converted SKS</span>
                     </div>
                   </div>
@@ -458,7 +458,7 @@ export function SksConversionModule({ role }: { role: string }) {
                       </button>
                       <button 
                         onClick={() => handleApprove(rec.id)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-md shadow-emerald-500/10 cursor-pointer transition-all"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-md shadow-emerald-500/10 cursor-pointer transition-colors"
                       >
                         Setujui Konversi & Verifikasi CPL
                       </button>

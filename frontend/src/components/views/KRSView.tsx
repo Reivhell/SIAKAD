@@ -195,7 +195,7 @@ export function KRSView() {
                   return (
                     <div
                       key={course.code}
-                      className={`p-4 flex items-center justify-between transition-all ${
+                      className={`p-4 flex items-center justify-between transition-colors ${
                         isSelected
                           ? 'opacity-50 bg-slate-50 dark:bg-slate-800/20 cursor-not-allowed'
                           : 'hover:bg-blue-50 dark:hover:bg-blue-950/20 cursor-pointer'

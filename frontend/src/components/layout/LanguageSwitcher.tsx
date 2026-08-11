@@ -47,7 +47,7 @@ export function LanguageSwitcher() {
                     id={`lang-active-indicator-${opt.code}`}
                     layoutId="activeLanguagePill"
                     className="absolute inset-0 bg-blue-600 rounded-lg -z-10 shadow-sm"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    transition={{ duration: 0.12, ease: [0.4, 0, 0.2, 1] }}
                   />
                 )}
                 <span id={`lang-flag-${opt.code}`} className="text-xs">{opt.flag}</span>

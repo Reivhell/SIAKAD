@@ -172,7 +172,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
           setIsOpen(!isOpen);
           setIsSuccess(false);
         }}
-        className="flex items-center gap-2 px-4 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors font-sans text-xs font-bold uppercase tracking-wider border border-slate-800 dark:border-slate-200 cursor-pointer"
+        className="flex items-center gap-2 px-4 py-3 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors font-sans text-xs font-boldr border border-slate-800 dark:border-slate-200 cursor-pointer"
       >
         {isOpen ? (
           <X className="w-4 h-4" />
@@ -220,7 +220,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                   setActiveTab('submit');
                   setIsSuccess(false);
                 }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
                   activeTab === 'submit'
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -232,7 +232,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
               <button
                 type="button"
                 onClick={() => setActiveTab('history')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
                   activeTab === 'history'
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
@@ -298,14 +298,14 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                             </div>
                           </div>
                         </div>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                           {user.role === 'student' ? 'Mahasiswa' : user.role === 'lecturer' ? 'Dosen' : user.role === 'kaprodi' ? 'Kaprodi' : 'Admin'}
                         </span>
                       </div>
 
                       {/* Title Field */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                           Judul Isu / Saran
                         </label>
                         <input
@@ -321,7 +321,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                       {/* Grid Category & Severity */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                             Kategori
                           </label>
                           <select
@@ -337,7 +337,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
+                          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                             Tingkat Keparahan
                           </label>
                           <select
@@ -355,7 +355,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
 
                       {/* Description Area */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                           Detail Deskripsi
                         </label>
                         <textarea
@@ -372,7 +372,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                       <button
                         type="submit"
                         disabled={isSubmitting || !title.trim() || !description.trim()}
-                        className="w-full flex items-center justify-center gap-1.5 py-2 px-4 border border-transparent rounded-xl shadow-md text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all cursor-pointer"
+                        className="w-full flex items-center justify-center gap-1.5 py-2 px-4 border border-transparent rounded-xl shadow-md text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer"
                       >
                         {isSubmitting ? (
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -437,30 +437,30 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                             {/* Badge and Metadata */}
                             <div className="flex flex-wrap items-center gap-1.5">
                               {item.category === 'bug' && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 flex items-center gap-0.5 uppercase tracking-wide">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 flex items-center gap-0.5">
                                   <Bug className="w-2.5 h-2.5" />
                                   Bug
                                 </span>
                               )}
                               {item.category === 'feature' && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 flex items-center gap-0.5 uppercase tracking-wide">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
                                   <Lightbulb className="w-2.5 h-2.5" />
                                   Fitur
                                 </span>
                               )}
                               {item.category === 'ui' && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 flex items-center gap-0.5 uppercase tracking-wide">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 flex items-center gap-0.5">
                                   🎨 UI/UX
                                 </span>
                               )}
                               {item.category === 'general' && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-0.5 uppercase tracking-wide">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-0.5">
                                   💬 Umum
                                 </span>
                               )}
 
                               {/* Severity Badge */}
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                 item.severity === 'critical' ? 'bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400' :
                                 item.severity === 'high' ? 'bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400' :
                                 item.severity === 'medium' ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' :
@@ -470,7 +470,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
                               </span>
 
                               {/* Status Badge */}
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide flex items-center gap-0.5 ml-auto ${
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5 ml-auto ${
                                 item.status === 'resolved' ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400' :
                                 item.status === 'in_review' ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' :
                                 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'

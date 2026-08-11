@@ -80,7 +80,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
   const estSemestersLeft = Math.ceil(remainingSks / 20);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans relative overflow-hidden">
       {/* Decorative top accent border */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600" />
 
@@ -175,7 +175,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
           
           {/* Base current progress */}
           <motion.div 
-            className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-blue-500 h-2.5 rounded-full z-10 relative transition-all duration-500 shadow-sm"
+            className="bg-gradient-to-r from-emerald-500 via-emerald-600 to-blue-500 h-2.5 rounded-full z-10 relative transition-colors duration-500 shadow-sm"
             style={{ width: `${currentPercentage}%` }}
             initial={{ width: 0 }}
             animate={{ width: `${currentPercentage}%` }}
@@ -188,7 +188,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
           {/* Simulated Planned progress bar overlay */}
           {simulatedPlannedSks > 0 && (
             <motion.div 
-              className="absolute left-[3px] top-[3px] h-2.5 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-60 rounded-full animate-pulse transition-all duration-500"
+              className="absolute left-[3px] top-[3px] h-2.5 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-60 rounded-full animate-pulse transition-colors duration-500"
               style={{ width: `${simulatedPercentage}%` }}
             />
           )}
@@ -265,7 +265,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
                     return (
                       <div 
                         key={idx} 
-                        className="p-3 bg-slate-50/70 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl space-y-2 hover:scale-[1.01] hover:shadow-xs transition-all duration-200"
+                        className="p-3 bg-slate-50/70 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 rounded-xl space-y-2  hover:shadow-xs transition-colors duration-200"
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-2">

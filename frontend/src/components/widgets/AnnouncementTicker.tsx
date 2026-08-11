@@ -53,11 +53,11 @@ export function AnnouncementTicker() {
   if (!isVisible || announcements.length === 0) return null;
 
   return (
-    <div className="relative w-full bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl overflow-hidden shadow-sm transition-all duration-200">
+    <div className="relative w-full bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl overflow-hidden shadow-sm transition-colors duration-200">
       <div className="flex items-center">
         {/* Fixed Title Label */}
         <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white font-bold text-xs select-none z-10 rounded-l-2xl shrink-0">
-          <Megaphone className="w-4 h-4 animate-bounce" />
+          <Megaphone className="w-4 h-4 animate-pulse" />
           <span className="hidden sm:inline">PENGUMUMAN</span>
           <span className="inline sm:hidden">INFO</span>
         </div>
@@ -85,7 +85,7 @@ export function AnnouncementTicker() {
         {/* Close Button */}
         <button
           onClick={() => setIsVisible(false)}
-          className="p-2 mr-1 text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-950/40 rounded-xl transition-all shrink-0 cursor-pointer"
+          className="p-2 mr-1 text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-950/40 rounded-xl transition-colors shrink-0 cursor-pointer"
           title="Tutup pengumuman"
         >
           <X className="w-4 h-4" />

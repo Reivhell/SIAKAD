@@ -59,7 +59,7 @@ export function AcademicAbsenceSupport() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all duration-200 font-sans relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans relative overflow-hidden">
       {/* Visual Header */}
       <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
         <div className="space-y-1">
@@ -85,7 +85,7 @@ export function AcademicAbsenceSupport() {
           return (
             <div
               key={alert.id}
-              className={`p-4 rounded-xl border transition-all ${
+              className={`p-4 rounded-xl border transition-colors ${
                 isWarning && isPending
                   ? 'bg-amber-50/40 dark:bg-amber-950/10 border-amber-500/30'
                   : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-850'
@@ -141,7 +141,7 @@ export function AcademicAbsenceSupport() {
                       <span className="text-[9px] uppercase font-bold text-blue-500 tracking-wider flex items-center gap-1">
                         <MessageCircle className="w-3.5 h-3.5 text-blue-500" /> Wellbeing Check (Sistem)
                       </span>
-                      <p className="text-[11px] text-slate-650 dark:text-slate-300 italic leading-relaxed bg-blue-500/5 dark:bg-blue-500/10 p-2 rounded-lg border border-blue-500/5">
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 italic leading-relaxed bg-blue-500/5 dark:bg-blue-500/10 p-2 rounded-lg border border-blue-500/5">
                         &ldquo;Hai Syafiq, sistem mencatat Anda tidak hadir beberapa kuliah belakangan. Apakah Anda baik-baik saja? Jika ada kendala medis, keluarga, atau psikologis, silakan kirim alasan di sini.&rdquo;
                       </p>
                     </div>
@@ -188,7 +188,7 @@ export function AcademicAbsenceSupport() {
 
                             <button
                               onClick={() => handleResolveAlert(alert.id)}
-                              className="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-xs shrink-0 flex items-center justify-center gap-1"
+                              className="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer shadow-xs shrink-0 flex items-center justify-center gap-1"
                             >
                               Kirim Alasan <Send className="w-3 h-3" />
                             </button>

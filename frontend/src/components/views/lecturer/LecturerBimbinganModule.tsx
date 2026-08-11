@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StudentAcademic, SkripsiItem } from '../../../data/lecturerMockData';
+import { StudentAcademic, SkripsiItem } from '../../../api/academic.api';
 import { 
   LineChart, 
   Line, 
@@ -154,7 +154,7 @@ export function LecturerBimbinganModule({
           {/* Student list + quick stats */}
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4 flex items-center gap-2">
                 <Users className="w-4.5 h-4.5 text-blue-500" /> Mahasiswa Bimbingan Wali
               </h4>
               <div className="space-y-2.5">
@@ -164,7 +164,7 @@ export function LecturerBimbinganModule({
                     <button
                       key={student.nim}
                       onClick={() => setActiveStudentNim(student.nim)}
-                      className={`w-full p-3.5 border rounded-xl text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      className={`w-full p-3.5 border rounded-xl text-left transition-colors cursor-pointer flex items-center justify-between gap-3 ${
                         isSelected 
                           ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/10' 
                           : 'border-slate-100 dark:border-slate-800 hover:border-blue-500/30 text-slate-800 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-950/20'
@@ -193,7 +193,7 @@ export function LecturerBimbinganModule({
             {/* GPA progression chart */}
             {activeStudent && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-blue-500" /> Monitoring Tren IPK: {activeStudent.name}
                 </h4>
                 <div className="h-44 w-full">
@@ -289,7 +289,7 @@ export function LecturerBimbinganModule({
                     <button
                       key={student.nim}
                       onClick={() => setActiveStudentNim(student.nim)}
-                      className={`w-full p-3.5 border rounded-xl text-left transition-all cursor-pointer flex justify-between items-center ${
+                      className={`w-full p-3.5 border rounded-xl text-left transition-colors cursor-pointer flex justify-between items-center ${
                         isSelected 
                           ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
                           : 'border-slate-100 dark:border-slate-800 hover:border-blue-500/30 text-slate-800 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-950/20'
@@ -316,7 +316,7 @@ export function LecturerBimbinganModule({
             <div className="lg:col-span-8 p-6 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/20 dark:bg-slate-950/10 space-y-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Draf Rencana Studi ({activeStudent?.name})</h4>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-whiter">Draf Rencana Studi ({activeStudent?.name})</h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">Semester Ganjil 2026/2027</p>
                 </div>
                 <div className="flex gap-2">
@@ -375,7 +375,7 @@ export function LecturerBimbinganModule({
           {/* Thesis guidance list */}
           <div className="lg:col-span-5 space-y-4">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-whiter mb-4 flex items-center gap-2">
                 <GraduationCap className="w-5 h-5 text-blue-500" /> Bimbingan Tugas Akhir / Skripsi
               </h4>
               <div className="space-y-2.5">
@@ -385,7 +385,7 @@ export function LecturerBimbinganModule({
                     <button
                       key={item.id}
                       onClick={() => setActiveThesisId(item.id)}
-                      className={`w-full p-3.5 border rounded-xl text-left transition-all cursor-pointer flex justify-between items-center ${
+                      className={`w-full p-3.5 border rounded-xl text-left transition-colors cursor-pointer flex justify-between items-center ${
                         isSelected 
                           ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
                           : 'border-slate-100 dark:border-slate-800 hover:border-blue-500/30 text-slate-800 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-950/20'

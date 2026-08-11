@@ -9,6 +9,8 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip 
 } from 'recharts';
 import { User } from '../../types';
+import { getRoleDashboard, AlumniDashboardPayload } from '../../api/academic.api';
+import { useEffect } from 'react';
 import { CertifiedDigitalTranscript } from '../widgets/CertifiedDigitalTranscript';
 import { DigitalFormsTracker } from '../widgets/DigitalFormsTracker';
 import { useLanguage } from '../../utils/i18n';
@@ -20,17 +22,6 @@ interface AlumniDashboardViewProps {
   activeTab?: string;
   onChangeTab?: (tab: string) => void;
 }
-
-const alumniSemesterGPAs = [
-  { name: 'Smt 1', IPS: 3.40, IPK: 3.40 },
-  { name: 'Smt 2', IPS: 3.55, IPK: 3.48 },
-  { name: 'Smt 3', IPS: 3.52, IPK: 3.49 },
-  { name: 'Smt 4', IPS: 3.65, IPK: 3.53 },
-  { name: 'Smt 5', IPS: 3.70, IPK: 3.56 },
-  { name: 'Smt 6', IPS: 3.62, IPK: 3.57 },
-  { name: 'Smt 7', IPS: 3.80, IPK: 3.60 },
-  { name: 'Smt 8', IPS: 3.90, IPK: 3.62 }
-];
 
 export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveTab, onChangeTab: propOnChangeTab }: AlumniDashboardViewProps) {
   const { t } = useLanguage();
@@ -44,26 +35,38 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const alumniProfile = {
-    name: user.name || 'Alumni',
-    nim: '1901001',
-    program: 'Teknik Informatika (S1)',
-    faculty: 'Fakultas Teknik',
-    classYear: '2019',
-    graduationYear: '2023',
-    gpa: 3.62,
-    totalSks: 144,
-    degree: 'Sarjana Komputer (S.Kom)',
-    advisor: 'Dr. Ir. H. Hermawan, M.T.',
-    birthPlace: 'Bandung',
-    birthDate: '12 September 2001',
-    religion: 'Islam',
-    citizenId: '3273012309010002',
-    email: user.email,
-    phone: user.phone || '+62 812-3456-7890',
-    address: 'Jl. Merdeka No. 45, Coblong, Kota Bandung, Jawa Barat 40135',
-    avatarUrl: user.avatar
+  // Data nyata profil alumni dari backend (RoleDashboard)
+  const [alumniProfile, setAlumniProfile] = useState<AlumniDashboardPayload['alumniProfile']>({
+    nim: '', program: '', faculty: '', classYear: '', graduationYear: '', gpa: 0, totalSks: 0,
+    degree: '', advisor: '', birthPlace: '', birthDate: '', religion: '', citizenId: '',
+    phone: '', address: '', avatarUrl: '',
+  });
+  const [alumniSemesterGPAs, setAlumniSemesterGPAs] = useState<AlumniDashboardPayload['alumniSemesterGPAs']>([]);
+
+  // Gabung profil alumni dari backend dengan identitas pengguna yang sedang login
+  const profileView = {
+    ...alumniProfile,
+    name: alumniProfile.name || user.name || 'Alumni',
+    email: alumniProfile.email || user.email || '',
+    phone: alumniProfile.phone || user.phone || '-',
+    avatarUrl: alumniProfile.avatarUrl || user.avatar || '',
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    getRoleDashboard<AlumniDashboardPayload>('alumni')
+      .then((data) => {
+        if (cancelled) return;
+        if (data.alumniProfile) setAlumniProfile(data.alumniProfile);
+        setAlumniSemesterGPAs(data.alumniSemesterGPAs ?? []);
+      })
+      .catch(() => {
+        // biarkan state kosong; UI menampilkan kondisi "Belum ada data"
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const menuItems = [
     { id: 'dashboard', label: 'Ringkasan Alumni', icon: LayoutDashboard },
@@ -77,7 +80,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-xs font-bold border border-slate-800 dark:border-slate-200 flex items-center gap-2 animate-pulse">
           <ShieldCheck className="w-4 h-4 text-green-500" />
           {toastMessage}
         </div>
@@ -89,11 +92,11 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-amber-300 shadow-md">
+              <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full border border-amber-300 shadow-md">
                 ALUMNI / GRADUATED
               </span>
             </div>
-            <h2 className="text-2xl font-black tracking-tight">Selamat Datang Kembali, {alumniProfile.name}</h2>
+            <h2 className="text-2xl font-black tracking-tight">Selamat Datang Kembali, {profileView.name}</h2>
             <p className="text-xs text-amber-100 font-medium">
               NIM: {alumniProfile.nim} &bull; {alumniProfile.program} &bull; Wisuda Angkatan {alumniProfile.graduationYear}
             </p>
@@ -101,11 +104,11 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3.5 border border-white/10 flex items-center gap-4">
             <div className="text-center border-r border-white/10 pr-4">
-              <div className="text-[10px] text-amber-200 uppercase font-black tracking-wider">IPK Kelulusan</div>
+              <div className="text-[10px] text-amber-200 font-black">IPK Kelulusan</div>
               <div className="text-xl font-black text-amber-300">{alumniProfile.gpa}</div>
             </div>
             <div className="text-center">
-              <div className="text-[10px] text-amber-200 uppercase font-black tracking-wider">Gelar Akademik</div>
+              <div className="text-[10px] text-amber-200 font-black">Gelar Akademik</div>
               <div className="text-xs font-extrabold text-white">{alumniProfile.degree}</div>
             </div>
           </div>
@@ -121,7 +124,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-black rounded-xl transition-colors cursor-pointer ${
                 isActive 
                   ? item.id === 'profil'
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md border border-amber-400/30 font-bold'
@@ -162,7 +165,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-850">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Riwayat IPK & IPS Per Semester</h3>
+                    <h3 className="text-xs font-blackr text-slate-400">Riwayat IPK & IPS Per Semester</h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">Arsip perkembangan indeks prestasi dari Semester 1 hingga kelulusan.</p>
                   </div>
                   <span className="text-[10.5px] font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
@@ -186,7 +189,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} />
                       <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} domain={[2.5, 4.0]} />
-                      <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '11px', border: '1px solid #e2e8f0' }} />
+                      <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '11px', border: '1px solid var(--color-border)' }} />
                       <Area type="monotone" dataKey="IPS" stroke="#d97706" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIPS)" name="IPS Semester" />
                       <Area type="monotone" dataKey="IPK" stroke="#4f46e5" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIPK)" name="IPK Kumulatif" />
                     </AreaChart>
@@ -226,7 +229,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
               
               {/* Alumni card representation */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider pb-2.5 border-b border-slate-100 dark:border-slate-850 flex items-center gap-1.5">
+                <h4 className="text-xs font-black text-slate-800 dark:text-whiter pb-2.5 border-b border-slate-100 dark:border-slate-850 flex items-center gap-1.5">
                   <GraduationCap className="w-4 h-4 text-amber-500" />
                   Kartu Ikatan Alumni (IKA)
                 </h4>
@@ -243,7 +246,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
                   </div>
                   
                   <div className="space-y-1">
-                    <div className="text-[11px] font-bold tracking-wide">{alumniProfile.name}</div>
+                    <div className="text-[11px] font-bold tracking-wide">{profileView.name}</div>
                     <div className="text-[8px] font-mono text-slate-400">NIM: {alumniProfile.nim} &bull; S.Kom</div>
                   </div>
 
@@ -255,7 +258,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
 
                 <button
                   onClick={() => triggerToast("Simulasi pengajuan pembuatan Kartu IKA Fisik berhasil dikirim!")}
-                  className="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200/50 dark:border-slate-700 py-2 rounded-xl text-[11px] font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer text-center"
+                  className="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-200/50 dark:border-slate-700 py-2 rounded-xl text-[11px] font-black text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-center"
                 >
                   Cetak / Ajukan Kartu IKA Fisik
                 </button>
@@ -264,7 +267,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
               {/* Read-only verification center */}
               <div className="bg-slate-900 text-slate-250 rounded-3xl p-5 space-y-3.5 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-xs font-black text-whiter flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   Pemberitahuan Akademik
                 </h4>
@@ -348,7 +351,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
               </div>
 
               <div className="sm:col-span-2 flex justify-end pt-3">
-                <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs cursor-pointer transition-all shadow-md">
+                <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs cursor-pointer transition-colors shadow-md">
                   Kirim Data Tracer Study
                 </button>
               </div>
@@ -391,23 +394,23 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
               <div className="md:col-span-3 flex flex-col items-center text-center space-y-3">
                 <div className="relative group">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-amber-500/20 shadow-md flex items-center justify-center bg-slate-100 dark:bg-slate-850">
-                    {alumniProfile.avatarUrl ? (
+                    {profileView.avatarUrl ? (
                       <img 
-                        src={alumniProfile.avatarUrl} 
+                        src={profileView.avatarUrl} 
                         alt="Avatar" 
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
                       <span className="text-4xl font-black text-slate-400">
-                        {(alumniProfile.name || 'A').charAt(0)}
+                        {(profileView.name || 'A').charAt(0)}
                       </span>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <div className="font-extrabold text-slate-900 dark:text-white">{alumniProfile.name}</div>
+                  <div className="font-extrabold text-slate-900 dark:text-white">{profileView.name}</div>
                   <div className="text-xs text-slate-400 font-semibold">NIM. {alumniProfile.nim}</div>
                 </div>
               </div>
@@ -438,14 +441,14 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
                 <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200/40 dark:border-slate-850/50 space-y-1 sm:col-span-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase">Surat Elektronik (Email) Resmi</span>
                   <div className="font-mono font-bold text-slate-850 dark:text-slate-200 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-blue-500 shrink-0" /> {alumniProfile.email}
+                    <Mail className="w-3.5 h-3.5 text-blue-500 shrink-0" /> {profileView.email}
                   </div>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200/40 dark:border-slate-850/50 space-y-1 sm:col-span-2">
                   <span className="text-[10px] text-slate-400 font-bold uppercase">Nomor Telepon Seluler</span>
                   <div className="font-mono font-bold text-slate-850 dark:text-slate-200 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-blue-500 shrink-0" /> {alumniProfile.phone}
+                    <Phone className="w-3.5 h-3.5 text-blue-500 shrink-0" /> {profileView.phone}
                   </div>
                 </div>
 

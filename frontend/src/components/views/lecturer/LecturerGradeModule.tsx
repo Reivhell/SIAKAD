@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StudentAcademic, TugasItem, MateriItem } from '../../../data/lecturerMockData';
+import { StudentAcademic, TugasItem, MateriItem } from '../../../api/academic.api';
 import { 
   FileSpreadsheet, 
   Award, 
@@ -155,7 +155,7 @@ export function LecturerGradeModule({
               </button>
               <button 
                 onClick={handlePublishGrades}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/10"
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-bold cursor-pointer transition-colors flex items-center gap-1.5 shadow-md shadow-blue-500/10"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" /> Publikasikan Nilai
               </button>
@@ -165,7 +165,7 @@ export function LecturerGradeModule({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                   <th className="pb-3 pl-2">Mahasiswa</th>
                   <th className="pb-3 text-center w-16">Tugas (20%)</th>
                   <th className="pb-3 text-center w-16">Kuis (10%)</th>
@@ -418,7 +418,7 @@ export function LecturerGradeModule({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                     <th className="pb-3 pl-2">Materi</th>
                     <th className="pb-3 text-center">Tipe</th>
                     <th className="pb-3">Nama File</th>

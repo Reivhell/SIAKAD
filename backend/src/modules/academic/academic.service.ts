@@ -422,6 +422,8 @@ export class AcademicService {
     const chatList = chats.map((m) => ({
       id: m.id,
       sender: (m.senderRole === 'lecturer' ? 'lecturer' : 'student') as any,
+      senderEmail: m.senderEmail,
+      senderName: m.senderName,
       text: m.text,
       timestamp: m.createdAt,
     }));
@@ -564,6 +566,8 @@ export class AcademicService {
     return rows.map((m) => ({
       id: m.id,
       sender: (m.senderRole === 'lecturer' ? 'lecturer' : 'student') as any,
+      senderEmail: m.senderEmail,
+      senderName: m.senderName,
       text: m.text,
       timestamp: m.createdAt,
     }));
@@ -596,6 +600,26 @@ export class AcademicService {
 
     const enrolledCodes = krs ? safeJson<string[]>(krs.coursesJson, []) : [];
     const enrolled = offerings.filter((o) => enrolledCodes.includes(o.code));
+
+    // Presensi nyata per mata kuliah dari sesi kuliah yang pernah dibuka.
+    const sessions = enrolledCodes.length ? await this.prisma.attendanceSession.findMany({ where: { courseCode: { in: enrolledCodes } } }) : [];
+    const attendanceRecords = enrolledCodes.length ? await this.prisma.attendanceRecord.findMany({ where: { studentNim: nim } }) : [];
+    const attendance = enrolled
+      .map((o) => {
+        const courseSessions = sessions.filter((s) => s.courseCode === o.code);
+        const planned = courseSessions.length;
+        const attended = courseSessions.filter((s) =>
+          attendanceRecords.some((r) => r.sessionId === s.id && r.status === 'Hadir'),
+        ).length;
+        return {
+          code: o.code,
+          name: o.name,
+          attendance: attended,
+          total: planned,
+          percentage: planned ? Math.round((attended / planned) * 1000) / 10 : 0,
+        };
+      })
+      .filter((a) => a.total > 0);
 
     const gpaSemesters = Array.from(new Set(grades.map((g) => g.semester))).sort((a, b) => a - b);
     const semesterGPAs = gpaSemesters.map((sem) => {
@@ -664,6 +688,7 @@ export class AcademicService {
 
     return {
       semesterGPAs,
+      attendance,
       announcements: announcements.map((a) => ({ id: a.id, category: a.target, title: a.title, date: a.date, excerpt: a.content, important: a.target === 'Mahasiswa' })),
       todayClasses,
       weeklySchedules,

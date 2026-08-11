@@ -4,7 +4,7 @@ import {
   ClassItem, 
   StudentAcademic, 
   JurnalItem 
-} from '../../../data/lecturerMockData';
+} from '../../../api/academic.api';
 import { 
   Calendar, 
   Users, 
@@ -149,7 +149,7 @@ export function LecturerAcademicModule({
             </h4>
             <div className="space-y-4">
               {jadwal.map((item) => (
-                <div key={item.id} className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 hover:border-blue-500/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div key={item.id} className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 hover:border-blue-500/30 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
                       {item.code} - SKS {item.sks}
@@ -228,7 +228,7 @@ export function LecturerAcademicModule({
             {/* Class capacity card */}
             <div className="lg:col-span-4 space-y-4">
               <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Informasi Kelas</span>
+                <span className="text-[10px] text-slate-400 font-bold">Informasi Kelas</span>
                 <h5 className="text-base font-extrabold text-slate-800 dark:text-white mt-1">{activeClassDetails?.name}</h5>
                 <p className="text-xs text-slate-500 mt-1">Kode: {activeClassDetails?.code} &bull; SKS: {activeClassDetails?.sks}</p>
 
@@ -254,7 +254,7 @@ export function LecturerAcademicModule({
             {/* Students table */}
             <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Mahasiswa Terdaftar</h5>
+                <h5 className="text-xs font-bold text-slate-800 dark:text-whiter">Mahasiswa Terdaftar</h5>
                 <button 
                   onClick={() => onShowToast('Daftar mahasiswa berhasil diekspor!')}
                   className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer transition-colors"
@@ -266,7 +266,7 @@ export function LecturerAcademicModule({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                       <th className="pb-3 pl-2">NIM</th>
                       <th className="pb-3">Nama Lengkap</th>
                       <th className="pb-3 text-right pr-2">Presensi Kehadiran</th>
@@ -364,7 +364,7 @@ export function LecturerAcademicModule({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                     <th className="pb-3 pl-2">Nama Mahasiswa</th>
                     <th className="pb-3 text-center">Hadir</th>
                     <th className="pb-3 text-center">Izin</th>
@@ -486,7 +486,7 @@ export function LecturerAcademicModule({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold">
                     <th className="pb-3 pl-2 text-center w-12">Pert</th>
                     <th className="pb-3 w-28">Tanggal</th>
                     <th className="pb-3">Materi Diajarkan</th>

@@ -128,7 +128,7 @@ export function PresensiView() {
         {/* Left Column - Active Classes */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-4 text-smr flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Kelas Hari Ini
             </h3>
@@ -144,7 +144,7 @@ export function PresensiView() {
                   <button
                     key={cls.id}
                     onClick={() => setSelectedClassId(cls.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-1.5 ${
+                    className={`w-full text-left p-4 rounded-xl border transition-colors flex flex-col gap-1.5 ${
                       isActive 
                         ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20' 
                         : 'bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200'
@@ -182,7 +182,7 @@ export function PresensiView() {
 
                     <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-3">
                       <div 
-                        className={`h-full transition-all duration-300 ${isActive ? 'bg-white' : 'bg-blue-600'}`}
+                        className={`h-full transition-colors duration-300 ${isActive ? 'bg-white' : 'bg-blue-600'}`}
                         style={{ width: `${(loggedCount / clsRoster.length) * 100}%` }}
                       />
                     </div>
@@ -204,7 +204,7 @@ export function PresensiView() {
             {/* Header Detail Kelas */}
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-col sm:flex-row justify-between gap-4">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">DETAIL KELAS</span>
+                <span className="text-[10px] font-boldr text-blue-600 dark:text-blue-400">DETAIL KELAS</span>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-1">{selectedClass.name}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Dosen Pengampu: <span className="font-semibold">{selectedClass.lecturer}</span></p>
               </div>
@@ -234,7 +234,7 @@ export function PresensiView() {
 
             {/* Attendance controls */}
             <div className="p-4 bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aksi Cepat Presensi Massal:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400r">Aksi Cepat Presensi Massal:</span>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button 
                   onClick={() => handleMarkAll('Hadir')}
@@ -262,10 +262,10 @@ export function PresensiView() {
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
                 <thead className="bg-slate-50 dark:bg-slate-800/40">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">NIM</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nama Mahasiswa</th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status Kehadiran</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Keterangan / Catatan</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400r">NIM</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400r">Nama Mahasiswa</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400r">Status Kehadiran</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400r">Keterangan / Catatan</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800">
@@ -280,7 +280,7 @@ export function PresensiView() {
                           <button
                             type="button"
                             onClick={() => handleStatusChange(student.id, 'Hadir')}
-                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                               student.status === 'Hadir'
                                 ? 'bg-green-500 text-white shadow-sm'
                                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
@@ -293,7 +293,7 @@ export function PresensiView() {
                           <button
                             type="button"
                             onClick={() => handleStatusChange(student.id, 'Izin')}
-                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                               student.status === 'Izin'
                                 ? 'bg-amber-500 text-white shadow-sm'
                                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
@@ -306,7 +306,7 @@ export function PresensiView() {
                           <button
                             type="button"
                             onClick={() => handleStatusChange(student.id, 'Alpha')}
-                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${
                               student.status === 'Alpha'
                                 ? 'bg-red-500 text-white shadow-sm'
                                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
@@ -339,7 +339,7 @@ export function PresensiView() {
               <button
                 type="button"
                 onClick={handleSaveAttendance}
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-md shadow-blue-500/10 flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 Simpan Lembar Kehadiran
