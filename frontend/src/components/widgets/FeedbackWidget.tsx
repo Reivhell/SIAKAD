@@ -18,6 +18,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { User } from '../../types';
+import { createTicket } from '../../api/academic.api';
 import { safeDispatchCustomEvent } from '../../utils/utils';
 
 interface FeedbackWidgetProps {
@@ -48,37 +49,18 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  // Load persistent feedback history from localStorage
+  // Load persistent feedback history from localStorage (hanya kiriman nyata pengguna)
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackItem[]>(() => {
     try {
       const saved = localStorage.getItem('siakad_feedback_history');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      }
     } catch (e) {
       console.error("Failed to parse feedback history:", e);
     }
-    // Seed standard mock items
-    return [
-      {
-        id: 'fb-1',
-        title: 'Error integrasi jadwal KRS dengan kalender akademik',
-        category: 'bug',
-        severity: 'high',
-        description: 'Ketika menekan sinkronisasi kalender di dashboard KRS, halaman macet dan menampilkan blank page.',
-        timestamp: new Date(Date.now() - 86400000 * 2).toLocaleString(),
-        status: 'in_review',
-        userEmail: user?.email || ''
-      },
-      {
-        id: 'fb-2',
-        title: 'Saran penambahan ekspor PDF transkrip nilai',
-        category: 'feature',
-        severity: 'low',
-        description: 'Sangat memudahkan jika mahasiswa bisa langsung mengunduh PDF transkrip terenkripsi yang memiliki QR code validasi langsung dari SIAKAD.',
-        timestamp: new Date(Date.now() - 86400000 * 5).toLocaleString(),
-        status: 'resolved',
-        userEmail: user?.email || ''
-      }
-    ];
+    return [];
   });
 
   // Save to localStorage whenever feedback history changes
@@ -95,35 +77,17 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
     // Trigger the Global Progress Bar at the top of the screen via fetch intercept & events
     safeDispatchCustomEvent('global-progress-start');
 
-    // Simulated API Endpoint Call to store feedback
+    // Kirim laporan ke backend helpdesk (tiket) yang nyata
     try {
-      const mockResponse = await fetch('/api/feedback/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          category,
-          severity,
-          description,
-          user: {
-            name: user?.name || 'User',
-            email: user?.email || '',
-            role: user?.role || ''
-          }
-        })
-      }).catch(() => {
-        // Fallback for mock client-side server environments
-        return new Promise<Response>((resolve) => {
-          setTimeout(() => {
-            resolve({ ok: true, json: async () => ({ status: 'success' }) } as Response);
-          }, 1200);
-        });
+      const ticket = await createTicket({
+        subject: title,
+        message: description,
       });
 
-      if (mockResponse.ok) {
+      if (ticket) {
         // Create new feedback entry
         const newFeedback: FeedbackItem = {
-          id: `fb-${Math.random().toString(36).substring(2, 9)}`,
+          id: ticket.id,
           title,
           category,
           severity,
@@ -144,6 +108,7 @@ export function FeedbackWidget({ user }: FeedbackWidgetProps) {
       }
     } catch (error) {
       console.error("Error submitting feedback:", error);
+      alert('Gagal mengirim laporan. Silakan coba lagi nanti.');
     } finally {
       setIsSubmitting(false);
       safeDispatchCustomEvent('global-progress-end');

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   AdminClass,
   AdminStudent,
-  AdminLecturer
+  AdminLecturer,
+  AdminActivityLog
 } from '../../../api/academic.api';
 import {
   Activity,
@@ -28,30 +29,20 @@ interface AdminMonitoringModuleProps {
   classes: AdminClass[];
   students: AdminStudent[];
   lecturers: AdminLecturer[];
+  activityLogs: AdminActivityLog[];
   onShowToast: (message: string) => void;
 }
-
-// Mock Log Activity data to make logs populated & realistic
-const INITIAL_LOGS = [
-  { id: 'log-1', timestamp: '2026-06-25 11:32:05', user: 'Admin (Kurnia)', action: 'Ubah Data Mahasiswa', detail: 'Mengubah status NIM 10118025 menjadi Aktif', ip: '192.168.1.102' },
-  { id: 'log-2', timestamp: '2026-06-25 10:15:40', user: 'Dosen (Dr. Eng. Rahmat)', action: 'Check-in Mengajar', detail: 'Check-in mengajar IF3110 kelas K-01', ip: '114.122.34.8' },
-  { id: 'log-3', timestamp: '2026-06-25 09:02:11', user: 'Admin (Kurnia)', action: 'Persetujuan KRS', detail: 'Menyetujui KRS NIM 10118025 (Zaki Mubarak)', ip: '192.168.1.102' },
-  { id: 'log-4', timestamp: '2026-06-24 16:45:12', user: 'Mahasiswa (Zaki Mubarak)', action: 'Pengisian KRS', detail: 'Mengajukan 24 SKS untuk Semester Ganjil 2025/2026', ip: '180.244.12.5' },
-  { id: 'log-5', timestamp: '2026-06-24 14:20:00', user: 'Admin (Kurnia)', action: 'Tambah Kelas Kuliah', detail: 'Membuat kelas IF3150 kelas A kapasitas 40', ip: '192.168.1.102' },
-  { id: 'log-6', timestamp: '2026-06-24 11:10:55', user: 'Dosen (Prof. Hermansyah)', action: 'Input Nilai', detail: 'Menginput KHS Mahasiswa untuk kelas Pemrograman Lanjut', ip: '114.122.34.12' },
-  { id: 'log-7', timestamp: '2026-06-23 08:30:15', user: 'System', action: 'Backup Database Auto', detail: 'Backup database berhasil disimpan ke Cloud Storage', ip: '127.0.0.1' }
-];
 
 export function AdminMonitoringModule({
   activeTab,
   classes,
   students,
   lecturers,
+  activityLogs,
   onShowToast
 }: AdminMonitoringModuleProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('Semua');
-  const [activityLogs, setActivityLogs] = useState(INITIAL_LOGS);
 
   // Poke Lecturer handler (simulates sending notification)
   const handlePokeLecturer = (lecturerName: string, classTitle: string) => {
@@ -68,9 +59,9 @@ export function AdminMonitoringModule({
 
   // Filter logs or items based on query
   const filteredLogs = activityLogs.filter(log =>
-    log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.detail.toLowerCase().includes(searchQuery.toLowerCase())
+    (log.user || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (log.action || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (log.role || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -361,9 +352,8 @@ export function AdminMonitoringModule({
 
             <button
               onClick={() => {
-                setActivityLogs(INITIAL_LOGS);
                 setSearchQuery('');
-                onShowToast('Database log aktivitas disinkronkan ulang!');
+                onShowToast('Log aktivitas ditampilkan langsung dari sistem (real-time).');
               }}
               className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl transition-colors"
             >
@@ -387,19 +377,22 @@ export function AdminMonitoringModule({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                   {filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                      <td className="px-6 py-4 text-slate-500 font-semibold font-mono">{log.timestamp}</td>
+                      <td className="px-6 py-4 text-slate-500 font-semibold font-mono">{log.time}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
                           <User className="w-3.5 h-3.5 text-slate-400" />
-                          {log.user}
+                          {log.user || '—'}
                         </div>
+                        {log.role ? (
+                          <span className="text-[10px] text-slate-400 ml-4">({log.role})</span>
+                        ) : null}
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-semibold">{log.detail}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-semibold">{log.action}</td>
                       <td className="px-6 py-4 text-slate-400 font-mono text-[10px]">{log.ip}</td>
                     </tr>
                   ))}

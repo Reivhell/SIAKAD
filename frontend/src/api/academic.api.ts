@@ -705,6 +705,8 @@ export interface TicketItem {
   status: string;
   createdAt?: string;
   resolution?: string | null;
+  requesterName?: string;
+  requesterEmail?: string;
 }
 
 export async function getTickets(): Promise<TicketItem[]> {

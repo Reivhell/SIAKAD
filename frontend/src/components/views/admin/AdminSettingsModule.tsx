@@ -35,12 +35,14 @@ interface AdminSettingsModuleProps {
   onShowToast: (message: string) => void;
 }
 
-// Initial mock backups
-const INITIAL_BACKUPS = [
-  { id: 'b-1', filename: 'siakad_backup_20260625_120000.sql', size: '12.4 MB', timestamp: '2026-06-25 12:00:15', status: 'Sukses' },
-  { id: 'b-2', filename: 'siakad_backup_20260624_120000.sql', size: '12.2 MB', timestamp: '2026-06-24 12:00:09', status: 'Sukses' },
-  { id: 'b-3', filename: 'siakad_backup_20260623_120000.sql', size: '12.1 MB', timestamp: '2026-06-23 12:00:22', status: 'Sukses' }
-];
+// Arsip backup diisi dari aksi nyata di sesi ini (belum ada endpoint backup backend)
+interface BackupEntry {
+  id: string;
+  filename: string;
+  size: string;
+  timestamp: string;
+  status: string;
+}
 
 export function AdminSettingsModule({
   activeTab,
@@ -57,7 +59,7 @@ export function AdminSettingsModule({
   const [formData, setFormData] = useState<any>({});
 
   // Backup states
-  const [backups, setBackups] = useState(INITIAL_BACKUPS);
+  const [backups, setBackups] = useState<BackupEntry[]>([]);
   const [isBackingUp, setIsBackingUp] = useState(false);
 
   // Currency Formatter
@@ -370,7 +372,12 @@ export function AdminSettingsModule({
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {backups.map((b) => (
+              {backups.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">
+                  Belum ada arsip backup. Tekan "Cadangkan Database SQL Sekarang" untuk membuat cadangan pertama.
+                </div>
+              ) : (
+              backups.map((b) => (
                 <div key={b.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs">
                   <div className="space-y-1">
                     <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{b.filename}</p>
@@ -401,7 +408,8 @@ export function AdminSettingsModule({
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         </div>

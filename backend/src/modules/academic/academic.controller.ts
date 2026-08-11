@@ -208,7 +208,7 @@ export class AcademicController {
   }
 
   @Post('tickets')
-  @Roles('student')
+  @Roles('admin', 'lecturer', 'student', 'kaprodi', 'dekan', 'baak', 'bauk', 'alumni', 'applicant')
   async createTicket(@Req() req: express.Request, @Body() body: any) {
     const [ip, ua] = meta(req);
     const ticket = await this.academicService.createTicket(actorOf(req), body, ip, ua);

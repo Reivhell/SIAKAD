@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, 
   Award, 
@@ -7,7 +7,6 @@ import {
   Printer, 
   TrendingUp, 
   BookOpen, 
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
 import { 
@@ -19,86 +18,42 @@ import {
   CartesianGrid, 
   Tooltip 
 } from 'recharts';
-
-interface GradeItem {
-  code: string;
-  name: string;
-  sks: number;
-  score: number;
-  grade: 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E';
-  point: number;
-  status: 'Lulus' | 'Tidak Lulus';
-}
-
-interface SemesterData {
-  semesterName: string;
-  ips: number;
-  sksTaken: number;
-  grades: GradeItem[];
-}
-
-const mockSemesters: Record<string, SemesterData> = {
-  'Ganjil 2023/2024': {
-    semesterName: 'Semester 5 (Ganjil 2023/2024)',
-    ips: 3.78,
-    sksTaken: 20,
-    grades: [
-      { code: 'IF3110', name: 'Pengembangan Aplikasi Web', sks: 3, score: 92, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3150', name: 'Manajemen Proyek Perangkat Lunak', sks: 3, score: 86, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF3170', name: 'Kecerdasan Buatan', sks: 3, score: 90, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3140', name: 'Manajemen Basis Data', sks: 3, score: 81, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'KU2071', name: 'Pancasila dan Kewarganegaraan', sks: 2, score: 88, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF3180', name: 'Sistem Temu Balik Informasi', sks: 3, score: 78, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF3190', name: 'Kriptografi', sks: 3, score: 85, grade: 'AB', point: 3.5, status: 'Lulus' },
-    ]
-  },
-  'Genap 2022/2023': {
-    semesterName: 'Semester 4 (Genap 2022/2023)',
-    ips: 3.65,
-    sksTaken: 22,
-    grades: [
-      { code: 'IF2210', name: 'Algoritma dan Struktur Data', sks: 4, score: 84, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF2230', name: 'Sistem Operasi', sks: 3, score: 89, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2240', name: 'Rekayasa Perangkat Lunak', sks: 3, score: 76, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2250', name: 'Pemrograman Berorientasi Objek', sks: 3, score: 95, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2270', name: 'Teori Bahasa Formal dan Otomata', sks: 3, score: 68, grade: 'C', point: 2.0, status: 'Lulus' },
-      { code: 'IF2280', name: 'Jaringan Komputer', sks: 3, score: 82, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'KU2060', name: 'Bahasa Inggris Akademik', sks: 3, score: 91, grade: 'A', point: 4.0, status: 'Lulus' },
-    ]
-  },
-  'Ganjil 2022/2023': {
-    semesterName: 'Semester 3 (Ganjil 2022/2023)',
-    ips: 3.52,
-    sksTaken: 21,
-    grades: [
-      { code: 'IF2110', name: 'Matematika Diskrit', sks: 3, score: 80, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2130', name: 'Arsitektur dan Organisasi Komputer', sks: 3, score: 75, grade: 'B', point: 3.0, status: 'Lulus' },
-      { code: 'IF2140', name: 'Pemrograman fungsional', sks: 3, score: 87, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'IF2150', name: 'Aljabar Linier dan Geometri', sks: 3, score: 93, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2160', name: 'Probabilitas dan Statistika', sks: 3, score: 82, grade: 'AB', point: 3.5, status: 'Lulus' },
-      { code: 'KU2010', name: 'Tata Tulis Karya Ilmiah', sks: 2, score: 90, grade: 'A', point: 4.0, status: 'Lulus' },
-      { code: 'IF2180', name: 'Interaksi Manusia dan Komputer', sks: 4, score: 86, grade: 'AB', point: 3.5, status: 'Lulus' },
-    ]
-  }
-};
-
-const ipsHistory = [
-  { name: 'Smt 1', IPS: 3.40, IPK: 3.40 },
-  { name: 'Smt 2', IPS: 3.55, IPK: 3.48 },
-  { name: 'Smt 3', IPS: 3.52, IPK: 3.49 },
-  { name: 'Smt 4', IPS: 3.65, IPK: 3.53 },
-  { name: 'Smt 5', IPS: 3.78, IPK: 3.58 },
-];
+import { getStudentOverview, TranskripRow, StudentSemesterGpa } from '../../api/academic.api';
 
 export function KHSView() {
-  const [selectedSemester, setSelectedSemester] = useState<string>('Ganjil 2023/2024');
+  const [transkrip, setTranskrip] = useState<TranskripRow[]>([]);
+  const [ipsHistory, setIpsHistory] = useState<StudentSemesterGpa[]>([]);
+  const [selectedSemester, setSelectedSemester] = useState<string>('');
   const [showNotification, setShowNotification] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const currentData = mockSemesters[selectedSemester] || mockSemesters['Ganjil 2023/2024'];
-  
-  // Calculate aggregate stats based on our mock history
-  const cumulativeGPA = 3.58; 
-  const cumulativeSKS = 104;
+  useEffect(() => {
+    let cancelled = false;
+    getStudentOverview()
+      .then((data) => {
+        if (cancelled) return;
+        setTranskrip(data.transkrip || []);
+        setIpsHistory(data.semesterGPAs || []);
+        if (data.transkrip?.length) setSelectedSemester(data.transkrip[data.transkrip.length - 1].semester);
+      })
+      .catch((err) => console.error('Gagal memuat KHS:', err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const currentData = transkrip.find((t) => t.semester === selectedSemester) || transkrip[transkrip.length - 1];
+  const semesterOptions = transkrip.map((t) => t.semester);
+
+  // Statistik kumulatif dihitung dari transkrip nyata
+  const cumulativeSKS = transkrip.reduce((sum, t) => sum + t.sksTaken, 0);
+  const allGrades = transkrip.flatMap((t) => t.grades);
+  const cumulativeGPA = allGrades.length
+    ? Math.round((allGrades.reduce((sum, g) => sum + g.point * g.sks, 0) / Math.max(1, allGrades.reduce((sum, g) => sum + g.sks, 0))) * 100) / 100
+    : 0;
 
   const triggerNotification = (message: string) => {
     setShowNotification(message);
@@ -171,10 +126,10 @@ export function KHSView() {
             <Award className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400r">IPS Terakhir ({selectedSemester})</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{currentData.ips.toFixed(2)}</h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400r">IPS Terakhir ({selectedSemester || '—'})</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{currentData ? currentData.ips.toFixed(2) : '—'}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Beban SKS Semester: {currentData.sksTaken} SKS
+              Beban SKS Semester: {currentData ? currentData.sksTaken : 0} SKS
             </p>
           </div>
         </div>
@@ -244,7 +199,7 @@ export function KHSView() {
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Semester:</span>
               </div>
               <div className="flex flex-wrap gap-1 w-full sm:w-auto">
-                {Object.keys(mockSemesters).map((sem) => (
+                {semesterOptions.map((sem) => (
                   <button
                     key={sem}
                     onClick={() => setSelectedSemester(sem)}
@@ -275,7 +230,20 @@ export function KHSView() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
-                  {currentData.grades.map((grade) => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                        Memuat data KHS...
+                      </td>
+                    </tr>
+                  ) : !currentData ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                        Belum ada data KHS.
+                      </td>
+                    </tr>
+                  ) : (
+                    currentData.grades.map((grade) => (
                     <tr key={grade.code} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-xs font-semibold text-slate-900 dark:text-white">
                         <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded border border-slate-200/60 dark:border-slate-700/60">
@@ -315,7 +283,8 @@ export function KHSView() {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </div>

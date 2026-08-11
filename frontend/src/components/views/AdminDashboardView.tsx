@@ -157,16 +157,8 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
   // Render Admin Dashboard Landing
   const renderDashboardLanding = () => {
     const s = summary;
-    // Recharts Mock Data (fallback until live data arrives)
-    const gpaTrendData = s?.gpaTrend?.length
-      ? s.gpaTrend
-      : [
-          { name: '2022', gpa: 3.31 },
-          { name: '2023', gpa: 3.42 },
-          { name: '2024', gpa: 3.48 },
-          { name: '2025', gpa: 3.55 },
-          { name: '2026', gpa: 3.58 },
-        ];
+    // Data tren IPK & distribusi diambil dari backend; tanpa data tampilkan keadaan kosong
+    const gpaTrendData = s?.gpaTrend?.length ? s.gpaTrend : [];
 
     const prodiDistributionData = s?.facultyDistribution?.length
       ? s.facultyDistribution.map((f) => ({ name: f.name, jumlah: f.count }))
@@ -441,6 +433,7 @@ export function AdminDashboardView({ user, activeTab = 'dashboard', onChangeTab 
           students={studentsList}
           classes={classesList}
           lecturers={lecturersList}
+          activityLogs={activityLogsList}
           onShowToast={triggerToast}
         />
       );

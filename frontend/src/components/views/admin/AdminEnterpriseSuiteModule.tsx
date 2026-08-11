@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTickets, updateTicketStatus } from '../../../api/academic.api';
 import {
   Layers,
   Network,
@@ -106,13 +107,24 @@ const INITIAL_THESIS_PROPOSALS = [
   { id: 'tp-4', studentName: 'Eka Lestari', nim: '10121115', title: 'Optimasi Routing Protokol OSPF Menggunakan Algoritma Genetika', advisor: 'Wawan Kuswara, M.T.', examiner: 'Dr. Budi Rahardjo', stage: 'Pengajuan Judul', date: 'N/A', score: null }
 ];
 
-// 11. HELPDESK MOCK
-const INITIAL_TICKETS = [
-  { id: 't-101', sender: 'Fajar Ramadhan (Mhs)', category: 'Akademik', title: 'KRS Terkunci karena Pembayaran UKT Belum Sinkron', priority: 'Tinggi', date: '2026-06-25 09:30', status: 'Terbuka' },
-  { id: 't-102', sender: 'Dra. Sri Hartati (Dosen)', category: 'Sistem', title: 'Gagal Memasukkan Nilai Akhir Kelas Rekayasa web B', priority: 'Sedang', date: '2026-06-24 15:15', status: 'Diproses' },
-  { id: 't-103', sender: 'Melati Suci (Mhs)', category: 'Keuangan', title: 'Kesalahan Nominal Tagihan Cicilan UKT Tahap 2', priority: 'Tinggi', date: '2026-06-24 10:00', status: 'Diselesaikan' },
-  { id: 't-104', sender: 'Admin Prodi IF', category: 'Sarana', title: 'Proyektor Ruang Lab RPL 02 Sering Berkedip', priority: 'Rendah', date: '2026-06-23 08:45', status: 'Diselesaikan' }
-];
+// 11. Tiket helpdesk dimuat dari backend yang nyata (bukan mock)
+interface HelpdeskTicketView {
+  id: string;
+  sender: string;
+  category: string;
+  title: string;
+  priority: string;
+  date: string;
+  status: string;
+}
+
+// Terjemahan status tiket backend ke label UI helpdesk
+function mapTicketStatus(status?: string): string {
+  if (!status) return 'Terbuka';
+  if (status.includes('el')) return 'Diselesaikan';
+  if (status.includes('roses') || status.includes('ros')) return 'Diproses';
+  return 'Terbuka';
+}
 
 // 12. SECURITY AUDIT LOGS
 const SECURITY_LOGS = [
@@ -175,7 +187,7 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
   const [isLmsSyncing, setIsLmsSyncing] = useState(false);
 
   // 11. Helpdesk Ticketing States
-  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [tickets, setTickets] = useState<HelpdeskTicketView[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [ticketReply, setTicketReply] = useState('');
 
@@ -457,11 +469,37 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
   const handleTicketSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketReply.trim() || !selectedTicketId) return;
-    setTickets(prev => prev.map(t => t.id === selectedTicketId ? { ...t, status: 'Diselesaikan' } : t));
+    updateTicketStatus(selectedTicketId, 'Diproses')
+      .then(() => {
+        setTickets(prev => prev.map(t => t.id === selectedTicketId ? { ...t, status: 'Diproses' } : t));
+        handleActionToast('Respon bantuan dikirim ke sistem helpdesk.');
+      })
+      .catch(() => handleActionToast('Gagal mengirim respon. Coba lagi nanti.'));
     setTicketReply('');
     setSelectedTicketId(null);
-    handleActionToast('Respon bantuan dikirim. Tiket ditandai selesai.');
   };
+
+  // Muat tiket helpdesk nyata dari backend
+  useEffect(() => {
+    let cancelled = false;
+    getTickets()
+      .then((items) => {
+        if (cancelled) return;
+        setTickets(items.map((t) => ({
+          id: t.id,
+          sender: t.requesterName || 'Pengguna',
+          category: t.status || 'Akademik',
+          title: t.subject,
+          priority: 'Sedang',
+          date: t.createdAt || '—',
+          status: mapTicketStatus(t.status),
+        })));
+      })
+      .catch((err) => console.error('Gagal memuat tiket helpdesk:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -2192,7 +2230,12 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
             <div className="lg:col-span-2 space-y-3">
               <h4 className="text-xs font-bold text-slate-400r">Laporan Antrean Tiket Bantuan</h4>
               <div className="space-y-3">
-                {tickets.map((t) => (
+                {tickets.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-950/10 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    Belum ada tiket bantuan masuk.
+                  </div>
+                ) : (
+                tickets.map((t) => (
                   <div
                     key={t.id}
                     onClick={() => setSelectedTicketId(t.id)}
@@ -2215,7 +2258,8 @@ export function AdminEnterpriseSuiteModule({ activeTab, onShowToast }: AdminEnte
                       </span>
                     </div>
                   </div>
-                ))}
+                ))
+                )}
               </div>
             </div>
 
