@@ -293,6 +293,26 @@ model HelpdeskTicket {
   resolution     String?
 }
 
+// Evaluasi Dosen oleh Mahasiswa (EDOM). Satu baris per (mahasiswa, matkul, semester).
+model EdomEvaluation {
+  id            String @id @default(uuid())
+  studentNim    String
+  studentName   String
+  courseCode    String
+  courseName    String
+  lecturerEmail String
+  lecturerName  String
+  semester      String
+  pedagogik     Int
+  profesional   Int
+  kepribadian   Int
+  sosial        Int
+  comment       String
+  createdAt     String
+
+  @@unique([studentNim, courseCode, semester])
+}
+
 model RoleDashboard {
   id        String @id @default(uuid())
   role      String @unique

@@ -181,6 +181,15 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
   const gpaHistory = summary?.gpaHistory?.length ? summary.gpaHistory : semesterGpaData;
   const currentIpk = gpaHistory[gpaHistory.length - 1]?.IPK ?? 0;
+  const totalSksTaken = transcriptData.reduce((a, r) => a + (r.sks || 0), 0);
+  const sksPerSemester = Object.entries(semesterGradeMap).map(([semester, v]) => ({ semester, sksTaken: v.sksTaken, ips: v.ips }));
+  const prevIps = gpaHistory.length > 1 ? gpaHistory[gpaHistory.length - 2]?.IPS ?? 0 : (gpaHistory[gpaHistory.length - 1]?.IPS ?? 0);
+  const ipsPredicate = prevIps >= 3.51 ? 'Dengan Pujian' : prevIps >= 3.0 ? 'Sangat Memuaskan' : prevIps > 0 ? 'Memuaskan' : '';
+  const overallAttendance = (() => {
+    const total = attendanceData.reduce((a, r) => a + (r.total || 0), 0);
+    const attended = attendanceData.reduce((a, r) => a + (r.attendance || 0), 0);
+    return total ? Math.round((attended / total) * 1000) / 10 : null;
+  })();
   const todayCourses = summary?.courses?.length
     ? summary.courses.map((c) => ({ id: c.id, code: c.code, name: c.name, sks: c.sks, time: c.schedule, room: c.room, lecturer: '' }))
     : todayClassList;
@@ -429,12 +438,12 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
             <div className="space-y-6">
               
               {/* Scrolling Announcement Ticker */}
-              <AnnouncementTicker />
+              <AnnouncementTicker user={user} />
 
               {/* Semester & Degree Progress Bars */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <SemesterProgressBar />
-                <DegreeCreditProgressBar forceCompleted={studiSelesai} />
+                <DegreeCreditProgressBar forceCompleted={studiSelesai} sksTaken={totalSksTaken} ipk={currentIpk} perSemester={sksPerSemester} />
               </div>
 
               {/* Centralized Tasks & Deadlines Timeline */}
@@ -447,10 +456,10 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                     <Award className="w-6 h-6" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">IPS Semester Lalu</div>
-                    <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">3.78</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">IPS Semester Terakhir</div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{prevIps > 0 ? prevIps.toFixed(2) : '—'}</div>
                     <div className="text-[10px] text-green-500 font-bold flex items-center gap-0.5 mt-0.5">
-                      <TrendingUp className="w-3 h-3" /> Memuaskan
+                      <TrendingUp className="w-3 h-3" /> {ipsPredicate || 'Belum ada data nilai'}
                     </div>
                   </div>
                 </div>
@@ -462,7 +471,7 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   <div>
                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">SKS Terkumpul</div>
                     <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                      {studiSelesai ? '144 SKS' : '84 SKS'}
+                      {totalSksTaken > 0 ? `${totalSksTaken} SKS` : '—'}
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
                       {studiSelesai ? 'Studi Selesai / Lulus Yudisium' : 'Target: 144 SKS Kelulusan'}
@@ -476,8 +485,8 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                   </div>
                   <div>
                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Kehadiran Kelas</div>
-                    <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">96.4%</div>
-                    <div className="text-[10px] text-emerald-500 font-bold mt-0.5">Batas Minimal Kehadiran 80%</div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{overallAttendance !== null ? `${overallAttendance}%` : '—'}</div>
+                    <div className="text-[10px] text-emerald-500 font-bold mt-0.5">{overallAttendance !== null ? 'Batas Minimal Kehadiran 80%' : 'Belum ada sesi presensi'}</div>
                   </div>
                 </div>
               </div>
@@ -1025,11 +1034,11 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
                  <div className="flex gap-4">
                   <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-center min-w-[80px]">
                     <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total SKS</div>
-                    <div className="text-xl font-black text-white mt-0.5">{studiSelesai ? '144' : '84'}</div>
+                    <div className="text-xl font-black text-white mt-0.5">{totalSksTaken > 0 ? totalSksTaken : '—'}</div>
                   </div>
                   <div className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-center min-w-[80px]">
                     <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">IPK</div>
-                    <div className="text-xl font-black text-green-400 mt-0.5">3.64</div>
+                    <div className="text-xl font-black text-green-400 mt-0.5">{currentIpk > 0 ? currentIpk.toFixed(2) : '—'}</div>
                   </div>
                   <button
                     onClick={() => triggerPdfDownload("Transkrip Akademik")}
@@ -1043,7 +1052,13 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
 
               {/* Secure Cryptographic Certified Digital Transcripts & Ijazah */}
               {studiSelesai ? (
-                <CertifiedDigitalTranscript />
+                <CertifiedDigitalTranscript
+                  student={{ name: studentProfile.name, nim: studentProfile.nim, program: studentProfile.program, faculty: studentProfile.faculty }}
+                  ipk={currentIpk}
+                  sksTotal={totalSksTaken}
+                  transcriptRows={transcriptData}
+                  onDownload={() => triggerPdfDownload('Transkrip & Ijazah Digital')}
+                />
               ) : (
                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-6 text-center space-y-4">
                   <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto text-amber-500 border border-amber-500/20">
@@ -1605,10 +1620,10 @@ export function MahasiswaDashboardView({ user, activeTab, onChangeTab, onUserCha
           {activeSubTab === 'layanan' && (
             <div className="space-y-6">
               
-              <DigitalFormsTracker role="student" isAlumni={studiSelesai} />
+              <DigitalFormsTracker role="student" isAlumni={studiSelesai} user={user} />
 
               {/* Student Helpdesk & Support System */}
-              <HelpdeskSystem />
+              <HelpdeskSystem user={user} />
 
               {/* Anonymous Bullying / Sexual Harassment & Mental Health Support Unit */}
               <PsychologicalSupportCrisis />

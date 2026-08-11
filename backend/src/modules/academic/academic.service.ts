@@ -560,6 +560,78 @@ export class AcademicService {
     return rows.map((t) => mapThesis(t));
   }
 
+  // ── Tugas (Assignment) terpusat ───────────────────────────────────
+  async getAssignments(actor: AcademicActor) {
+    if (actor.role === 'lecturer') {
+      return this.prisma.assignment.findMany({ where: { lecturerEmail: actor.email }, orderBy: { createdAt: 'desc' } });
+    }
+    if (actor.role === 'student') {
+      const krs = await this.prisma.krsItem.findUnique({ where: { studentEmail: actor.email } });
+      const codes = krs ? safeJson<string[]>(krs.coursesJson, []) : [];
+      return this.prisma.assignment.findMany({ where: { courseCode: { in: codes } }, orderBy: { createdAt: 'desc' } });
+    }
+    return this.prisma.assignment.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  // ── Evaluasi Dosen oleh Mahasiswa (EDOM) ──────────────────────────
+  async getEdom(actor: AcademicActor) {
+    if (actor.role === 'lecturer') {
+      const rows = await this.prisma.edomEvaluation.findMany({ where: { lecturerEmail: actor.email }, orderBy: { createdAt: 'desc' } });
+      return { role: 'lecturer', evaluations: rows };
+    }
+    if (actor.role === 'student') {
+      const krs = await this.prisma.krsItem.findUnique({ where: { studentEmail: actor.email } });
+      const nim = krs?.studentNim ?? actor.email.split('@')[0].replace(/\./g, '').toUpperCase();
+      const [offerings, rows] = await Promise.all([
+        this.prisma.courseOffering.findMany({ orderBy: { code: 'asc' } }),
+        this.prisma.edomEvaluation.findMany({ where: { studentNim: nim }, orderBy: { createdAt: 'desc' } }),
+      ]);
+      const codes = krs ? safeJson<string[]>(krs.coursesJson, []) : [];
+      const courses = offerings
+        .filter((o) => codes.includes(o.code))
+        .map((o) => ({
+          code: o.code,
+          name: o.name,
+          lecturer: o.lecturer, // nama lengkap dosen pengampu
+          evaluated: rows.some((r) => r.courseCode === o.code),
+        }));
+      return { role: 'student', courses, evaluations: rows };
+    }
+    // Pimpinan & admin: agregat per dosen dari seluruh evaluasi.
+    const rows = await this.prisma.edomEvaluation.findMany({ orderBy: { createdAt: 'desc' } });
+    return { role: 'leadership', evaluations: rows };
+  }
+
+  async submitEdom(actor: AcademicActor, body: any, ip: string, userAgent: string) {
+    if (actor.role !== 'student') throw new ForbiddenException('Hanya mahasiswa yang dapat mengisi EDOM.');
+    if (!body.courseCode || !body.courseName || !body.lecturerName) throw new BadRequestException('Matakuliah dan dosen wajib diisi.');
+    const krs = await this.prisma.krsItem.findUnique({ where: { studentEmail: actor.email } });
+    const nim = krs?.studentNim ?? actor.email.split('@')[0].replace(/\./g, '').toUpperCase();
+    const semester = '2025/2026-Genap';
+    const existing = await this.prisma.edomEvaluation.findUnique({ where: { studentNim_courseCode_semester: { studentNim: nim, courseCode: body.courseCode, semester } } });
+    if (existing) throw new BadRequestException(`Anda sudah mengisi EDOM untuk ${body.courseName} pada semester ${semester}.`);
+    const clamp = (v: number) => Math.max(1, Math.min(5, Math.round(Number(v) || 0)));
+    const row = await this.prisma.edomEvaluation.create({
+      data: {
+        studentNim: nim,
+        studentName: actor.name,
+        courseCode: body.courseCode,
+        courseName: body.courseName,
+        lecturerEmail: body.lecturerEmail || '',
+        lecturerName: body.lecturerName,
+        semester,
+        pedagogik: clamp(body.pedagogik),
+        profesional: clamp(body.profesional),
+        kepribadian: clamp(body.kepribadian),
+        sosial: clamp(body.sosial),
+        comment: body.comment || '',
+        createdAt: new Date().toISOString().slice(0, 10),
+      },
+    });
+    await this.audit(actor, `SUBMIT EDOM ${body.courseName} untuk ${body.lecturerName}`, 'edom', ip, userAgent);
+    return row;
+  }
+
   async getMessages(withEmail: string, actor: AcademicActor) {
     const pair = [actor.email.toLowerCase(), withEmail.toLowerCase()].sort().join(':');
     const rows = await this.prisma.chatMessage.findMany({ where: { threadKey: pair }, orderBy: { createdAt: 'asc' } });

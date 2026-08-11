@@ -370,7 +370,7 @@ export function AlumniDashboardView({ user, onUserChange, activeTab: propActiveT
             </div>
             
             {/* Embedded DigitalFormsTracker forced with isAlumni={true} */}
-            <DigitalFormsTracker role="student" isAlumni={true} />
+            <DigitalFormsTracker role="student" isAlumni={true} user={user} />
           </div>
         )}
 

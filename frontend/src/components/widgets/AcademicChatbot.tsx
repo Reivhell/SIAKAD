@@ -2,22 +2,36 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MessageSquare, X, Send, Sparkles, AlertCircle, BookOpen, Calendar, 
-  CheckCircle, ArrowRight, CreditCard, Award, QrCode, ClipboardList,
-  User, Check, Phone, ShieldCheck, Download
+  CheckCircle, ArrowRight, CreditCard, QrCode, ClipboardList,
+  User, Check, Clock, Wallet, GraduationCap, Users
 } from 'lucide-react';
 import { User as UserType } from '../../types';
+import { 
+  getStudentOverview, 
+  StudentOverviewPayload,
+  getLecturerOverview,
+  getMyFinance,
+  payFinanceBill,
+  FinanceBill,
+  getThesisItems,
+  ThesisItem,
+  AvailableKrsCourse,
+  TodayClassItem
+} from '../../api/academic.api';
 
 interface Message {
   id: string;
   sender: 'user' | 'assistant' | 'system';
   text: string;
   timestamp: Date;
-  widget?: 'krs' | 'qris' | 'qr_absensi' | 'skripsi';
+  widget?: 'krs' | 'tagihan' | 'presensi' | 'skripsi';
 }
 
 interface AcademicChatbotProps {
   user: UserType;
 }
+
+const rupiah = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
 
 export function AcademicChatbot({ user }: AcademicChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,33 +41,56 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Simulated KRS data for student
-  const [krsSimulated, setKrsSimulated] = useState([
-    { code: 'IF301', name: 'Analisis & Desain Perangkat Lunak', sks: 3, checked: false },
-    { code: 'IF302', name: 'Kecerdasan Buatan (AI)', sks: 3, checked: false },
-    { code: 'IF303', name: 'Pemrograman Web Enterprise', sks: 4, checked: false },
-    { code: 'IF304', name: 'Sistem Terdistribusi', sks: 3, checked: false },
-  ]);
+  // ── Data riil dari backend ────────────────────────────────────────
+  const [studentData, setStudentData] = useState<StudentOverviewPayload | null>(null);
+  const [lecturerJadwal, setLecturerJadwal] = useState<Array<{ code: string; name: string; room: string; time: string; day: string; mahasiswaCount: number }>>([]);
+  const [lecturerSkripsi, setLecturerSkripsi] = useState<ThesisItem[]>([]);
+  const [thesisItems, setThesisItems] = useState<ThesisItem[]>([]);
+  const [bills, setBills] = useState<FinanceBill[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
-  // Simulated UKT Payment states
-  const [uktPaid, setUktPaid] = useState(() => {
-    return user?.id ? localStorage.getItem(`siakad_ukt_paid_${user.id}`) === 'true' : false;
-  });
-  const [isPaying, setIsPaying] = useState(false);
+  // KRS planner state (kursi riil dari API)
+  const [selectedKrsCodes, setSelectedKrsCodes] = useState<string[]>([]);
 
-  // Simulated Attendance state
-  const [attendanceCodeGenerated, setAttendanceCodeGenerated] = useState(false);
-  const [attendanceMinutesLeft, setAttendanceMinutesLeft] = useState(15);
+  // Real payment state
+  const [payingBillId, setPayingBillId] = useState<string | null>(null);
 
-  // Simulated Skripsi states
-  const [skripsiStep, setSkripsiStep] = useState(2); // 1: Pengajuan Judul, 2: Seminar Proposal, 3: Bimbingan, 4: Sidang Akhir
+  const loadData = async () => {
+    try {
+      if (user.role === 'student') {
+        const [ov, fin, thesis] = await Promise.all([
+          getStudentOverview(),
+          getMyFinance(),
+          getThesisItems(),
+        ]);
+        setStudentData(ov);
+        setBills(fin.bills ?? []);
+        setThesisItems(thesis ?? []);
+      } else if (user.role === 'lecturer') {
+        const [ov, thesis] = await Promise.all([
+          getLecturerOverview(),
+          getThesisItems(),
+        ]);
+        setLecturerJadwal(ov.jadwal ?? []);
+        setLecturerSkripsi(thesis ?? []);
+      }
+      setDataLoaded(true);
+      setDataError(null);
+    } catch (err) {
+      setDataError('Data akademik belum dapat dimuat dari server. Coba lagi nanti.');
+    }
+  };
+
+  useEffect(() => {
+    if (user) loadData();
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    // Welcome message based on role
     const welcomeText = user.role === 'student'
-      ? `Halo ${user.name || 'User'}! Saya **Asisten Akademik AI SIAKAD**. Bagaimana saya bisa membantu Anda hari ini? Anda bisa menanyakan rekomendasi mata kuliah KRS, memeriksa tagihan UKT, melacak status bimbingan skripsi, atau melakukan presensi kuliah.`
-      : `Selamat datang, ${user.name || 'User'}! Saya **Asisten Akademik AI SIAKAD** untuk Dosen. Anda dapat memantau jadwal mengajar hari ini, menghasilkan QR presensi kuliah dinamis, mengirim pengumuman kelas, atau meninjau berkas skripsi bimbingan mahasiswa.`;
+      ? `Halo ${user.name || 'User'}! Saya **Asisten Akademik AI SIAKAD**. Saya dapat membantu melihat rekomendasi mata kuliah KRS, tagihan UKT, IPK & KHS, jadwal kuliah hari ini, presensi, serta status skripsi Anda.`
+      : `Selamat datang, ${user.name || 'User'}! Saya **Asisten Akademik AI SIAKAD** untuk Dosen. Saya dapat membantu memantau jadwal mengajar, daftar mahasiswa bimbingan skripsi, dan panduan modul SIAKAD.`;
 
     setMessages([
       {
@@ -77,7 +114,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
     setHasNotification(false);
   };
 
-  const simulateTyping = (responseProps: Partial<Message>, delay = 1000) => {
+  const sendAssistantReply = (responseProps: Partial<Message>, delay = 800) => {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
@@ -94,6 +131,39 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
     }, delay);
   };
 
+  const pushSystemMessage = (text: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(),
+        sender: 'system',
+        text,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  // Real payment handler
+  const handlePayBill = async (bill: FinanceBill) => {
+    if (!bill || !bill.id) return;
+    setPayingBillId(bill.id);
+    try {
+      const updated = await payFinanceBill(bill.id, bill.amount - (bill.paidAmount || 0));
+      pushSystemMessage(
+        `Pembayaran **${updated.description || bill.description || 'Tagihan UKT'}** sebesar ${rupiah(bill.amount)} berhasil dicatat. Status tagihan: ${updated.status || 'LUNAS'}.`
+      );
+      // Muat ulang data keuangan agar status terkini
+      try {
+        const fin = await getMyFinance();
+        setBills(fin.bills ?? []);
+      } catch { /* abaikan, pesan sukses sudah tampil */ }
+    } catch (err: any) {
+      pushSystemMessage(`Gagal memproses pembayaran: ${err?.message || 'terjadi kesalahan.'}`);
+    } finally {
+      setPayingBillId(null);
+    }
+  };
+
   const handleSendMessage = (textToSend: string) => {
     if (!textToSend.trim()) return;
 
@@ -108,73 +178,160 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
     setInputValue('');
 
     const query = textToSend.toLowerCase();
+    const today = new Date();
+    const todayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][today.getDay()];
 
-    // Student specific flows
     if (user.role === 'student') {
+      // ── KRS ──────────────────────────────────────────────────
       if (query.includes('krs') || query.includes('rekomendasi') || query.includes('mata kuliah') || query.includes('sks')) {
-        simulateTyping({
-          text: `Berdasarkan Indeks Prestasi Kumulatif (IPK) Anda yang luar biasa, Anda direkomendasikan mengambil mata kuliah lanjutan Semester Ganjil TA 2026/2027 berikut. Silakan pilih mata kuliah di bawah untuk simulasi beban SKS Anda:`,
-          widget: 'krs'
-        });
-      } else if (query.includes('ukt') || query.includes('bayar') || query.includes('biaya') || query.includes('keuangan')) {
-        if (uktPaid) {
-          simulateTyping({
-            text: `Status tagihan UKT Anda untuk **Semester Ganjil 2026/2027** adalah **LUNAS**. Anda sudah dapat melakukan pengisian KRS tanpa hambatan administratif. Terima kasih!`
+        const courses = studentData?.availableKrsCourses ?? [];
+        setSelectedKrsCodes([]);
+        if (courses.length === 0) {
+          sendAssistantReply({
+            text: `Belum ada data mata kuliah yang tersedia untuk pengisian KRS pada periode berjalan. Jika IPK Anda memenuhi syarat, data KRS akan tampil di modul KRS.`
           });
         } else {
-          simulateTyping({
-            text: `Sistem mendeteksi Anda memiliki tagihan UKT aktif sebesar **Rp 7.500.000** untuk **Semester Ganjil 2026/2027**. Silakan gunakan modul pembayaran QRIS dinamis di bawah ini untuk penyelesaian instan:`,
-            widget: 'qris'
+          const wajib = courses.filter((c) => c.type === 'Wajib');
+          const pilihan = courses.filter((c) => c.type === 'Pilihan');
+          sendAssistantReply({
+            text: `Berikut **${courses.length} mata kuliah** yang tersedia untuk KRS periode berjalan (${wajib.length} wajib, ${pilihan.length} pilihan). Silakan pilih mata kuliah untuk menghitung total SKS.`,
+            widget: 'krs'
           });
         }
-      } else if (query.includes('presensi') || query.includes('absen') || query.includes('hadir') || query.includes('qr')) {
-        simulateTyping({
-          text: `Untuk melakukan presensi kuliah hari ini, silakan masukkan kode QR dinamis yang ditampilkan oleh Dosen di proyektor kelas atau pilih menu di bawah untuk menyimulasikan kehadiran cepat:`,
-          widget: 'qr_absensi'
-        });
-      } else if (query.includes('skripsi') || query.includes('tugas akhir') || query.includes('sidang') || query.includes('thesis')) {
-        simulateTyping({
-          text: `Berikut adalah status pelacakan berkas **Tugas Akhir / Skripsi** Anda saat ini. Anda berada pada tahap **Seminar Proposal**:`,
-          widget: 'skripsi'
-        });
-      } else if (query.includes('nilai') || query.includes('ipk') || query.includes('khs')) {
-        simulateTyping({
-          text: `IPK Kumulatif Anda saat ini adalah **3.74**. Seluruh Kartu Hasil Studi (KHS) dari Semester 1 s.d. 5 telah disahkan oleh Kaprodi. Anda memiliki tren kenaikan nilai yang sangat konsisten!`
-        });
-      } else if (query.includes('jadwal') || query.includes('kuliah') || query.includes('hari ini')) {
-        simulateTyping({
-          text: `📅 **Jadwal Kuliah Anda Hari Ini (Kamis, 25 Juni 2026):**\n\n1. **Kecerdasan Buatan (IF402)** — Kelas A\n   📍 Ruang: Lab RPL & AI\n   ⏰ Pukul: 08:00 - 10:30 WIB\n   👨‍🏫 Dosen: Dr. Budi Rahardjo\n\n2. **Pemrograman Web Enterprise** — Kelas B\n   📍 Ruang: Ruang Kuliah 401\n   ⏰ Pukul: 13:00 - 15:30 WIB\n   👨‍🏫 Dosen: Dr. Hendra Wijaya\n\n*Catatan: Pastikan datang 10 menit sebelum perkuliahan dimulai.*`
-        });
-      } else {
-        simulateTyping({
-          text: `Maaf, saya belum memahami pertanyaan Anda sepenuhnya. Coba tanyakan tentang **Rekomendasi KRS**, **Bayar UKT**, **Presensi Kuliah**, **Status Skripsi**, atau **Jadwal Kuliah Hari Ini**.`
+      }
+      // ── UKT / Keuangan ───────────────────────────────────────
+      else if (query.includes('ukt') || query.includes('bayar') || query.includes('biaya') || query.includes('keuangan') || query.includes('tagihan')) {
+        const unpaid = bills.filter((b) => (b.status || '').toLowerCase() !== 'lunas' && (b.amount || 0) > (b.paidAmount || 0));
+        const unpaidTotal = (studentData?.unpaidBill ?? 0) || unpaid.reduce((acc, b) => acc + (b.amount - (b.paidAmount || 0)), 0);
+        if (unpaid.length === 0 || unpaidTotal <= 0) {
+          sendAssistantReply({
+            text: `Tidak ada tagihan aktif pada akun Anda saat ini. Seluruh tagihan telah **LUNAS**. Anda dapat melanjutkan aktivitas akademik tanpa hambatan administratif.`
+          });
+        } else {
+          sendAssistantReply({
+            text: `Terdapat tagihan aktif sebesar **${rupiah(unpaidTotal)}** pada periode ${unpaid[0].period || 'berjalan'}. Pilih tagihan di bawah untuk melakukan pembayaran langsung melalui SIAKAD.`,
+            widget: 'tagihan'
+          });
+        }
+      }
+      // ── Presensi ─────────────────────────────────────────────
+      else if (query.includes('presensi') || query.includes('absen') || query.includes('hadir') || query.includes('qr')) {
+        const classes = studentData?.todayClasses ?? [];
+        if (classes.length === 0) {
+          sendAssistantReply({
+            text: `Anda tidak memiliki jadwal kuliah hari ini (${todayName}). Presensi dilakukan melalui menu **Presensi** pada dashboard saat perkuliahan berlangsung.`
+          });
+        } else {
+          sendAssistantReply({
+            text: `Berikut kelas Anda hari ini (${todayName}). Presensi kehadiran dilakukan melalui menu **Presensi** di dashboard SIAKAD pada jam perkuliahan masing-masing.`,
+            widget: 'presensi'
+          });
+        }
+      }
+      // ── Skripsi / Tugas Akhir ────────────────────────────────
+      else if (query.includes('skripsi') || query.includes('tugas akhir') || query.includes('sidang') || query.includes('thesis')) {
+        if (thesisItems.length === 0) {
+          sendAssistantReply({
+            text: `Belum ada data **Tugas Akhir / Skripsi** yang terdaftar pada akun Anda. Status akan tampil setelah pengajuan judul disetujui prodi.`
+          });
+        } else {
+          sendAssistantReply({
+            text: `Berikut status **${thesisItems.length} berkas Tugas Akhir / Skripsi** Anda yang tersimpan di SIAKAD.`,
+            widget: 'skripsi'
+          });
+        }
+      }
+      // ── Nilai / IPK / KHS ────────────────────────────────────
+      else if (query.includes('nilai') || query.includes('ipk') || query.includes('khs')) {
+        const gpas = studentData?.semesterGPAs ?? [];
+        if (gpas.length === 0) {
+          sendAssistantReply({
+            text: `Belum ada data IPK yang tersedia. Nilai semester akan tampil setelah Kaprodi mengesahkan KHS.`
+          });
+        } else {
+          const latest = gpas[gpas.length - 1];
+          const trend = gpas.length >= 2
+            ? (latest.IPK >= gpas[gpas.length - 2].IPK ? 'mengalami kenaikan' : 'mengalami penurunan dibanding semester sebelumnya')
+            : '';
+          sendAssistantReply({
+            text: `IPK kumulatif Anda saat ini adalah **${latest.IPK.toFixed(2)}** (semester ${latest.name}). Riwayat IPS/IPK Anda ${trend}.\n\n${gpas.map((g) => `${g.name}: IPS ${g.IPS.toFixed(2)} / IPK ${g.IPK.toFixed(2)}`).join('\n')}\n\nKartu Hasil Studi (KHS) dapat diunduh pada menu **Nilai & Transkrip** di dashboard.`
+          });
+        }
+      }
+      // ── Jadwal ───────────────────────────────────────────────
+      else if (query.includes('jadwal') || query.includes('kuliah') || query.includes('hari ini')) {
+        const classes = studentData?.todayClasses ?? [];
+        if (classes.length === 0) {
+          sendAssistantReply({
+            text: `Tidak ada jadwal perkuliahan hari ini (${todayName}). Jadwal lengkap tersedia pada menu **Jadwal Kuliah** di dashboard.`
+          });
+        } else {
+          const lines = classes.map((c) => `• **${c.name}** (${c.code})\n  📍 ${c.room} • ⏰ ${c.time} • 👨‍🏫 ${c.lecturer}`);
+          sendAssistantReply({
+            text: `📅 **Jadwal Kuliah Hari Ini (${todayName}):**\n\n${lines.join('\n\n')}\n\n*Pastikan datang 10 menit sebelum perkuliahan dimulai.*`
+          });
+        }
+      }
+      // ── Alur / menu lain ─────────────────────────────────────
+      else if (query.includes('transkrip') || query.includes('nilai semester')) {
+        sendAssistantReply({
+          text: `Transkrip dan sertifikat digital tersedia pada menu **Nilai & Transkrip** di dashboard mahasiswa.`
         });
       }
-    } 
-    // Lecturer specific flows
+      else {
+        sendAssistantReply({
+          text: `Maaf, saya belum memahami pertanyaan Anda sepenuhnya. Coba tanyakan tentang **Rekomendasi KRS**, **Tagihan UKT**, **IPK/KHS**, **Jadwal Kuliah**, **Presensi**, atau **Status Skripsi**.`
+        });
+      }
+    }
+    // ── Dosen ─────────────────────────────────────────────────
     else if (user.role === 'lecturer') {
       if (query.includes('jadwal') || query.includes('mengajar') || query.includes('hari ini')) {
-        simulateTyping({
-          text: `👨‍🏫 **Jadwal Mengajar Anda Hari Ini (Kamis, 25 Juni 2026):**\n\n1. **Konsep AI (IF402)** — Kelas A\n   📍 Ruang: Lab RPL & AI\n   ⏰ Pukul: 10:00 - 12:30 WIB\n   👥 Kehadiran: 28/30 Mahasiswa\n\n2. **Pemrograman Aplikasi Web** — Kelas C\n   📍 Ruang: Ruang Kuliah 305\n   ⏰ Pukul: 14:00 - 16:30 WIB\n   👥 Kehadiran: Belum Dimulai`
-        });
-      } else if (query.includes('presensi') || query.includes('absen') || query.includes('hadir') || query.includes('qr')) {
-        simulateTyping({
-          text: `Buat sesi presensi digital instan untuk kelas Anda yang sedang berlangsung sekarang. Mahasiswa cukup memindai kode QR dari layar proyektor atau perangkat mereka:`,
-          widget: 'qr_absensi'
-        });
-      } else if (query.includes('bimbingan') || query.includes('skripsi') || query.includes('mahasiswa')) {
-        simulateTyping({
-          text: `Anda saat ini membimbing **5 Mahasiswa Tugas Akhir**. Mahasiswa atas nama **Aditya Pratama (NIM: 1901001)** baru saja mengunggah draft Bab III untuk peninjauan Anda. Silakan hubungi prodi untuk penjadwalan sidang.`
-        });
-      } else if (query.includes('riset') || query.includes('hibah') || query.includes('penelitian')) {
-        simulateTyping({
-          text: `Sponsor dan Pengajuan Hibah Riset Penelitian Internal Dosen Tahun Anggaran 2026 diperpanjang hingga **15 Juli 2026**. Topik prioritas meliputi: Artificial Intelligence (AI), Internet of Things (IoT), dan Keamanan Siber.`
-        });
-      } else {
-        simulateTyping({
-          text: `Maaf Bapak/Ibu Dosen ${user.name || 'User'}, saya masih menyempurnakan respon ini. Silakan coba tanyakan mengenai **Jadwal Mengajar**, **Membuat QR Presensi**, atau **Bimbingan Skripsi Mahasiswa**.`
+        const todays = lecturerJadwal.filter((j) => j.day.toLowerCase().includes(todayName.toLowerCase()));
+        if (todays.length === 0) {
+          sendAssistantReply({
+            text: `Tidak ada jadwal mengajar hari ini (${todayName}). Jadwal lengkap tersedia pada menu **Jadwal Mengajar** di dashboard dosen.`
+          });
+        } else {
+          const lines = todays.map((j) => `• **${j.name}** (${j.code})\n  📍 ${j.room} • ⏰ ${j.time} • 👥 ${j.mahasiswaCount} mahasiswa`);
+          sendAssistantReply({
+            text: `👨‍🏫 **Jadwal Mengajar Hari Ini (${todayName}):**\n\n${lines.join('\n\n')}`
+          });
+        }
+      }
+      else if (query.includes('presensi') || query.includes('absen') || query.includes('hadir') || query.includes('qr')) {
+        sendAssistantReply({
+          text: `Sesi presensi kuliah dikelola melalui menu **Presensi** di dashboard dosen. Di sana Anda dapat membuka sesi, menampilkan kode QR dinamis di kelas, dan menutup sesi setelah perkuliahan selesai.`
         });
       }
+      else if (query.includes('bimbingan') || query.includes('skripsi') || query.includes('mahasiswa')) {
+        if (lecturerSkripsi.length === 0) {
+          sendAssistantReply({
+            text: `Belum ada mahasiswa bimbingan skripsi yang terdaftar pada akun Anda.`
+          });
+        } else {
+          sendAssistantReply({
+            text: `Anda saat ini membimbing **${lecturerSkripsi.length} mahasiswa** Tugas Akhir. Detail progres masing-masing mahasiswa dapat dilihat pada widget di bawah.`,
+            widget: 'skripsi'
+          });
+        }
+      }
+      else if (query.includes('riset') || query.includes('hibah') || query.includes('penelitian')) {
+        sendAssistantReply({
+          text: `Informasi hibah riset internal diumumkan melalui LPPM. Pantau menu **Penelitian** pada dashboard dosen untuk pengumuman periode berjalan.`
+        });
+      }
+      else {
+        sendAssistantReply({
+          text: `Maaf Bapak/Ibu Dosen ${user.name || 'User'}, saya belum memahami pertanyaan ini. Coba tanyakan mengenai **Jadwal Mengajar**, **Presensi Kuliah**, atau **Bimbingan Skripsi Mahasiswa**.`
+        });
+      }
+    }
+    // ── Peran lain ─────────────────────────────────────────────
+    else {
+      sendAssistantReply({
+        text: `Halo! Saat ini saya fokus membantu mahasiswa dan dosen. Untuk peran ${user.role}, silakan gunakan menu-modul yang tersedia pada dashboard Anda.`
+      });
     }
   };
 
@@ -182,28 +339,13 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
     handleSendMessage(promptText);
   };
 
-  // Simulated payments trigger
-  const triggerUktPayment = () => {
-    setIsPaying(true);
-    setTimeout(() => {
-      setIsPaying(false);
-      setUktPaid(true);
-      localStorage.setItem(`siakad_ukt_paid_${user.id}`, 'true');
-      
-      // Post system announcement that UKT has been updated
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          sender: 'system',
-          text: '🎉 Pembayaran UKT sebesar Rp 7.500.000 Berhasil diproses menggunakan QRIS Dinamis. Status Akademik Anda: AKTIF.',
-          timestamp: new Date()
-        }
-      ]);
-    }, 2000);
-  };
-
   if (!user) return null;
+
+  const krsCourses: AvailableKrsCourse[] = studentData?.availableKrsCourses ?? [];
+  const todayClasses: TodayClassItem[] = studentData?.todayClasses ?? [];
+  const unpaidBills = bills.filter(
+    (b) => (b.status || '').toLowerCase() !== 'lunas' && (b.amount || 0) > (b.paidAmount || 0)
+  );
 
   return (
     <>
@@ -278,7 +420,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                 <div key={msg.id} className="space-y-1">
                   {/* Sender Labels */}
                   {msg.sender !== 'system' && (
-                    <div className={`flex items-center gap-1.5 text-[9px] font-boldr text-slate-400 px-1 ${
+                    <div className={`flex items-center gap-1.5 text-[9px] font-bold text-slate-400 px-1 ${
                       msg.sender === 'user' ? 'justify-end' : 'justify-start'
                     }`}>
                       {msg.sender === 'user' ? (
@@ -317,253 +459,195 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                         {msg.widget && (
                           <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                             
-                            {/* WIDGET 1: KRS Recommender */}
+                            {/* WIDGET 1: KRS Planner (real courses) */}
                             {msg.widget === 'krs' && (
                               <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-400r block">
-                                  Simulasi Pengisian Mata Kuliah (SKS)
+                                <span className="text-[10px] font-black text-slate-400 block">
+                                  Simulasi Pemilihan Mata Kuliah (SKS)
                                 </span>
-                                <div className="grid grid-cols-1 gap-2">
-                                  {krsSimulated.map((course, idx) => (
-                                    <button
-                                      key={course.code}
-                                      onClick={() => {
-                                        const updated = [...krsSimulated];
-                                        updated[idx].checked = !updated[idx].checked;
-                                        setKrsSimulated(updated);
-                                      }}
-                                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
-                                        course.checked
-                                          ? 'border-blue-500 bg-blue-50/55 dark:bg-blue-950/25 text-blue-700 dark:text-blue-300'
-                                          : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/40 hover:bg-slate-100'
-                                      }`}
-                                    >
-                                      <div>
-                                        <div className="text-[11px] font-bold">{course.name}</div>
-                                        <div className="text-[9px] text-slate-400 font-mono">{course.code} &bull; {course.sks} SKS</div>
-                                      </div>
-                                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                        course.checked 
-                                          ? 'border-blue-500 bg-blue-500 text-white' 
-                                          : 'border-slate-300'
-                                      }`}>
-                                        {course.checked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                                      </div>
-                                    </button>
-                                  ))}
+                                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                                  {krsCourses.map((course) => {
+                                    const checked = selectedKrsCodes.includes(course.code);
+                                    return (
+                                      <button
+                                        key={course.code}
+                                        onClick={() => {
+                                          setSelectedKrsCodes((prev) =>
+                                            checked
+                                              ? prev.filter((c) => c !== course.code)
+                                              : [...prev, course.code]
+                                          );
+                                        }}
+                                        className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
+                                          checked
+                                            ? 'border-blue-500 bg-blue-50/55 dark:bg-blue-950/25 text-blue-700 dark:text-blue-300'
+                                            : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/40 hover:bg-slate-100'
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="text-[11px] font-bold">{course.name}</div>
+                                          <div className="text-[9px] text-slate-400 font-mono">
+                                            {course.code} &bull; {course.sks} SKS &bull; {course.type}
+                                          </div>
+                                        </div>
+                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                          checked 
+                                            ? 'border-blue-500 bg-blue-500 text-white' 
+                                            : 'border-slate-300'
+                                        }`}>
+                                          {checked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
                                 </div>
-                                
+
                                 {/* SKS counter banner */}
                                 <div className="p-2 bg-blue-50/40 dark:bg-blue-950/20 border border-blue-100/30 rounded-xl flex justify-between items-center text-[10px] font-extrabold text-blue-700 dark:text-blue-400">
                                   <span>TOTAL SKS TERPILIH:</span>
                                   <span>
-                                    {krsSimulated.reduce((acc, c) => acc + (c.checked ? c.sks : 0), 0)} / 24 SKS
+                                    {krsCourses
+                                      .filter((c) => selectedKrsCodes.includes(c.code))
+                                      .reduce((acc, c) => acc + c.sks, 0)} SKS
                                   </span>
                                 </div>
-                                
+
                                 <button
                                   onClick={() => {
-                                    const selectedCount = krsSimulated.filter(c => c.checked).length;
+                                    const selectedCount = selectedKrsCodes.length;
                                     if (selectedCount === 0) {
-                                      setMessages((prev) => [
-                                        ...prev,
-                                        {
-                                          id: Math.random().toString(),
-                                          sender: 'assistant',
-                                          text: 'Silakan pilih minimal 1 mata kuliah terlebih dahulu untuk melakukan simulasi KRS.',
-                                          timestamp: new Date()
-                                        }
-                                      ]);
+                                      pushSystemMessage('Silakan pilih minimal 1 mata kuliah terlebih dahulu untuk menghitung beban SKS.');
                                       return;
                                     }
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      {
-                                        id: Math.random().toString(),
-                                        sender: 'assistant',
-                                        text: `Hebat! Anda telah menyimulasikan **${selectedCount} Mata Kuliah** dengan total **${krsSimulated.reduce((acc, c) => acc + (c.checked ? c.sks : 0), 0)} SKS**. Konsultasikan pilihan ini dengan Dosen Wali Anda sebelum KRS ditutup pada 10 Agustus 2026.`,
-                                        timestamp: new Date()
-                                      }
-                                    ]);
+                                    const totalSks = krsCourses
+                                      .filter((c) => selectedKrsCodes.includes(c.code))
+                                      .reduce((acc, c) => acc + c.sks, 0);
+                                    pushSystemMessage(
+                                      `Pilihan simulasi: ${selectedCount} mata kuliah dengan total ${totalSks} SKS. Pengajuan KRS resmi dilakukan melalui menu **KRS** pada dashboard mahasiswa.`
+                                    );
                                   }}
                                   className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer"
                                 >
-                                  Ajukan Konsultasi Wali <ArrowRight className="w-3.5 h-3.5" />
+                                  Lihat di Modul KRS <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             )}
 
-                            {/* WIDGET 2: QRIS Dynamic Payment Gateway */}
-                            {msg.widget === 'qris' && (
-                              <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[10px] font-black text-slate-500">DYNAMIC BILLING GATEWAY</span>
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 rounded-md">
-                                    BELUM BAYAR
-                                  </span>
-                                </div>
-                                
-                                {/* Simulated QRIS Code image */}
-                                <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center space-y-2">
-                                  <div className="w-32 h-32 bg-slate-100 rounded-lg flex items-center justify-center relative border border-slate-200/80 overflow-hidden">
-                                    {/* QR layout style */}
-                                    <QrCode className="w-24 h-24 text-slate-800" />
-                                    {/* Simulated lines */}
-                                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-600" />
-                                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-600" />
-                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-600" />
-                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-600" />
-                                  </div>
-                                  <div className="text-[10px] font-black tracking-widest text-slate-800 font-mono">
-                                    SIAKAD_QRIS_098273
-                                  </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <div className="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                                    <span>Penerima:</span>
-                                    <span className="font-bold text-slate-800 dark:text-white">UNIVERSITAS SIAKAD</span>
-                                  </div>
-                                  <div className="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                                    <span>Nominal:</span>
-                                    <span className="font-extrabold text-blue-600 dark:text-blue-400">Rp 7.500.000</span>
-                                  </div>
-                                </div>
-
-                                <button
-                                  onClick={triggerUktPayment}
-                                  disabled={isPaying}
-                                  className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                  {isPaying ? (
-                                    <>Memproses Pembayaran...</>
-                                  ) : (
-                                    <>
-                                      <CreditCard className="w-3.5 h-3.5" />
-                                      Bayar via QRIS Simulator
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            )}
-
-                            {/* WIDGET 3: QR Attendance Generator/Scanner */}
-                            {msg.widget === 'qr_absensi' && (
+                            {/* WIDGET 2: Real UKT bills */}
+                            {msg.widget === 'tagihan' && (
                               <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                                 <span className="text-[10px] font-black text-slate-500 block">
-                                  {user.role === 'lecturer' ? 'PRESENSI KULIAH AKTIF' : 'SCAN QR PRESENSI'}
+                                  TAGIHAN AKTIF (SIAKAD FINANCE)
                                 </span>
-                                
-                                {user.role === 'lecturer' ? (
-                                  <>
-                                    {!attendanceCodeGenerated ? (
-                                      <button
-                                        onClick={() => {
-                                          setAttendanceCodeGenerated(true);
-                                          setAttendanceMinutesLeft(15);
-                                        }}
-                                        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                                      >
-                                        <QrCode className="w-3.5 h-3.5" />
-                                        Hasilkan Kode Presensi Baru
-                                      </button>
-                                    ) : (
-                                      <div className="text-center space-y-2">
-                                        <div className="bg-white p-3 rounded-xl inline-block border border-slate-200">
-                                          <QrCode className="w-20 h-20 text-slate-800 animate-pulse" />
+
+                                <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                  {unpaidBills.map((bill) => (
+                                    <div key={bill.id} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                                      <div className="flex justify-between items-start gap-2">
+                                        <div>
+                                          <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                                            {bill.description || 'Tagihan UKT'}
+                                          </div>
+                                          <div className="text-[9px] text-slate-400 font-mono">{bill.period}</div>
                                         </div>
-                                        <div className="text-[11px] font-bold text-slate-800 dark:text-white">
-                                          KODE: <span className="font-mono text-blue-600 dark:text-blue-400">LECT-2506-WEB</span>
-                                        </div>
-                                        <div className="text-[9px] font-extrabold text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
-                                          <AlertCircle className="w-3.5 h-3.5 animate-spin" />
-                                          Kode QR kedaluwarsa dalam {attendanceMinutesLeft} menit
-                                        </div>
+                                        <span className="text-[10px] font-mono font-black text-rose-600">
+                                          {rupiah(bill.amount - (bill.paidAmount || 0))}
+                                        </span>
                                       </div>
-                                    )}
-                                  </>
-                                ) : (
-                                  <div className="space-y-2">
-                                    <p className="text-[10px] text-slate-500 leading-relaxed">
-                                      Gunakan tombol simulator di bawah ini untuk menandai kehadiran Anda pada kelas **Kecerdasan Buatan (IF402)** hari ini secara instan:
-                                    </p>
-                                    <button
-                                      onClick={() => {
-                                        setMessages((prev) => [
-                                          ...prev,
-                                          {
-                                            id: Math.random().toString(),
-                                            sender: 'system',
-                                            text: '✅ PRESENSI BERHASIL! Anda terdaftar HADIR pada mata kuliah Kecerdasan Buatan (IF402) - Kelas A, tanggal 25 Juni 2026 pukul 08:15 WIB.',
-                                            timestamp: new Date()
-                                          }
-                                        ]);
-                                      }}
-                                      className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                                    >
-                                      <Check className="w-3.5 h-3.5" />
-                                      Simulasikan Pindai Kehadiran
-                                    </button>
-                                  </div>
-                                )}
+                                      <button
+                                        onClick={() => handlePayBill(bill)}
+                                        disabled={payingBillId === bill.id}
+                                        className="w-full py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                                      >
+                                        {payingBillId === bill.id ? (
+                                          <><Clock className="w-3.5 h-3.5 animate-spin" /> Memproses...</>
+                                        ) : (
+                                          <><CreditCard className="w-3.5 h-3.5" /> Bayar Sekarang</>
+                                        )}
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
 
-                            {/* WIDGET 4: Skripsi Tracker */}
+                            {/* WIDGET 3: Real schedule / attendance pointer */}
+                            {msg.widget === 'presensi' && (
+                              <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-500 block">
+                                  {user.role === 'lecturer' ? 'JADWAL MENGAJAR HARI INI' : 'KELAS HARI INI'}
+                                </span>
+
+                                <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                  {(user.role === 'lecturer'
+                                    ? lecturerJadwal.filter((j) => j.day.toLowerCase().includes(['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()].toLowerCase()))
+                                    : todayClasses
+                                  ).map((cls: any) => (
+                                    <div key={cls.id || cls.code} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 space-y-1">
+                                      <div className="flex justify-between items-center gap-2">
+                                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">{cls.name}</span>
+                                        <span className="text-[9px] font-mono font-black text-blue-600">{cls.code}</span>
+                                      </div>
+                                      <div className="text-[9px] text-slate-400 font-semibold flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" /> {cls.day} &bull; {cls.time} &bull; {cls.room}
+                                        {user.role === 'lecturer' && cls.mahasiswaCount != null && (
+                                          <span className="ml-auto flex items-center gap-1"><Users className="w-3 h-3" /> {cls.mahasiswaCount} mhs</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <p className="text-[9px] text-slate-500 leading-relaxed">
+                                  {user.role === 'lecturer'
+                                    ? 'Buka menu Presensi di dashboard dosen untuk membuat sesi presensi dan menampilkan kode QR dinamis di kelas.'
+                                    : 'Presensi kehadiran dilakukan melalui menu Presensi di dashboard mahasiswa pada jam perkuliahan masing-masing.'}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* WIDGET 4: Skripsi tracker (real data) */}
                             {msg.widget === 'skripsi' && (
                               <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                                 <span className="text-[10px] font-black text-slate-500 block">
-                                  PETA TAHAPAN SKRIPSI / TUGAS AKHIR
+                                  {user.role === 'lecturer' ? 'MAHASISWA BIMBINGAN TUGAS AKHIR' : 'STATUS TUGAS AKHIR / SKRIPSI'}
                                 </span>
-                                
-                                <div className="space-y-3 relative pl-4 border-l border-slate-200 dark:border-slate-800 ml-1.5">
-                                  {/* Step 1 */}
-                                  <div className="relative">
-                                    <span className="absolute -left-[21px] top-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
-                                    <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                      Tahap 1: Pengajuan Judul &amp; Proposal
-                                    </div>
-                                    <div className="text-[9px] text-emerald-600 font-bold flex items-center gap-0.5">
-                                      <Check className="w-3.5 h-3.5" /> DISAHKAN (SK DEKAN)
-                                    </div>
-                                  </div>
 
-                                  {/* Step 2 */}
-                                  <div className="relative">
-                                    <span className="absolute -left-[21px] top-0.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-slate-900" />
-                                    <div className="text-[11px] font-bold text-slate-900 dark:text-white">
-                                      Tahap 2: Seminar Proposal (Sempro)
+                                <div className="space-y-2.5 max-h-44 overflow-y-auto custom-scrollbar pr-1">
+                                  {(user.role === 'lecturer' ? lecturerSkripsi : thesisItems).map((item) => (
+                                    <div key={item.id} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                                      <div className="flex justify-between items-center gap-2">
+                                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                                          {user.role === 'lecturer' ? item.name : (item.title || `Skripsi (${item.nim})`)}
+                                        </span>
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md ${
+                                          item.status?.toLowerCase().includes('selesai') || item.status?.toLowerCase().includes('lulus')
+                                            ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+                                            : 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
+                                        }`}>
+                                          {item.status || `${item.progressPercentage || 0}%`}
+                                        </span>
+                                      </div>
+                                      {user.role === 'lecturer' && (
+                                        <div className="text-[9px] text-slate-400 font-mono">{item.nim}</div>
+                                      )}
+                                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                        <div
+                                          className="h-full bg-blue-500 rounded-full"
+                                          style={{ width: `${item.progressPercentage || 0}%` }}
+                                        />
+                                      </div>
+                                      <div className="text-[9px] text-slate-400 font-bold">
+                                        Progres: {item.progressPercentage || 0}%
+                                        {item.seminar && ` • Seminar ${item.seminar.type}: ${item.seminar.date || ''}`}
+                                      </div>
                                     </div>
-                                    <div className="text-[9px] text-blue-600 font-bold">
-                                      SELAI / VERIFIKASI JADWAL UTAMA
-                                    </div>
-                                  </div>
-
-                                  {/* Step 3 */}
-                                  <div className="relative opacity-60">
-                                    <span className="absolute -left-[21px] top-0.5 w-3 h-3 rounded-full bg-slate-300 border-2 border-white dark:border-slate-900" />
-                                    <div className="text-[11px] font-bold text-slate-600">
-                                      Tahap 3: Bimbingan &amp; Pengumpulan Draft
-                                    </div>
-                                  </div>
+                                  ))}
                                 </div>
 
-                                <button
-                                  onClick={() => {
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      {
-                                        id: Math.random().toString(),
-                                        sender: 'assistant',
-                                        text: `Buku Panduan Tugas Akhir &amp; Template Dokumen Sidang dapat Anda unduh dari repositori digital SIAKAD. Silakan unggah Bab III draft Skripsi Anda di menu utama mahasiswa.`,
-                                        timestamp: new Date()
-                                      }
-                                    ]);
-                                  }}
-                                  className="w-full py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                                >
-                                  <Download className="w-3.5 h-3.5" /> Unduh Dokumen Panduan
-                                </button>
+                                <p className="text-[9px] text-slate-500 leading-relaxed">
+                                  Detail berkas dan log bimbingan tersedia pada menu Tugas Akhir di dashboard.
+                                </p>
                               </div>
                             )}
 
@@ -575,10 +659,26 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                 </div>
               ))}
 
+              {/* Data load warning */}
+              {!dataLoaded && !dataError && (
+                <div className="flex justify-center">
+                  <div className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 rounded-xl text-[9px] font-bold flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 animate-spin" /> Menghubungkan ke server data akademik...
+                  </div>
+                </div>
+              )}
+              {dataError && (
+                <div className="flex justify-center">
+                  <div className="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 text-rose-700 dark:text-rose-400 rounded-xl text-[9px] font-bold flex items-center gap-1.5">
+                    <AlertCircle className="w-3 h-3" /> {dataError}
+                  </div>
+                </div>
+              )}
+
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex flex-col space-y-1">
-                  <div className="text-[9px] font-boldr text-slate-400 flex items-center gap-1">
+                  <div className="text-[9px] font-bold text-slate-400 flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-blue-500" />
                     <span>Asisten SIAKAD AI sedang mengetik...</span>
                   </div>
@@ -598,7 +698,7 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
               {user.role === 'student' ? (
                 <>
                   <button 
-                    onClick={() => handleQuickPrompt('Rekomendasi KRS semester ganjil')}
+                    onClick={() => handleQuickPrompt('Rekomendasi KRS semester ini')}
                     className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
                     <BookOpen className="w-3 h-3" /> Rekomendasi KRS
@@ -607,22 +707,28 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                     onClick={() => handleQuickPrompt('Bagaimana status tagihan UKT saya?')}
                     className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    <CreditCard className="w-3 h-3" /> Bayar UKT
+                    <Wallet className="w-3 h-3" /> Tagihan UKT
                   </button>
                   <button 
-                    onClick={() => handleQuickPrompt('Presensi kehadiran kuliah')}
+                    onClick={() => handleQuickPrompt('Tampilkan jadwal kuliah hari ini')}
                     className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    <CheckCircle className="w-3 h-3" /> Presensi Kehadiran
+                    <Calendar className="w-3 h-3" /> Jadwal Hari Ini
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Bagaimana status skripsi saya?')}
                     className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    <ClipboardList className="w-3 h-3" /> Status Skripsi
+                    <GraduationCap className="w-3 h-3" /> Status Skripsi
+                  </button>
+                  <button 
+                    onClick={() => handleQuickPrompt('Berapa IPK saya sekarang?')}
+                    className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
+                  >
+                    <ClipboardList className="w-3 h-3" /> IPK Saya
                   </button>
                 </>
-              ) : (
+              ) : user.role === 'lecturer' ? (
                 <>
                   <button 
                     onClick={() => handleQuickPrompt('Tampilkan jadwal mengajar hari ini')}
@@ -631,10 +737,10 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                     <Calendar className="w-3 h-3" /> Jadwal Mengajar
                   </button>
                   <button 
-                    onClick={() => handleQuickPrompt('Buat QR Presensi kuliah')}
+                    onClick={() => handleQuickPrompt('Cara membuat QR presensi kuliah')}
                     className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-500 rounded-xl shadow-sm transition-colors cursor-pointer"
                   >
-                    <QrCode className="w-3 h-3" /> Buat QR Presensi
+                    <QrCode className="w-3 h-3" /> QR Presensi
                   </button>
                   <button 
                     onClick={() => handleQuickPrompt('Tampilkan bimbingan skripsi')}
@@ -643,6 +749,12 @@ export function AcademicChatbot({ user }: AcademicChatbotProps) {
                     <User className="w-3 h-3" /> Bimbingan Skripsi
                   </button>
                 </>
+              ) : (
+                <button 
+                  className="shrink-0 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 rounded-xl shadow-sm cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3" /> Asisten untuk peran {user.role}
+                </button>
               )}
             </div>
 

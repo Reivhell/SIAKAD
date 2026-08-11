@@ -361,6 +361,44 @@ async function main() {
     });
   }
 
+  // ── EDOM: Evaluasi Dosen oleh Mahasiswa (data riil dari DB) ────────
+  if ((await prisma.edomEvaluation.count()) === 0) {
+    const roster = [
+      { nim: '10118001', name: 'Ahmad Syafiq' },
+      { nim: '10118004', name: 'Budi Santoso' },
+      { nim: '10118005', name: 'Citra Kirana' },
+      { nim: '10118006', name: 'Dewi Lestari' },
+      { nim: '10118007', name: 'Gita Wirjawan' },
+    ];
+    const edomRows: Array<Omit<{ studentNim: string; studentName: string; courseCode: string; courseName: string; lecturerEmail: string; lecturerName: string; pedagogik: number; profesional: number; kepribadian: number; sosial: number; comment: string }, 'studentNim' | 'studentName'>> = [
+      { courseCode: 'IF3110', courseName: 'Pengembangan Aplikasi Web', lecturerEmail: 'budi.rahardjo@kampus.ac.id', lecturerName: 'Dr. Budi Rahardjo', pedagogik: 5, profesional: 4, kepribadian: 5, sosial: 4, comment: 'Penjelasan materi JWT dan Web Security sangat detail dan mudah dipahami.' },
+      { courseCode: 'IF3170', courseName: 'Kecerdasan Buatan', lecturerEmail: 'budi.rahardjo@kampus.ac.id', lecturerName: 'Dr. Budi Rahardjo', pedagogik: 4, profesional: 5, kepribadian: 4, sosial: 5, comment: 'Kuliah AI sangat membuka wawasan, banyak contoh penerapan industri.' },
+      { courseCode: 'IF3150', courseName: 'Manajemen Proyek Perangkat Lunak', lecturerEmail: 'sri.hartati@kampus.ac.id', lecturerName: 'Sri Hartati', pedagogik: 4, profesional: 4, kepribadian: 4, sosial: 4, comment: 'Sangat disiplin soal waktu perkuliahan dan transparan dalam penilaian.' },
+    ];
+    for (let i = 0; i < roster.length; i += 1) {
+      const st = roster[i];
+      const idx = i % edomRows.length;
+      const row = edomRows[idx];
+      await prisma.edomEvaluation.create({
+        data: {
+          studentNim: st.nim,
+          studentName: st.name,
+          courseCode: row.courseCode,
+          courseName: row.courseName,
+          lecturerEmail: row.lecturerEmail,
+          lecturerName: row.lecturerName,
+          semester: '2025/2026-Genap',
+          pedagogik: row.pedagogik,
+          profesional: row.profesional,
+          kepribadian: row.kepribadian,
+          sosial: row.sosial,
+          comment: row.comment,
+          createdAt: '2026-06-25',
+        },
+      });
+    }
+  }
+
   // ── Dashboard per peran (RoleDashboard) ────────────────────────────
   const dashboards: Array<{ role: string; data: unknown }> = [
     {

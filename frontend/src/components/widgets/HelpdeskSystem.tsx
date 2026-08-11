@@ -1,158 +1,136 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { LifeBuoy, Plus, Send, Clock, CheckCircle2, AlertCircle, Eye, Search, ChevronRight, X, ArrowUpRight, MessageSquare } from 'lucide-react';
-
-interface TicketComment {
-  author: string;
-  role: string;
-  text: string;
-  timestamp: string;
-}
+import { LifeBuoy, Plus, Send, Clock, CheckCircle2, AlertCircle, Search, X, MessageSquare, Inbox } from 'lucide-react';
+import { User as UserType } from '../../types';
+import { getTickets, createTicket, updateTicketStatus, TicketItem } from '../../api/academic.api';
 
 interface SupportTicket {
   id: string;
   title: string;
   category: 'Nilai' | 'Jadwal' | 'Keuangan' | 'Lainnya';
-  priority: 'Rendah' | 'Sedang' | 'Darurat';
-  status: 'Diajukan' | 'Verifikasi Kaprodi' | 'Proses Rektorat' | 'Selesai';
+  status: 'Terbuka' | 'Diproses' | 'Selesai';
   description: string;
   createdAt: string;
   updatedAt: string;
-  comments: TicketComment[];
+  resolution?: string | null;
+  requesterName?: string;
 }
 
-const initialTickets: SupportTicket[] = [
-  {
-    id: 'TK-1092',
-    title: 'Nilai Praktikum Basis Data Tidak Muncul di KHS',
-    category: 'Nilai',
-    priority: 'Darurat',
-    status: 'Verifikasi Kaprodi',
-    description: 'Saya sudah mengumpulkan semua tugas praktikum basis data dan mengikuti responsi lengkap, namun di portal KHS Semester 4 nilai saya masih tertera T (Tertunda). Mohon bantuannya.',
-    createdAt: '24 Juni 2026, 09:15',
-    updatedAt: '25 Juni 2026, 14:20',
-    comments: [
-      { author: 'Sistem Helpdesk', role: 'System', text: 'Tiket berhasil dibuat dan dialokasikan ke Program Studi S1 Teknik Informatika.', timestamp: '24 Juni 2026, 09:15' },
-      { author: 'Dr. Eng. Ayu Purwari (Kaprodi)', role: 'Staff', text: 'Halo Syafiq, berkas asisten praktikum sedang kami verifikasi silang dengan nilai pusat. Kami kabari maksimal besok sore ya.', timestamp: '25 Juni 2026, 14:20' }
-    ]
-  },
-  {
-    id: 'TK-1044',
-    title: 'Bentrok Jadwal Kelas Pilihan Kecerdasan Buatan & Pemrograman Web',
-    category: 'Jadwal',
-    priority: 'Sedang',
-    status: 'Selesai',
-    description: 'Kelas A Pilihan Kecerdasan Buatan berbenturan langsung dengan kelas wajib Pemrograman Web di hari Kamis jam 08:00.',
-    createdAt: '18 Juni 2026, 11:30',
-    updatedAt: '20 Juni 2026, 10:00',
-    comments: [
-      { author: 'Sistem Helpdesk', role: 'System', text: 'Tiket diteruskan ke Bagian Akademik Fakultas.', timestamp: '18 Juni 2026, 11:30' },
-      { author: 'Budi Santoso (Admin Akademik)', role: 'Staff', text: 'Halo Ahmad Syafiq, jadwal Kelas Pilihan Kecerdasan Buatan telah digeser ke hari Kamis jam 13:00 WIB agar tidak berbenturan. Terima kasih masukannya.', timestamp: '20 Juni 2026, 10:00' },
-      { author: 'Ahmad Syafiq (Anda)', role: 'Student', text: 'Terima kasih banyak pak atas solusi instannya!', timestamp: '20 Juni 2026, 10:45' }
-    ]
-  }
-];
+// Kategorisasi tiket dari kata kunci subjek/isi (heuristik jujur, bukan data tiruan).
+const categorize = (text: string): SupportTicket['category'] => {
+  const t = text.toLowerCase();
+  if (t.includes('nilai') || t.includes('khs') || t.includes('ujian') || t.includes('praktikum')) return 'Nilai';
+  if (t.includes('jadwal') || t.includes('bentrok') || t.includes('kelas') || t.includes('kuliah')) return 'Jadwal';
+  if (t.includes('ukt') || t.includes('bayar') || t.includes('keuangan') || t.includes('beasiswa')) return 'Keuangan';
+  return 'Lainnya';
+};
 
-export function HelpdeskSystem() {
-  const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets);
+export function HelpdeskSystem({ user }: { user?: UserType }) {
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
-  
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   // Ticket Submission Form States
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<'Nilai' | 'Jadwal' | 'Keuangan' | 'Lainnya'>('Nilai');
-  const [priority, setPriority] = useState<'Rendah' | 'Sedang' | 'Darurat'>('Sedang');
   const [description, setDescription] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Comment Form States
-  const [commentText, setCommentText] = useState('');
+  const isStaff = user?.role === 'admin' || user?.role === 'baak';
+
+  const loadTickets = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const rows = await getTickets();
+      setTickets(rows.map((t: TicketItem) => ({
+        id: t.id,
+        title: t.subject,
+        category: categorize(`${t.subject} ${t.message}`),
+        status: (t.status as SupportTicket['status']) || 'Terbuka',
+        description: t.message,
+        createdAt: t.createdAt || '',
+        updatedAt: t.createdAt || '',
+        resolution: t.resolution,
+        requesterName: t.requesterName,
+      })));
+    } catch {
+      setLoadError('Gagal memuat tiket helpdesk dari server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTickets();
+  }, []);
+
+  const handleSubmitTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !description.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const created = await createTicket({
+        subject: title,
+        message: description,
+      });
+      const newTicket: SupportTicket = {
+        id: created.id,
+        title: created.subject,
+        category,
+        status: (created.status as SupportTicket['status']) || 'Terbuka',
+        description: created.message,
+        createdAt: created.createdAt || 'Baru saja',
+        updatedAt: created.createdAt || 'Baru saja',
+        resolution: created.resolution,
+        requesterName: created.requesterName,
+      };
+      setTickets((prev) => [newTicket, ...prev]);
+      setActiveTicket(newTicket);
+      setIsCreating(false);
+      setTitle('');
+      setDescription('');
+    } catch (err: any) {
+      alert(err?.message || 'Gagal membuat tiket. Coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const advanceStatus = async (id: string, next: SupportTicket['status']) => {
+    try {
+      const updated = await updateTicketStatus(id, next);
+      const patched: SupportTicket = {
+        id: updated.id,
+        title: updated.subject,
+        category: categorize(`${updated.subject} ${updated.message}`),
+        status: (updated.status as SupportTicket['status']) || next,
+        description: updated.message,
+        createdAt: updated.createdAt || '',
+        updatedAt: updated.createdAt || '',
+        resolution: updated.resolution,
+        requesterName: updated.requesterName,
+      };
+      setTickets((prev) => prev.map((t) => (t.id === id ? patched : t)));
+      setActiveTicket(patched);
+    } catch (err: any) {
+      alert(err?.message || 'Gagal memperbarui status tiket.');
+    }
+  };
 
   const filteredTickets = tickets.filter(ticket =>
     ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmitTicket = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !description.trim()) return;
-
-    const newTicket: SupportTicket = {
-      id: `TK-${Math.floor(1000 + Math.random() * 9000)}`,
-      title,
-      category,
-      priority,
-      status: 'Diajukan',
-      description,
-      createdAt: 'Hari ini, ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      updatedAt: 'Hari ini, ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      comments: [
-        { author: 'Sistem Helpdesk', role: 'System', text: 'Tiket berhasil dibuat secara anonim dan aman di helpdesk utama.', timestamp: 'Baru saja' }
-      ]
-    };
-
-    setTickets([newTicket, ...tickets]);
-    setIsCreating(false);
-    setTitle('');
-    setDescription('');
-    setActiveTicket(newTicket);
-  };
-
-  const handleAddComment = () => {
-    if (!commentText.trim() || !activeTicket) return;
-
-    const updatedComments = [
-      ...activeTicket.comments,
-      {
-        author: 'Ahmad Syafiq (Anda)',
-        role: 'Student',
-        text: commentText,
-        timestamp: 'Baru saja'
-      }
-    ];
-
-    const updatedTicket: SupportTicket = {
-      ...activeTicket,
-      comments: updatedComments,
-      updatedAt: 'Baru saja'
-    };
-
-    setTickets(tickets.map(t => t.id === activeTicket.id ? updatedTicket : t));
-    setActiveTicket(updatedTicket);
-    setCommentText('');
-
-    // Simulate an automatic response from staff after 2 seconds for interactive real-time goodness!
-    setTimeout(() => {
-      const responseComment: TicketComment = {
-        author: 'Sistem AI Helpdesk (Auto-Responder)',
-        role: 'System',
-        text: 'Notifikasi otomatis terkirim ke unit terkait. Tiket Anda sedang dalam tinjauan intensif tim admin fakultas.',
-        timestamp: 'Baru saja'
-      };
-
-      const finalTicket: SupportTicket = {
-        ...updatedTicket,
-        status: updatedTicket.status === 'Diajukan' ? 'Verifikasi Kaprodi' : updatedTicket.status,
-        comments: [...updatedComments, responseComment],
-        updatedAt: 'Baru saja'
-      };
-
-      setTickets(prevTickets => prevTickets.map(t => t.id === activeTicket.id ? finalTicket : t));
-      setActiveTicket(finalTicket);
-    }, 2000);
-  };
-
   const statusColors = {
-    'Diajukan': 'bg-slate-100 text-slate-800 dark:bg-slate-950/40 dark:text-slate-400 border-slate-200 dark:border-slate-800',
-    'Verifikasi Kaprodi': 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/30',
-    'Proses Rektorat': 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-450 border-amber-200/50 dark:border-amber-900/30',
+    'Terbuka': 'bg-slate-100 text-slate-800 dark:bg-slate-950/40 dark:text-slate-400 border-slate-200 dark:border-slate-800',
+    'Diproses': 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/30',
     'Selesai': 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/30',
-  };
-
-  const priorityColors = {
-    'Rendah': 'bg-slate-100 text-slate-700 dark:bg-slate-850 dark:text-slate-300',
-    'Sedang': 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-    'Darurat': 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 font-bold',
   };
 
   return (
@@ -164,17 +142,17 @@ export function HelpdeskSystem() {
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Sistem Pengaduan & Pelacakan Tiket (Helpdesk Akademik)
+              Sistem Pengaduan &amp; Pelacakan Tiket (Helpdesk Akademik)
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              Sampaikan kendala administrasi, nilai, perkuliahan, atau keuangan secara real-time.
+              Sampaikan kendala administrasi, nilai, perkuliahan, atau keuangan. Semua tiket tersimpan di basis data SIAKAD.
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setIsCreating(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs  transition-colors flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
         >
           <Plus className="w-3.5 h-3.5" /> Buat Tiket Baru
         </button>
@@ -195,8 +173,19 @@ export function HelpdeskSystem() {
             />
           </div>
 
+          {loading && (
+            <div className="text-center py-8 text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Clock className="w-4 h-4 animate-spin" /> Memuat tiket...
+            </div>
+          )}
+          {loadError && (
+            <div className="text-center py-8 text-xs text-rose-500 flex items-center justify-center gap-2">
+              <AlertCircle className="w-4 h-4" /> {loadError}
+            </div>
+          )}
+
           <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-            {filteredTickets.map((ticket) => {
+            {!loading && !loadError && filteredTickets.map((ticket) => {
               const isActive = activeTicket?.id === ticket.id;
               return (
                 <div
@@ -212,13 +201,10 @@ export function HelpdeskSystem() {
                   }`}
                 >
                   <div className="flex justify-between items-start gap-2 mb-2">
-                    <span className="text-[10px] font-mono font-bold text-slate-400">{ticket.id}</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400">{ticket.id.slice(0, 8)}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full border ${statusColors[ticket.status]}`}>
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full border ${statusColors[ticket.status] || statusColors.Terbuka}`}>
                         {ticket.status}
-                      </span>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-md ${priorityColors[ticket.priority]}`}>
-                        {ticket.priority}
                       </span>
                     </div>
                   </div>
@@ -234,9 +220,10 @@ export function HelpdeskSystem() {
               );
             })}
 
-            {filteredTickets.length === 0 && (
-              <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-850 rounded-xl">
-                Tidak ada tiket pengaduan ditemukan.
+            {!loading && !loadError && filteredTickets.length === 0 && (
+              <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-850 rounded-xl flex flex-col items-center gap-1.5">
+                <Inbox className="w-5 h-5 text-slate-300" />
+                {searchQuery ? 'Tidak ada tiket yang cocok dengan pencarian.' : 'Belum ada tiket pengaduan.'}
               </div>
             )}
           </div>
@@ -256,7 +243,7 @@ export function HelpdeskSystem() {
                 className="bg-slate-50 dark:bg-slate-950 p-4.5 rounded-xl border border-slate-100 dark:border-slate-850 space-y-3"
               >
                 <div className="flex justify-between items-center">
-                  <h5 className="text-xs font-blackr text-slate-800 dark:text-white">
+                  <h5 className="text-xs font-black text-slate-800 dark:text-white">
                     Pengajuan Tiket Masalah Baru
                   </h5>
                   <button
@@ -280,33 +267,18 @@ export function HelpdeskSystem() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Kategori</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value as any)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl text-xs outline-none font-semibold text-slate-700 dark:text-slate-350"
-                    >
-                      <option value="Nilai">Nilai Akademik</option>
-                      <option value="Jadwal">Jadwal Kuliah</option>
-                      <option value="Keuangan">Masalah Keuangan/UKT</option>
-                      <option value="Lainnya">Lain-lain</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Tingkat Urgensi</label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as any)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl text-xs outline-none font-semibold text-slate-700 dark:text-slate-350"
-                    >
-                      <option value="Rendah">Rendah</option>
-                      <option value="Sedang">Sedang / Menengah</option>
-                      <option value="Darurat">Darurat / Penting</option>
-                    </select>
-                  </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">Kategori</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as any)}
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl text-xs outline-none font-semibold text-slate-700 dark:text-slate-350"
+                  >
+                    <option value="Nilai">Nilai Akademik</option>
+                    <option value="Jadwal">Jadwal Kuliah</option>
+                    <option value="Keuangan">Masalah Keuangan/UKT</option>
+                    <option value="Lainnya">Lain-lain</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1">
@@ -323,9 +295,10 @@ export function HelpdeskSystem() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/10 cursor-pointer transition-colors"
+                  disabled={submitting}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/10 cursor-pointer transition-colors"
                 >
-                  Submit Tiket ke Helpdesk Kampus
+                  {submitting ? 'Mengirim tiket...' : 'Submit Tiket ke Helpdesk Kampus'}
                 </button>
               </motion.form>
             ) : activeTicket ? (
@@ -342,15 +315,21 @@ export function HelpdeskSystem() {
                   <div className="flex justify-between items-start gap-2 pb-3 border-b border-slate-200/40 dark:border-slate-800/40">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-black text-slate-400 text-[10px]">{activeTicket.id}</span>
+                        <span className="font-mono font-black text-slate-400 text-[10px]">{activeTicket.id.slice(0, 8)}</span>
                         <span className="text-slate-350 dark:text-slate-650">&bull;</span>
                         <span className="text-[10px] text-slate-500 font-bold">Kategori: {activeTicket.category}</span>
+                        {activeTicket.requesterName && (
+                          <>
+                            <span className="text-slate-350 dark:text-slate-650">&bull;</span>
+                            <span className="text-[10px] text-slate-500 font-bold">{activeTicket.requesterName}</span>
+                          </>
+                        )}
                       </div>
                       <h5 className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">
                         {activeTicket.title}
                       </h5>
                     </div>
-                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-black border uppercase shrink-0 ${statusColors[activeTicket.status]}`}>
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-black border uppercase shrink-0 ${statusColors[activeTicket.status] || statusColors.Terbuka}`}>
                       {activeTicket.status}
                     </span>
                   </div>
@@ -360,56 +339,73 @@ export function HelpdeskSystem() {
                     {activeTicket.description}
                   </div>
 
-                  {/* Real-time Follow-up Timeline */}
+                  {/* Timeline */}
                   <div className="space-y-2.5 pt-1">
                     <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
-                      <MessageSquare className="w-3.5 h-3.5 text-blue-500" /> Log Aktivitas & Tanggapan Helpdesk
+                      <MessageSquare className="w-3.5 h-3.5 text-blue-500" /> Log Aktivitas Helpdesk
                     </span>
 
                     <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                      {activeTicket.comments.map((comment, index) => {
-                        const isStudent = comment.role === 'Student';
-                        const isSystem = comment.role === 'System';
-                        return (
-                          <div 
-                            key={index} 
-                            className={`p-2.5 rounded-lg border text-[11px] ${
-                              isSystem 
-                                ? 'bg-slate-100/50 dark:bg-slate-900/40 border-slate-200/40 dark:border-slate-800/50 text-slate-500' 
-                                : isStudent 
-                                  ? 'bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/10 dark:border-blue-500/20 text-blue-800 dark:text-blue-300 ml-4' 
-                                  : 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-300 mr-4'
-                            }`}
-                          >
-                            <div className="flex justify-between font-bold text-[10px] opacity-80 mb-0.5">
-                              <span>{comment.author}</span>
-                              <span>{comment.timestamp}</span>
-                            </div>
-                            <p className="leading-relaxed font-medium">{comment.text}</p>
+                      <div className="p-2.5 rounded-lg border text-[11px] bg-slate-100/50 dark:bg-slate-900/40 border-slate-200/40 dark:border-slate-800/50 text-slate-500">
+                        <div className="flex justify-between font-bold text-[10px] opacity-80 mb-0.5">
+                          <span>Sistem Helpdesk</span>
+                          <span>{activeTicket.createdAt}</span>
+                        </div>
+                        <p className="leading-relaxed font-medium">
+                          Tiket "{activeTicket.title}" berhasil dibuat dan dicatat pada sistem Helpdesk SIAKAD.
+                        </p>
+                      </div>
+
+                      {activeTicket.resolution && (
+                        <div className="p-2.5 rounded-lg border text-[11px] bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-300">
+                          <div className="flex justify-between font-bold text-[10px] opacity-80 mb-0.5">
+                            <span>Resolusi Staf</span>
+                            <span>{activeTicket.updatedAt}</span>
                           </div>
-                        );
-                      })}
+                          <p className="leading-relaxed font-medium">{activeTicket.resolution}</p>
+                        </div>
+                      )}
+                      {!activeTicket.resolution && activeTicket.status !== 'Selesai' && (
+                        <div className="p-2.5 rounded-lg border text-[11px] bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/10 dark:border-amber-500/20 text-amber-800 dark:text-amber-300">
+                          <div className="flex justify-between font-bold text-[10px] opacity-80 mb-0.5">
+                            <span>Status Saat Ini</span>
+                            <span>{activeTicket.updatedAt}</span>
+                          </div>
+                          <p className="leading-relaxed font-medium">
+                            {activeTicket.status === 'Diproses'
+                              ? 'Tiket sedang ditangani oleh unit terkait.'
+                              : 'Tiket menunggu penanganan dari unit terkait.'}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Response / Message form */}
-                {activeTicket.status !== 'Selesai' && (
-                  <div className="flex gap-2 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
-                    <input
-                      type="text"
-                      placeholder="Balas pesan atau beri info tambahan..."
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                      className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 px-3.5 py-2 rounded-xl text-xs outline-none text-slate-800 dark:text-slate-200"
-                    />
+                {/* Staff workflow */}
+                {isStaff && activeTicket.status !== 'Selesai' && (
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
+                    {activeTicket.status === 'Terbuka' && (
+                      <button
+                        onClick={() => advanceStatus(activeTicket.id, 'Diproses')}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                      >
+                        Tandai Diproses
+                      </button>
+                    )}
                     <button
-                      onClick={handleAddComment}
-                      className="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition-colors cursor-pointer shadow-md shadow-blue-500/15 shrink-0"
+                      onClick={() => advanceStatus(activeTicket.id, 'Selesai')}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold cursor-pointer flex items-center gap-1"
                     >
-                      <Send className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Tandai Selesai
                     </button>
+                  </div>
+                )}
+
+                {!isStaff && (
+                  <div className="pt-3 border-t border-slate-200/40 dark:border-slate-800/40 text-[10px] text-slate-400 font-semibold flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    Status tiket diperbarui oleh staf helpdesk. Pantau perkembangan melalui widget ini.
                   </div>
                 )}
               </motion.div>
@@ -421,7 +417,7 @@ export function HelpdeskSystem() {
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-700 dark:text-slate-300">Pilih Tiket Pelacakan</div>
                   <p className="text-slate-450 max-w-[240px] leading-relaxed mx-auto">
-                    Pilih salah satu tiket di sebelah kiri untuk melihat rincian progres, timeline solusi rektorat, dan log obrolan penanganan.
+                    Pilih salah satu tiket di sebelah kiri untuk melihat rincian progres dan log penanganan.
                   </p>
                 </div>
               </div>

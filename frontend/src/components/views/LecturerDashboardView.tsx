@@ -195,7 +195,7 @@ export function LecturerDashboardView({ user, activeTab = 'dashboard', onChangeT
       {activeTab === 'dashboard' && (
         <div className="space-y-8">
           {/* Scrolling Announcement Ticker */}
-          <AnnouncementTicker />
+          <AnnouncementTicker user={user} />
 
           {/* Main Stat Summary Row */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">

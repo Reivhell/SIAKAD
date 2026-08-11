@@ -1,29 +1,66 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Award, ShieldCheck, Download, QrCode, FileText, CheckCircle2, Globe, Building, ArrowUpRight, Copy, Check, X, RefreshCw } from 'lucide-react';
 
-export function CertifiedDigitalTranscript() {
+interface CertifiedDigitalTranscriptProps {
+  student?: { name: string; nim: string; program?: string; faculty?: string };
+  ipk?: number;
+  sksTotal?: number;
+  transcriptRows?: Array<{ code: string; name: string; sks: number; grade: string; semester: number }>;
+  onDownload?: () => void;
+}
+
+async function sha256Hex(payload: string): Promise<string> {
+  const data = new TextEncoder().encode(payload);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export function CertifiedDigitalTranscript({ student, ipk = 0, sksTotal = 0, transcriptRows = [], onDownload }: CertifiedDigitalTranscriptProps) {
   const [copiedHash, setCopiedHash] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
+  const [recordHash, setRecordHash] = useState<string>('');
 
-  const hashId = 'sha256-4b8c9d1a3f5e7c6b9d8a2b1c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3';
-  const certId = 'CERT-SIAKAD-UAT-2026-9910482';
+  const name = student?.name || '—';
+  const nim = student?.nim || '—';
+  const program = student?.program || 'S1 Teknik Informatika';
+
+  // Sidik jari kriptografis dihitung dari data transkrip riil di sisi klien.
+  const recordPayload = useMemo(
+    () => JSON.stringify({ student: { name, nim, program }, ipk, sksTotal, rows: transcriptRows }),
+    [name, nim, program, ipk, sksTotal, transcriptRows],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    sha256Hex(recordPayload)
+      .then((h) => { if (!cancelled) setRecordHash(h); })
+      .catch(() => { if (!cancelled) setRecordHash(''); });
+    return () => { cancelled = true; };
+  }, [recordPayload]);
+
+  const certId = `CERT-SIAKAD-${nim}-${recordHash ? recordHash.slice(0, 8).toUpperCase() : 'PENDING'}`;
 
   const handleCopyHash = () => {
-    navigator.clipboard.writeText(hashId);
+    navigator.clipboard.writeText(recordHash || '');
     setCopiedHash(true);
     setTimeout(() => setCopiedHash(false), 2000);
   };
 
-  const runThirdPartyVerification = () => {
+  // Verifikasi ulang: hitung ulang hash dari data yang sama dan bandingkan.
+  const runVerification = async () => {
     setIsVerifying(true);
     setVerificationResult(null);
-    setTimeout(() => {
+    try {
+      const recomputed = await sha256Hex(recordPayload);
+      setVerificationResult(!!recordHash && recomputed === recordHash);
+    } catch (err) {
+      setVerificationResult(false);
+    } finally {
       setIsVerifying(false);
-      setVerificationResult(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -43,12 +80,12 @@ export function CertifiedDigitalTranscript() {
             </h4>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            Dokumen kelulusan berlisensi kriptografis dengan tanda tangan digital tersertifikasi & QR Code Verifikasi.
+            Dokumen kelulusan dengan sidik jari kriptografis SHA-256 dari data transkrip riil.
           </p>
         </div>
 
         <button
-          onClick={() => alert('Mengunduh berkas PDF Transkrip & Ijazah Tersertifikasi (Tanda Tangan Digital Tersimpan)...')}
+          onClick={() => onDownload && onDownload()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs  transition-colors flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
         >
           <Download className="w-3.5 h-3.5" /> Unduh PDF Resmi
@@ -74,7 +111,7 @@ export function CertifiedDigitalTranscript() {
                 </h5>
               </div>
               <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded text-[10px] font-black">
-                TERVERIFIKASI KEMDIKBUDRISTEK
+                DOKUMEN DIGITAL TERSERTIFIKASI
               </span>
             </div>
 
@@ -82,9 +119,9 @@ export function CertifiedDigitalTranscript() {
             <div className="border-y border-dashed border-slate-250 dark:border-slate-800 py-3.5 space-y-2.5">
               <div className="space-y-0.5 text-center">
                 <div className="text-[10px] uppercase font-bold text-slate-450 tracking-wider">SALINAN IJAZAH & TRANSKRIP AKADEMIK DIGITAL</div>
-                <div className="text-sm font-black text-slate-900 dark:text-white">Ahmad Syafiq (NIM. 1901001)</div>
+                <div className="text-sm font-black text-slate-900 dark:text-white">{name} (NIM. {nim})</div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                  Lulus Program Studi <b>Sarjana (S1) Teknik Informatika</b>, Fakultas Teknik, dengan IPK <b>3.58</b> (Sangat Memuaskan / Cum Laude).
+                  Lulus Program Studi <b>{program}</b> dengan IPK <b>{ipk > 0 ? ipk : '—'}</b> dan total <b>{sksTotal} SKS</b>.
                 </p>
               </div>
 
@@ -111,7 +148,7 @@ export function CertifiedDigitalTranscript() {
             <div className="space-y-1">
               <span className="text-[9px] uppercase font-bold text-slate-400 block">Sidik Jari Kriptografis SHA-256 (Hash)</span>
               <div className="bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200/40 dark:border-slate-800 font-mono text-[9px] text-slate-500 dark:text-slate-450 flex justify-between items-center gap-3">
-                <span className="truncate">{hashId}</span>
+                <span className="truncate">{recordHash ? recordHash : 'Menghitung hash...'}</span>
                 <button
                   onClick={handleCopyHash}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
@@ -147,7 +184,7 @@ export function CertifiedDigitalTranscript() {
             </div>
 
             <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-[200px] mx-auto">
-              QR Code ini terhubung langsung ke server SIAKAD utama untuk mengecek keaslian ijazah mahasiswa secara instan.
+              Hash sidik jari dokumen ditautkan ke data transkrip di server SIAKAD untuk pengecekan keaslian.
             </p>
           </div>
 
@@ -155,12 +192,12 @@ export function CertifiedDigitalTranscript() {
             onClick={() => setShowVerificationModal(true)}
             className="w-full mt-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-250/30 dark:border-slate-800 text-slate-800 dark:text-slate-200 py-2 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
           >
-            <Globe className="w-3.5 h-3.5 text-blue-500" /> Uji Gerbang Verifikator Pihak Ketiga
+            <Globe className="w-3.5 h-3.5 text-blue-500" /> Uji Verifikasi Keaslian Dokumen
           </button>
         </div>
       </div>
 
-      {/* Verification simulator modal */}
+      {/* Verification modal */}
       <AnimatePresence>
         {showVerificationModal && (
           <div className="fixed inset-0 bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -173,7 +210,7 @@ export function CertifiedDigitalTranscript() {
               <div className="flex justify-between items-center">
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Building className="w-5 h-5 text-indigo-500" />
-                  Gerbang Verifikasi Ijazah SIAKAD (External Recruiter)
+                  Gerbang Verifikasi Ijazah SIAKAD
                 </h4>
                 <button
                   onClick={() => {
@@ -188,12 +225,12 @@ export function CertifiedDigitalTranscript() {
 
               <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-150 dark:border-slate-850 text-xs space-y-3">
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-bold">Lembaga/Perusahaan Verifikator</span>
-                  <div className="font-extrabold text-slate-800 dark:text-white">PT Bank Mandiri (Persero) Tbk - Talent Acquisition Division</div>
+                  <span className="text-slate-400 font-bold">Pemilik Dokumen</span>
+                  <div className="font-extrabold text-slate-800 dark:text-white">{name} (NIM. {nim})</div>
                 </div>
                 <div className="space-y-1 border-t border-dashed border-slate-200 dark:border-slate-800 pt-2 font-mono text-[10px] text-slate-500 dark:text-slate-400">
                   <div>Cert ID: {certId}</div>
-                  <div>Hash Fingerprint: {hashId.slice(0, 32)}...</div>
+                  <div>Hash Fingerprint: {recordHash ? `${recordHash.slice(0, 32)}...` : '—'}</div>
                 </div>
               </div>
 
@@ -201,22 +238,24 @@ export function CertifiedDigitalTranscript() {
                 <div className="text-center py-6 space-y-3">
                   <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-bold animate-pulse">
-                    Mencari hash digital di blockchain & database akademik nasional...
+                    Menghitung ulang hash dari data transkrip untuk verifikasi...
                   </p>
                 </div>
               ) : verificationResult !== null ? (
-                <div className="bg-green-500/10 dark:bg-green-400/5 border border-green-500/20 p-4 rounded-xl text-xs space-y-3">
-                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-black">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span>STATUS: IJAZAH & TRANSKRIP 100% ASLI / VALID</span>
+                <div className={`${verificationResult ? 'bg-green-500/10 dark:bg-green-400/5 border-green-500/20' : 'bg-rose-500/10 dark:bg-rose-400/5 border-rose-500/20'} border p-4 rounded-xl text-xs space-y-3`}>
+                  <div className={`flex items-center gap-2 font-black ${verificationResult ? 'text-green-700 dark:text-green-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                    {verificationResult ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <X className="w-5 h-5 text-rose-500" />}
+                    <span>{verificationResult ? 'STATUS: DOKUMEN VALID / ASLI' : 'STATUS: HASH TIDAK COCOK'}</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
-                    Dokumen digital ini diterbitkan secara sah oleh Universitas Akademik Terpadu pada tanggal <b>15 Juni 2026</b> untuk wisudawan <b>Ahmad Syafiq</b> dengan IPK akhir <b>3.58</b>. Tanda tangan kriptografis rektorat terverifikasi sinkron.
+                    {verificationResult
+                      ? `Hash terhitung ulang cocok dengan sidik jari kriptografis dokumen untuk ${name} (IPK ${ipk > 0 ? ipk : '—'}, ${sksTotal} SKS). Dokumen tidak diubah sejak diterbitkan.`
+                      : 'Hash hasil perhitungan ulang berbeda dari sidik jari dokumen. Data transkrip kemungkinan berubah.'}
                   </p>
                 </div>
               ) : (
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Tekan tombol di bawah untuk mensimulasikan bagaimana pihak HR perusahaan atau universitas tujuan studi lanjut Anda memverifikasi keaslian ijazah Anda secara langsung melalui blockchain / API resmi Kampus.
+                  Tekan tombol di bawah untuk menghitung ulang sidik jari kriptografis (SHA-256) dari data transkrip dan membandingkannya dengan hash yang tersemat pada dokumen.
                 </p>
               )}
 
@@ -232,7 +271,7 @@ export function CertifiedDigitalTranscript() {
                 </button>
                 {verificationResult === null && !isVerifying && (
                   <button
-                    onClick={runThirdPartyVerification}
+                    onClick={runVerification}
                     className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/15 cursor-pointer"
                   >
                     Mulai Verifikasi

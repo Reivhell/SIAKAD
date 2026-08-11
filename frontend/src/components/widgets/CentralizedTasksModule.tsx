@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Trash2
 } from 'lucide-react';
+import { getAcademicAssignments, createAcademicAssignment, deleteAcademicAssignment } from '../../api/academic.api';
 
 interface Task {
   id: string;
@@ -32,54 +33,11 @@ interface Task {
   h3ReminderSent: boolean;
 }
 
-const defaultTasks: Task[] = [
-  {
-    id: 'TASK-01',
-    courseCode: 'IF3110',
-    courseName: 'Pengembangan Web & Cloud',
-    title: 'Tugas 3: Integrasi API & Autentikasi JWT',
-    description: 'Rancanglah RESTful API lengkap menggunakan Node.js Express dengan token JWT untuk otorisasi endpoint.',
-    deadline: '2026-06-27T23:59:00', // Close to current local time (June 26, 2026)
-    status: 'Belum Selesai',
-    h1ReminderSent: true,
-    h3ReminderSent: false,
-  },
-  {
-    id: 'TASK-02',
-    courseCode: 'IF3240',
-    courseName: 'Pengantar Inteligensi Buatan',
-    title: 'Tugas Praktis: Implementasi KNN Classifier',
-    description: 'Tulis kode Python manual (tanpa scikit-learn) untuk klasifikasi dataset bunga Iris dengan K-Nearest Neighbors.',
-    deadline: '2026-06-29T17:00:00',
-    status: 'Belum Selesai',
-    h1ReminderSent: false,
-    h3ReminderSent: false,
-  },
-  {
-    id: 'TASK-03',
-    courseCode: 'IF2230',
-    courseName: 'Pemrograman Berorientasi Objek',
-    title: 'Milestone 2: Desain Model Inheritance & Polymorphism',
-    description: 'Rancang class diagram UML dan implementasikan inheritance struktur kelas pada aplikasi e-commerce sederhana.',
-    deadline: '2026-06-25T23:59:00', // Already passed
-    status: 'Selesai',
-    submittedAt: '24 Juni 2026 21:12',
-    h1ReminderSent: true,
-    h3ReminderSent: true,
-  }
-];
-
 export function CentralizedTasksModule({ role }: { role: string }) {
   const { t, lang } = useLanguage();
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('siakad_tasks_list');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return defaultTasks;
-  });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Lecturer form states
   const [taskTitle, setTaskTitle] = useState('');
@@ -90,34 +48,39 @@ export function CentralizedTasksModule({ role }: { role: string }) {
 
   // Interactive local states
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [activeReminders, setActiveReminders] = useState<{ id: string; type: 'H-1' | 'H-3 Jam'; message: string }[]>([]);
+
+  // Muat daftar tugas riil dari backend (Assignment)
+  const loadTasks = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const assignments = await getAcademicAssignments();
+      const mapped: Task[] = assignments.map((a) => ({
+        id: a.id,
+        courseCode: a.courseCode,
+        courseName: a.classLabel || a.courseCode,
+        title: a.title,
+        description: a.description || '',
+        deadline: a.deadline,
+        status: 'Belum Selesai',
+        h1ReminderSent: false,
+        h3ReminderSent: false,
+      }));
+      setTasks(mapped);
+    } catch (err) {
+      setLoadError('Gagal memuat data tugas. Periksa koneksi ke server.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('siakad_tasks_list', JSON.stringify(tasks));
-  }, [tasks]);
+    loadTasks();
+  }, []);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // Push notification reminder simulation
-  const simulatePushNotification = (task: Task, type: 'H-1' | 'H-3 Jam') => {
-    try {
-      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav'); // Soft beep
-      audio.play().catch(() => {});
-    } catch (err) {}
-
-    const newRem = {
-      id: `${task.id}-${type}-${Date.now()}`,
-      type,
-      message: type === 'H-1' 
-        ? `Reminder H-1: Tugas "${task.title}" ({${task.courseCode}}) dikumpulkan besok!`
-        : `Urgent! Reminder H-3 Jam: Sisa waktu 3 jam untuk mengumpulkan "${task.title}".`
-    };
-
-    setActiveReminders(prev => [newRem, ...prev]);
-    triggerToast(`🚨 Push Notification: ${newRem.message}`);
   };
 
   // Calculate remaining times dynamically
@@ -150,45 +113,30 @@ export function CentralizedTasksModule({ role }: { role: string }) {
     }
   };
 
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle || !taskDesc) {
       triggerToast('Judul tugas dan deskripsi wajib diisi!');
       return;
     }
 
-    const coursesMap: Record<string, string> = {
-      'IF3110': 'Pengembangan Web & Cloud',
-      'IF3240': 'Pengantar Inteligensi Buatan',
-      'IF2230': 'Pemrograman Berorientasi Objek',
-      'IF2211': 'Matematika Diskrit',
-      'IF4120': 'Kriptografi & Keamanan Jaringan',
-    };
-
     const targetIsoDeadline = `${taskDate}T${taskTime}:00`;
 
-    const newTask: Task = {
-      id: `TASK-0${tasks.length + 1}`,
-      courseCode: taskCourse,
-      courseName: coursesMap[taskCourse] || 'Matakuliah Umum',
-      title: taskTitle,
-      description: taskDesc,
-      deadline: targetIsoDeadline,
-      status: 'Belum Selesai',
-      h1ReminderSent: false,
-      h3ReminderSent: false
-    };
-
-    setTasks([newTask, ...tasks]);
-    setTaskTitle('');
-    setTaskDesc('');
-    
-    triggerToast(`Tugas "${taskTitle}" resmi dirilis terpusat!`);
-    
-    // Simulate push alert immediately on load
-    setTimeout(() => {
-      simulatePushNotification(newTask, 'H-1');
-    }, 1500);
+    try {
+      await createAcademicAssignment({
+        courseCode: taskCourse,
+        classLabel: `${taskCourse}-A`,
+        title: taskTitle,
+        description: taskDesc,
+        deadline: targetIsoDeadline,
+      });
+      setTaskTitle('');
+      setTaskDesc('');
+      triggerToast(`Tugas "${taskTitle}" resmi dirilis terpusat!`);
+      await loadTasks();
+    } catch (err) {
+      triggerToast('Gagal menyimpan tugas. Coba lagi.');
+    }
   };
 
   const handleToggleStatus = (id: string) => {
@@ -203,12 +151,17 @@ export function CentralizedTasksModule({ role }: { role: string }) {
       }
       return t;
     }));
-    triggerToast('Status pengerjaan tugas berhasil disinkronisasi!');
+    triggerToast('Status pengerjaan tugas diperbarui.');
   };
 
-  const handleDeleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
-    triggerToast('Tugas berhasil dihapus.');
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteAcademicAssignment(id);
+      setTasks(tasks.filter(t => t.id !== id));
+      triggerToast('Tugas berhasil dihapus.');
+    } catch (err) {
+      triggerToast('Gagal menghapus tugas.');
+    }
   };
 
   return (
@@ -334,7 +287,21 @@ export function CentralizedTasksModule({ role }: { role: string }) {
           </div>
 
           <div className="relative border-l border-slate-200 dark:border-slate-800 pl-4 sm:pl-6 ml-3 space-y-5">
-            {tasks.map((task, idx) => {
+            {loading && (
+              <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-250 dark:border-slate-800">
+                <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2 animate-spin" />
+                <p className="text-xs text-slate-500">Memuat data tugas...</p>
+              </div>
+            )}
+
+            {!loading && loadError && (
+              <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-250 dark:border-slate-800">
+                <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                <p className="text-xs text-slate-500">{loadError}</p>
+              </div>
+            )}
+
+            {!loading && !loadError && tasks.map((task, idx) => {
               const rem = getRemainingTimeText(task.deadline);
               const isTaskDone = task.status === 'Selesai';
               
@@ -376,7 +343,7 @@ export function CentralizedTasksModule({ role }: { role: string }) {
                             {task.courseCode} &bull; {task.courseName}
                           </span>
                           <span className="text-slate-300 dark:text-slate-750">&bull;</span>
-                          <span className="text-[9.5px] font-bold text-slate-450 uppercase">{task.id}</span>
+                          <span className="text-[9.5px] font-bold text-slate-450 uppercase">{task.id.slice(0, 8)}</span>
                         </div>
                         <h6 className={`font-extrabold text-xs ${isTaskDone ? 'line-through text-slate-500' : 'text-slate-800 dark:text-white'}`}>
                           {task.title}
@@ -398,32 +365,14 @@ export function CentralizedTasksModule({ role }: { role: string }) {
                       </div>
                     </div>
 
-                    {/* Integrated dynamic push trigger tools */}
+                    {/* Action bar */}
                     <div className="mt-3.5 pt-3 border-t border-dashed border-slate-250 dark:border-slate-850/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                      {/* Reminder configurations logger */}
-                      <div className="flex items-center gap-3.5 text-[10px] text-slate-400 font-bold">
-                        <div className="flex items-center gap-1">
-                          <Bell className={`w-3.5 h-3.5 ${task.h1ReminderSent ? 'text-emerald-500' : 'text-slate-300'}`} />
-                          <span className={task.h1ReminderSent ? 'text-slate-600 dark:text-slate-300' : ''}>{t('task.remind_1')}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Bell className={`w-3.5 h-3.5 ${task.h3ReminderSent ? 'text-rose-500 animate-pulse' : 'text-slate-300'}`} />
-                          <span className={task.h3ReminderSent ? 'text-slate-600 dark:text-slate-300' : ''}>{t('task.remind_3')}</span>
-                        </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>{task.courseCode}</span>
                       </div>
 
-                      {/* Interactive completion action & push simulation triggers */}
                       <div className="flex gap-2">
-                        {/* Lecturer-only notification tools */}
-                        {role !== 'student' && (
-                          <button
-                            onClick={() => simulatePushNotification(task, 'H-3 Jam')}
-                            className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg text-[9.5px] font-black cursor-pointer transition-colors"
-                          >
-                            Simulasikan Push H-3 Jam
-                          </button>
-                        )}
-
                         {role === 'student' && (
                           <button
                             onClick={() => handleToggleStatus(task.id)}
@@ -444,11 +393,12 @@ export function CentralizedTasksModule({ role }: { role: string }) {
                           </button>
                         )}
 
-                        {/* Admin can delete tasks */}
-                        {role === 'admin' && (
+                        {/* Dosen & admin dapat menghapus tugas */}
+                        {role !== 'student' && (
                           <button
                             onClick={() => handleDeleteTask(task.id)}
                             className="p-1 text-slate-300 hover:text-rose-600 transition-colors"
+                            title="Hapus tugas"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -461,10 +411,10 @@ export function CentralizedTasksModule({ role }: { role: string }) {
               );
             })}
 
-            {tasks.length === 0 && (
+            {!loading && !loadError && tasks.length === 0 && (
               <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-250 dark:border-slate-800">
                 <ListTodo className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs text-slate-500">Hebat! Tidak ada tugas tersisa pada garis waktu.</p>
+                <p className="text-xs text-slate-500">Belum ada data tugas pada garis waktu.</p>
               </div>
             )}
           </div>

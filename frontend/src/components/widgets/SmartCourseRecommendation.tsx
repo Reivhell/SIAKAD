@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, ArrowRight, Award, BrainCircuit, ShieldCheck, Database, Layout, TrendingUp, CheckCircle2, UserCheck, Star } from 'lucide-react';
+import { Sparkles, ArrowRight, Award, BrainCircuit, ShieldCheck, Database, Layout, TrendingUp, Star, Inbox, Clock } from 'lucide-react';
+import { getStudentOverview, AvailableKrsCourse } from '../../api/academic.api';
 
 interface ElectiveCourse {
   code: string;
   name: string;
   sks: number;
   semester: number;
-  suitabilityScore: number; // Percentage
+  suitabilityScore: number; // Skor kesesuaian minat (dihitung dari kata kunci, bukan data tiruan)
   reasoning: string;
   careerProspects: string[];
   prerequisites: string;
@@ -15,116 +16,63 @@ interface ElectiveCourse {
 }
 
 const interestOptions = [
-  { id: 'ai', label: 'Artificial Intelligence & Machine Learning', icon: <BrainCircuit className="w-4 h-4" /> },
-  { id: 'cyber', label: 'Cyber Security & Network Defense', icon: <ShieldCheck className="w-4 h-4" /> },
-  { id: 'data', label: 'Big Data & Data Science', icon: <Database className="w-4 h-4" /> },
-  { id: 'web', label: 'Full-Stack Web & Mobile Engineering', icon: <Layout className="w-4 h-4" /> },
+  { id: 'ai', label: 'Artificial Intelligence & Machine Learning', icon: <BrainCircuit className="w-4 h-4" />, keywords: ['kecerdasan', 'intelligence', 'machine', 'learning', 'ai', 'data mining', 'pengolahan', 'natural', 'vision', 'robot'], careers: ['AI Research Engineer', 'Data Scientist', 'Computer Vision Specialist'] },
+  { id: 'cyber', label: 'Cyber Security & Network Defense', icon: <ShieldCheck className="w-4 h-4" />, keywords: ['keamanan', 'kripto', 'cryptography', 'forensik', 'forensic', 'jaringan', 'network', 'cyber', 'penetration', 'malware'], careers: ['Cyber Security Analyst', 'Penetration Tester', 'Forensic Investigator'] },
+  { id: 'data', label: 'Big Data & Data Science', icon: <Database className="w-4 h-4" />, keywords: ['data', 'analitik', 'analytics', 'statistik', 'statistics', 'big data', 'visualisasi', 'sains data', 'science'], careers: ['Data Engineer', 'Business Intelligence Analyst', 'Data Analytics Consultant'] },
+  { id: 'web', label: 'Full-Stack Web & Mobile Engineering', icon: <Layout className="w-4 h-4" />, keywords: ['web', 'mobile', 'pemrograman', 'programming', 'aplikasi', 'application', 'perangkat lunak', 'software', 'cloud', 'mikroservis', 'microservice'], careers: ['Full-Stack Developer', 'Mobile Developer', 'Cloud Engineer'] },
 ];
-
-const mockRecommendations: Record<string, ElectiveCourse[]> = {
-  ai: [
-    {
-      code: 'IF3244',
-      name: 'Pembelajaran Mendalam (Deep Learning)',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 98,
-      reasoning: 'Sangat cocok karena Anda meraih nilai A pada mata kuliah Matematika Diskrit dan Algoritma Struktur Data. Mata kuliah ini memperluas penguasaan neural networks Anda.',
-      careerProspects: ['AI Research Engineer', 'Computer Vision Specialist', 'Data Scientist'],
-      prerequisites: 'Kalkulus II, Pengantar Kecerdasan Buatan',
-      instructor: 'Prof. Dr. Ir. Supriadi'
-    },
-    {
-      code: 'IF3248',
-      name: 'Pemrosesan Bahasa Alami (NLP)',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 92,
-      reasoning: 'Rekomendasi kuat berdasarkan kesukaan Anda pada struktur data teks. Berfokus pada implementasi LLM, chatbot, dan analisis sentimen.',
-      careerProspects: ['NLP Engineer', 'Generative AI Developer', 'Computational Linguist'],
-      prerequisites: 'Probabilitas & Statistika, Pemrograman Python',
-      instructor: 'Dr. Eng. Ayu Purwari'
-    }
-  ],
-  cyber: [
-    {
-      code: 'IF3262',
-      name: 'Kriptografi Terapan & Keamanan Informasi',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 95,
-      reasoning: 'Didukung oleh nilai AB Anda di Jaringan Komputer. Mempelajari sistem enkripsi modern, otentikasi biometrik, dan audit keamanan sistem.',
-      careerProspects: ['Cryptographer', 'Information Security Officer', 'Cyber Security Consultant'],
-      prerequisites: 'Matematika Diskrit, Jaringan Komputer',
-      instructor: 'Dr. Rahmat Kartiko'
-    },
-    {
-      code: 'IF3266',
-      name: 'Forensik Digital & Analisis Malware',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 89,
-      reasoning: 'Sesuai untuk melacak serangan siber. Mempelajari pemulihan data pasca-insiden dan reverse engineering file biner berbahaya.',
-      careerProspects: ['Digital Forensics Investigator', 'Incident Responder', 'Malware Analyst'],
-      prerequisites: 'Sistem Operasi, Keamanan Jaringan',
-      instructor: 'Brigjen Dr. Sonny Santosa'
-    }
-  ],
-  data: [
-    {
-      code: 'IF3250',
-      name: 'Arsitektur Data Besar (Big Data Engineering)',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 96,
-      reasoning: 'Didorong oleh pencapaian nilai A Anda di Sistem Basis Data. Memfokuskan pada pemrosesan klaster Hadoop, Spark, dan ETL berskala peta-byte.',
-      careerProspects: ['Big Data Engineer', 'Data Warehouse Architect', 'Analytics Manager'],
-      prerequisites: 'Sistem Basis Data, Pemrograman Berorientasi Objek',
-      instructor: 'Dr. Budi Rahardjo'
-    },
-    {
-      code: 'IF3255',
-      name: 'Visualisasi Data & Intelijen Bisnis',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 91,
-      reasoning: 'Cocok untuk mempresentasikan analisis data rumit. Berfokus pada penceritaan data (data storytelling), Tableau, d3.js, dan dashboard eksekutif.',
-      careerProspects: ['Business Intelligence Analyst', 'Data Journalist', 'Data Analytics Consultant'],
-      prerequisites: 'Statistika Terapan, Pengantar Sains Data',
-      instructor: 'Indah Kusuma, M.T.'
-    }
-  ],
-  web: [
-    {
-      code: 'IF3270',
-      name: 'Arsitektur Mikroservis & Komputasi Awan (Cloud)',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 97,
-      reasoning: 'Berdasarkan nilai prima Anda pada Rekayasa Perangkat Lunak. Mempelajari skalabilitas aplikasi, Docker, Kubernetes, dan serverless deployment.',
-      careerProspects: ['Cloud Engineer', 'DevOps Specialist', 'Lead Backend Architect'],
-      prerequisites: 'Rekayasa Perangkat Lunak, Jaringan Komputer',
-      instructor: 'Yusuf Azhari, Ph.D.'
-    },
-    {
-      code: 'IF3275',
-      name: 'Pengembangan Aplikasi Mobile Lanjut (Cross-Platform)',
-      sks: 3,
-      semester: 6,
-      suitabilityScore: 94,
-      reasoning: 'Sesuai dengan bakat antarmuka Anda. Berfokus pada ekosistem React Native, Flutter, manajemen state global, dan sinkronisasi data luring (offline-sync).',
-      careerProspects: ['Senior Mobile Developer', 'App Architect', 'Startup Tech Founder'],
-      prerequisites: 'Pemrograman Web & Mobile, Interaksi Manusia & Komputer',
-      instructor: 'Hafiz Azman, M.Sc.'
-    }
-  ]
-};
 
 export function SmartCourseRecommendation() {
   const [selectedInterest, setSelectedInterest] = useState<string>('ai');
   const [activeCourse, setActiveCourse] = useState<ElectiveCourse | null>(null);
+  const [courses, setCourses] = useState<AvailableKrsCourse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const currentList = mockRecommendations[selectedInterest] || [];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const ov = await getStudentOverview();
+        if (!cancelled) setCourses(ov.availableKrsCourses ?? []);
+      } catch {
+        if (!cancelled) setCourses([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Mata kuliah pilihan riil dari KRS backend, dicocokkan dengan kata kunci minat.
+  const recommendations: Record<string, ElectiveCourse[]> = useMemo(() => {
+    const electives = courses.filter((c) => c.type === 'Pilihan');
+    const result: Record<string, ElectiveCourse[]> = {};
+    for (const opt of interestOptions) {
+      const matched = electives
+        .map((c) => {
+          const hay = `${c.code} ${c.name}`.toLowerCase();
+          const hits = opt.keywords.filter((k) => hay.includes(k.toLowerCase())).length;
+          return { c, hits };
+        })
+        .filter((x) => x.hits > 0)
+        .sort((a, b) => b.hits - a.hits)
+        .map(({ c, hits }) => ({
+          code: c.code,
+          name: c.name,
+          sks: c.sks,
+          semester: c.semester,
+          suitabilityScore: Math.min(100, 50 + hits * 15),
+          reasoning: `Mata kuliah ini mengandung topik yang sesuai dengan fokus minat "${opt.label}" (${hits} kata kunci cocok). Daftar ini disusun dari mata kuliah pilihan yang tersedia pada KRS periode berjalan.`,
+          careerProspects: opt.careers,
+          prerequisites: '—',
+          instructor: 'Lihat modul KRS untuk daftar dosen pengampu.',
+        }));
+      result[opt.id] = matched;
+    }
+    return result;
+  }, [courses]);
+
+  const currentList = recommendations[selectedInterest] || [];
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-colors duration-200 font-sans">
@@ -141,7 +89,7 @@ export function SmartCourseRecommendation() {
             </h4>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            Saran mata kuliah opsional berdasar minat karir, performa akademik, dan kecenderungan minat Anda.
+            Mata kuliah pilihan yang tersedia pada KRS periode berjalan, dicocokkan dengan fokus minat karir Anda.
           </p>
         </div>
       </div>
@@ -175,7 +123,31 @@ export function SmartCourseRecommendation() {
         </div>
       </div>
 
-      {/* Suggested Courses Area */}
+      {loading && (
+        <div className="text-center py-8 text-xs text-slate-400 flex items-center justify-center gap-2">
+          <Clock className="w-4 h-4 animate-spin" /> Memuat mata kuliah pilihan dari server...
+        </div>
+      )}
+
+      {!loading && courses.length === 0 && (
+        <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-2">
+          <Inbox className="w-8 h-8 text-slate-300" />
+          <p className="text-xs text-slate-500 max-w-sm">
+            Belum ada data mata kuliah pilihan untuk KRS periode berjalan. Data akan tampil setelah prodi menerbitkan daftar mata kuliah.
+          </p>
+        </div>
+      )}
+
+      {!loading && courses.length > 0 && currentList.length === 0 && (
+        <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-950/20 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-2">
+          <Inbox className="w-8 h-8 text-slate-300" />
+          <p className="text-xs text-slate-500 max-w-sm">
+            Tidak ada mata kuliah pilihan yang cocok dengan fokus minat ini pada KRS periode berjalan.
+          </p>
+        </div>
+      )}
+
+      {!loading && currentList.length > 0 && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Recommended list */}
         <div className="lg:col-span-6 space-y-3">
@@ -244,7 +216,7 @@ export function SmartCourseRecommendation() {
                   {/* Smart reasoning explanation */}
                   <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg">
                     <span className="text-[9px] uppercase font-bold text-blue-500 flex items-center gap-1 mb-1 font-sans">
-                      <Award className="w-3.5 h-3.5" /> Analisis Kecocokan Akademik
+                      <Award className="w-3.5 h-3.5" /> Analisis Kecocokan Minat
                     </span>
                     <p className="text-[11px] text-slate-650 dark:text-slate-300 leading-relaxed">
                       {activeCourse.reasoning}
@@ -254,7 +226,7 @@ export function SmartCourseRecommendation() {
                   {/* Career paths prospects */}
                   <div className="space-y-1.5">
                     <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">
-                      Prospek Karir Masa Depan
+                      Jalur Karir Umum (Fokus Minat)
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {activeCourse.careerProspects.map((cr, idx) => (
@@ -290,7 +262,7 @@ export function SmartCourseRecommendation() {
                   <span className="text-slate-400 font-medium">Tertarik mengambil MK ini?</span>
                   <button
                     onClick={() => {
-                      alert(`Mata kuliah ${activeCourse.name} (${activeCourse.code}) berhasil ditambahkan ke usulan KRS bayangan Anda! Silakan finalisasi di menu KRS.`);
+                      alert(`Mata kuliah ${activeCourse.name} (${activeCourse.code}) direkomendasikan untuk KRS Anda. Finalisasi pengambilan dilakukan melalui modul KRS pada dashboard.`);
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition-colors text-[11px]"
                   >
@@ -306,7 +278,7 @@ export function SmartCourseRecommendation() {
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-700 dark:text-slate-300">Pilih Mata Kuliah Rekomendasi</div>
                   <p className="text-slate-450 max-w-[240px] leading-relaxed mx-auto">
-                    Pilih salah satu usulan mata kuliah di sebelah kiri untuk meninjau rincian analisis akademik, prasyarat, serta prospek karirnya.
+                    Pilih salah satu usulan mata kuliah di sebelah kiri untuk meninjau rincian analisis kecocokan dan prospek karirnya.
                   </p>
                 </div>
               </div>
@@ -314,6 +286,7 @@ export function SmartCourseRecommendation() {
           </AnimatePresence>
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../utils/i18n';
+import {
+  getRoleDashboard,
+  getStudentOverview,
+  getLecturerOverview,
+  BaakDashboardPayload,
+} from '../../api/academic.api';
 import { 
   Award, 
   BookOpen, 
@@ -38,47 +44,19 @@ interface ConversionRecord {
   notes?: string;
 }
 
-const defaultConversions: ConversionRecord[] = [
-  {
-    id: 'CONV-2026-001',
-    studentName: 'Ahmad Syafiq',
-    studentNim: '1901001',
-    originUni: 'Program Bangkit Academy (Google, GoTo, Traveloka)',
-    originCourse: 'Cloud Computing Learning Path',
-    originSks: 9,
-    targetCourseCode: 'IF3110',
-    targetCourseName: 'Pengembangan Web & Cloud',
-    targetSks: 4,
-    cplMatchPercentage: 92,
-    status: 'Disetujui',
-    proposedAt: '20 Juni 2026',
-    approvedAt: '22 Juni 2026',
-    notes: 'Sesuai dengan Capaian Pembelajaran Lulusan (CPL-03 dan CPL-05). SKS berhasil dialihkan.',
-  },
-  {
-    id: 'CONV-2026-002',
-    studentName: 'Ahmad Syafiq',
-    studentNim: '1901001',
-    originUni: 'Universitas Indonesia (Pertukaran Mahasiswa Merdeka)',
-    originCourse: 'Kecerdasan Artifisial Dasar',
-    originSks: 3,
-    targetCourseCode: 'IF3240',
-    targetCourseName: 'Pengantar Inteligensi Buatan',
-    targetSks: 3,
-    cplMatchPercentage: 88,
-    status: 'Diajukan',
-    proposedAt: '25 Juni 2026',
-    notes: 'Sedang diverifikasi oleh Kaprodi terkait dokumen silabus.',
-  }
-];
+interface TargetCourse {
+  code: string;
+  name: string;
+  sks: number;
+  keywords: string[];
+}
 
-const availableTargetCourses = [
-  { code: 'IF3110', name: 'Pengembangan Web & Cloud', sks: 4, keywords: ['web', 'cloud', 'server', 'database', 'rest api', 'internet'] },
-  { code: 'IF3240', name: 'Pengantar Inteligensi Buatan', sks: 3, keywords: ['kecerdasan', 'artifisial', 'ai', 'machine learning', 'data', 'logika'] },
-  { code: 'IF2230', name: 'Pemrograman Berorientasi Objek', sks: 3, keywords: ['oop', 'java', 'class', 'object', 'pemrograman', ' inheritance'] },
-  { code: 'IF2211', name: 'Matematika Diskrit', sks: 3, keywords: ['logika', 'graf', 'himpunan', 'kombinatorika', 'diskrit', 'aljabar'] },
-  { code: 'IF4120', name: 'Kriptografi & Keamanan Jaringan', sks: 3, keywords: ['kripto', 'keamanan', 'jaringan', 'enkripsi', 'cipher', 'hash'] },
-];
+// Buat kata kunci pencocokan dari data kurikulum asli (nama, kode, tipe).
+function buildKeywords(c: { code: string; name: string; type?: string }): string[] {
+  const stop = new Set(['dan', 'atau', 'pengantar', 'dasar', 'lanjutan', 'i', 'ii', 'iii', 'iv']);
+  const words = c.name.toLowerCase().split(/\s+/).filter((w) => w.length > 1 && !stop.has(w));
+  return [...new Set([...words, c.code.toLowerCase(), ...(c.type ? [c.type.toLowerCase()] : [])])];
+}
 
 export function SksConversionModule({ role }: { role: string }) {
   const { t, lang } = useLanguage();
@@ -89,11 +67,16 @@ export function SksConversionModule({ role }: { role: string }) {
         try { return JSON.parse(saved); } catch (e) {}
       }
     }
-    return defaultConversions;
+    return [];
   });
 
+  // Mata kuliah target SIAKAD dimuat dari kurikulum asli (role dashboard BAAK).
+  const [targetCourses, setTargetCourses] = useState<TargetCourse[]>([]);
+  const [curriculumLoading, setCurriculumLoading] = useState(true);
+
   // Lecturer Form states
-  const [studentSearch, setStudentSearch] = useState('Ahmad Syafiq (1901001)');
+  const [studentName, setStudentName] = useState('');
+  const [studentNim, setStudentNim] = useState('');
   const [originUni, setOriginUni] = useState('');
   const [originCourse, setOriginCourse] = useState('');
   const [originSks, setOriginSks] = useState<number>(3);
@@ -109,6 +92,54 @@ export function SksConversionModule({ role }: { role: string }) {
   useEffect(() => {
     localStorage.setItem('siakad_sks_conversions', JSON.stringify(conversions));
   }, [conversions]);
+
+  // Muat kurikulum target asli dari role dashboard BAAK (terbuka untuk semua peran).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const baak = await getRoleDashboard<BaakDashboardPayload>('baak');
+        const list = (baak.courses ?? [])
+          .map((c) => ({ code: c.code, name: c.name, sks: c.sks, keywords: buildKeywords(c) }))
+          .filter((c) => c.code && c.name);
+        if (!cancelled && list.length > 0) {
+          setTargetCourses(list);
+          setTargetIndex(0);
+        }
+      } catch {
+        // Kurikulum gagal dimuat; form tetap menampilkan state kosong jujur.
+      } finally {
+        if (!cancelled) setCurriculumLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Muat identitas mahasiswa asli: profil sendiri (student) atau roster (dosen).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (role === 'student') {
+          const ov = await getStudentOverview();
+          if (!cancelled) {
+            setStudentName(ov.profile?.name || '');
+            setStudentNim(ov.profile?.nim || '');
+          }
+        } else {
+          const ov = await getLecturerOverview();
+          const s = ov.students?.[0];
+          if (!cancelled) {
+            setStudentName(s?.name || '');
+            setStudentNim(s?.nim || '');
+          }
+        }
+      } catch {
+        // Identitas gagal dimuat; biarkan kosong.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [role]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -127,7 +158,12 @@ export function SksConversionModule({ role }: { role: string }) {
     setMatchedKeywords([]);
 
     setTimeout(() => {
-      const selectedTarget = availableTargetCourses[targetIndex];
+      const selectedTarget = targetCourses[targetIndex];
+      if (!selectedTarget) {
+        setIsMatching(false);
+        showToast('Kurikulum target belum tersedia. Silakan muat ulang halaman.');
+        return;
+      }
       const keywords = selectedTarget.keywords;
       
       // Compute score based on matching keywords inside syllabus or origin course
@@ -153,13 +189,17 @@ export function SksConversionModule({ role }: { role: string }) {
       return;
     }
 
-    const selectedTarget = availableTargetCourses[targetIndex];
+    const selectedTarget = targetCourses[targetIndex];
+    if (!selectedTarget) {
+      showToast('Kurikulum target belum tersedia. Silakan muat ulang halaman.');
+      return;
+    }
     const finalScore = matchScore || Math.floor(65 + Math.random() * 25);
 
     const newRecord: ConversionRecord = {
-      id: `CONV-2026-0${conversions.length + 1}`,
-      studentName: 'Ahmad Syafiq',
-      studentNim: '1901001',
+      id: `CONV-${new Date().getFullYear()}-${String(conversions.length + 1).padStart(3, '0')}`,
+      studentName: studentName || '—',
+      studentNim: studentNim || '—',
       originUni,
       originCourse,
       originSks,
@@ -264,7 +304,7 @@ export function SksConversionModule({ role }: { role: string }) {
               <div className="space-y-1.5">
                 <label className="text-[10px] text-slate-400 uppercase font-black">{t('login.username')} (Mahasiswa)</label>
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-blue-500" /> {studentSearch}
+                  <UserCheck className="w-4 h-4 text-blue-500" /> {studentName ? `${studentName} (${studentNim || '—'})` : 'Mahasiswa belum dipilih'}
                 </div>
               </div>
 
@@ -315,9 +355,15 @@ export function SksConversionModule({ role }: { role: string }) {
                   }}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 font-bold outline-none"
                 >
-                  {availableTargetCourses.map((c, i) => (
-                    <option key={c.code} value={i}>{c.code} - {c.name} ({c.sks} SKS)</option>
-                  ))}
+                  {curriculumLoading ? (
+                    <option value={0}>Memuat kurikulum...</option>
+                  ) : targetCourses.length === 0 ? (
+                    <option value={0}>Kurikulum belum tersedia</option>
+                  ) : (
+                    targetCourses.map((c, i) => (
+                      <option key={c.code} value={i}>{c.code} - {c.name} ({c.sks} SKS)</option>
+                    ))
+                  )}
                 </select>
               </div>
 

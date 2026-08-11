@@ -109,8 +109,15 @@ export class AcademicController {
     return { status: 'success', message: 'Materi dihapus.' };
   }
 
+  @Get('assignments')
+  @Roles('admin', 'lecturer', 'student', 'kaprodi', 'dekan', 'baak', 'bauk')
+  async getAssignments(@Req() req: express.Request) {
+    const assignments = await this.academicService.getAssignments(actorOf(req));
+    return { status: 'success', assignments };
+  }
+
   @Post('assignments')
-  @Roles('lecturer')
+  @Roles('admin', 'lecturer')
   async createAssignment(@Req() req: express.Request, @Body() body: any) {
     const [ip, ua] = meta(req);
     const assignment = await this.academicService.createAssignment(actorOf(req), body, ip, ua);
@@ -118,7 +125,7 @@ export class AcademicController {
   }
 
   @Delete('assignments/:id')
-  @Roles('lecturer')
+  @Roles('admin', 'lecturer')
   async deleteAssignment(@Req() req: express.Request, @Param('id') id: string) {
     const [ip, ua] = meta(req);
     await this.academicService.deleteAssignment(id, actorOf(req), ip, ua);
@@ -226,5 +233,22 @@ export class AcademicController {
   @Get('documents')
   async getDocuments() {
     return { status: 'success', documents: await this.academicService.getDocuments() };
+  }
+
+  // ── EDOM: Evaluasi Dosen oleh Mahasiswa ───────────────────────────
+  @Get('edom')
+  @Roles('student', 'lecturer', 'admin', 'baak', 'bauk', 'kaprodi', 'dekan')
+  async getEdom(@Req() req: express.Request) {
+    const data = await this.academicService.getEdom(actorOf(req));
+    return { status: 'success', ...data };
+  }
+
+  @Post('edom')
+  @Roles('student')
+  @HttpCode(HttpStatus.CREATED)
+  async submitEdom(@Req() req: express.Request, @Body() body: any) {
+    const [ip, ua] = meta(req);
+    const evaluation = await this.academicService.submitEdom(actorOf(req), body, ip, ua);
+    return { status: 'success', message: 'Evaluasi EDOM berhasil dikirim.', evaluation };
   }
 }

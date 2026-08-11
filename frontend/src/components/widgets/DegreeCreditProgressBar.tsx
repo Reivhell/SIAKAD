@@ -13,52 +13,34 @@ interface SksCategory {
 
 interface DegreeCreditProgressBarProps {
   forceCompleted?: boolean;
+  /** Total SKS yang sudah ditempuh (dari transkrip riil). */
+  sksTaken?: number;
+  /** IPK kumulatif terkini (dari semesterGPAs riil). */
+  ipk?: number;
+  /** Rincian SKS per semester dari transkrip riil. */
+  perSemester?: Array<{ semester: string; sksTaken: number; ips: number }>;
 }
 
-export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCreditProgressBarProps) {
-  const baseTaken = forceCompleted ? 144 : 84;
+const CATEGORY_COLORS = ['bg-emerald-500', 'bg-blue-500', 'bg-amber-500', 'bg-indigo-500'];
+
+export function DegreeCreditProgressBar({ forceCompleted = false, sksTaken, ipk, perSemester = [] }: DegreeCreditProgressBarProps) {
   const graduationTarget = 144;
+  const baseTaken = forceCompleted ? 144 : (sksTaken ?? 0);
   
   // Interactive simulation state
   const [simulatedPlannedSks, setSimulatedPlannedSks] = useState<number>(0);
   const [showCategoryBreakdown, setShowCategoryBreakdown] = useState<boolean>(false);
   const [showHelperTooltip, setShowHelperTooltip] = useState<boolean>(false);
 
-  // SKS categories breakdown
-  const categories: SksCategory[] = [
-    { 
-      name: 'Mata Kuliah Umum (Nasional/MKU)', 
-      taken: 12, 
-      target: 12, 
-      color: 'bg-emerald-500', 
-      icon: <Award className="w-4 h-4 text-emerald-500" />,
-      details: 'Pendidikan Agama, Pancasila, Kewarganegaraan, dan Bahasa Indonesia.'
-    },
-    { 
-      name: 'Mata Kuliah Inti Program Studi (Wajib)', 
-      taken: forceCompleted ? 92 : 54, 
-      target: 92, 
-      color: 'bg-blue-500', 
-      icon: <BookOpen className="w-4 h-4 text-blue-500" />,
-      details: 'Algoritma, Pemrograman, Basis Data, Jaringan, Rekayasa Perangkat Lunak, dll.'
-    },
-    { 
-      name: 'Mata Kuliah Pilihan (Elektif)', 
-      taken: forceCompleted ? 20 : 12, 
-      target: 20, 
-      color: 'bg-amber-500', 
-      icon: <Sparkles className="w-4 h-4 text-amber-500" />,
-      details: 'Kecerdasan Buatan Terapan, Keamanan Siber, Rekayasa Data, dll.'
-    },
-    { 
-      name: 'Tugas Akhir, Magang & Skripsi', 
-      taken: forceCompleted ? 20 : 6, 
-      target: 20, 
-      color: 'bg-indigo-500', 
-      icon: <CheckCircle2 className="w-4 h-4 text-indigo-500" />,
-      details: 'Kerja Praktek (KP), Seminar Proposal, Skripsi / Tugas Akhir.'
-    }
-  ];
+  // Rincian SKS per semester (data riil dari transkrip)
+  const categories: SksCategory[] = perSemester.map((row, idx) => ({
+    name: row.semester,
+    taken: row.sksTaken,
+    target: graduationTarget,
+    color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+    icon: idx % 4 === 0 ? <Award className="w-4 h-4 text-emerald-500" /> : idx % 4 === 1 ? <BookOpen className="w-4 h-4 text-blue-500" /> : idx % 4 === 2 ? <Sparkles className="w-4 h-4 text-amber-500" /> : <CheckCircle2 className="w-4 h-4 text-indigo-500" />,
+    details: `IPS semester ${row.ips.toFixed(2)}`,
+  }));
 
   const totalTaken = baseTaken + simulatedPlannedSks;
   const currentPercentage = Math.min(100, Math.round((baseTaken / graduationTarget) * 100));
@@ -66,13 +48,13 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
   const remainingSks = Math.max(0, graduationTarget - totalTaken);
 
   // Estimates for graduation
-  const ipk = 3.58; // Current student IPK
-  let predicate = 'Sangat Memuaskan';
-  if (ipk >= 3.51) {
+  const currentIpk = ipk ?? 0;
+  let predicate = 'Belum Ada Data';
+  if (currentIpk >= 3.51) {
     predicate = 'Dengan Pujian (Cum Laude)';
-  } else if (ipk >= 3.0) {
+  } else if (currentIpk >= 3.0) {
     predicate = 'Sangat Memuaskan';
-  } else {
+  } else if (currentIpk > 0) {
     predicate = 'Memuaskan';
   }
 
@@ -115,7 +97,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
           </div>
           <div className="pl-3 border-l border-slate-200 dark:border-slate-800 text-right">
             <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">IPK</div>
-            <div className="text-sm font-black text-slate-900 dark:text-white">{ipk}</div>
+            <div className="text-sm font-black text-slate-900 dark:text-white">{currentIpk > 0 ? currentIpk : '—'}</div>
           </div>
         </div>
       </div>
@@ -241,7 +223,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
             className="w-full flex items-center justify-between py-2 text-xs font-bold text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-slate-100 transition-colors border-t border-slate-100 dark:border-slate-800/80 mt-1 cursor-pointer"
           >
             <span className="flex items-center gap-1.5">
-              Cek Rincian Sebaran Kategori SKS Kelulusan
+              Cek Rincian SKS per Semester
             </span>
             {showCategoryBreakdown ? (
               <ChevronUp className="w-4 h-4 text-slate-450" />
@@ -260,6 +242,12 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
                 className="overflow-hidden"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-3">
+                  {categories.length === 0 && (
+                    <div className="col-span-full text-center py-8 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-250 dark:border-slate-800">
+                      <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-xs text-slate-500">Belum ada data transkrip. SKS per semester akan tampil setelah nilai tersedia.</p>
+                    </div>
+                  )}
                   {categories.map((cat, idx) => {
                     const catPct = Math.min(100, Math.round((cat.taken / cat.target) * 100));
                     return (
@@ -286,7 +274,7 @@ export function DegreeCreditProgressBar({ forceCompleted = false }: DegreeCredit
                         {/* Category Progress Stats */}
                         <div className="space-y-1 pt-1">
                           <div className="flex justify-between items-center text-[10px] font-bold">
-                            <span className="text-slate-400">Pencapaian</span>
+                            <span className="text-slate-400">SKS ditempuh</span>
                             <span className="text-slate-700 dark:text-slate-300">
                               {cat.taken} / <span className="text-slate-400">{cat.target} SKS</span> ({catPct}%)
                             </span>

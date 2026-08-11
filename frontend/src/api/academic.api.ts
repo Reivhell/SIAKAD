@@ -564,10 +564,10 @@ export interface AcademicAnnouncement {
   createdAt?: string;
 }
 
-export async function getAcademicAnnouncements(target?: string) {
+export async function getAcademicAnnouncements(target?: string): Promise<AcademicAnnouncement[]> {
   const params = target ? { params: { target } } : undefined;
-  const res = await apiClient.get<AcademicAnnouncement[]>(`/academic/announcements`, params);
-  return (res as unknown as { data?: AcademicAnnouncement[] }).data ?? res;
+  const res = await apiClient.get<{ status: string; announcements: AcademicAnnouncement[] }>('/academic/announcements', params);
+  return (res as unknown as { announcements?: AcademicAnnouncement[] }).announcements ?? [];
 }
 
 /** Kirim pesan chat nyata ke mahasiswa (penerima = email). */
@@ -597,11 +597,12 @@ export interface AcademicDateItem {
   date: string;
   description?: string;
   type?: string;
+  period?: string;
 }
 
 export async function getAcademicDates(): Promise<AcademicDateItem[]> {
-  const res = await apiClient.get<AcademicDateItem[]>('/academic/dates');
-  return (res as unknown as { data?: AcademicDateItem[] }).data ?? res;
+  const res = await apiClient.get<{ status: string; dates: AcademicDateItem[] }>('/academic/dates');
+  return (res as unknown as { dates?: AcademicDateItem[] }).dates ?? [];
 }
 
 export interface AcademicMaterial {
@@ -639,6 +640,11 @@ export interface AcademicAssignment {
 export async function createAcademicAssignment(body: Partial<AcademicAssignment>): Promise<AcademicAssignment> {
   const res = await apiClient.post<AcademicAssignment>('/academic/assignments', body);
   return (res as unknown as { data?: AcademicAssignment }).data ?? res;
+}
+
+export async function getAcademicAssignments(): Promise<AcademicAssignment[]> {
+  const res = await apiClient.get<AcademicAssignment[]>('/academic/assignments');
+  return (res as unknown as { data?: AcademicAssignment[] }).data ?? res;
 }
 
 export async function deleteAcademicAssignment(id: string): Promise<{ id: string }> {
@@ -710,8 +716,8 @@ export interface TicketItem {
 }
 
 export async function getTickets(): Promise<TicketItem[]> {
-  const res = await apiClient.get<TicketItem[]>('/academic/tickets');
-  return (res as unknown as { data?: TicketItem[] }).data ?? res;
+  const res = await apiClient.get<{ status: string; tickets: TicketItem[] }>('/academic/tickets');
+  return (res as unknown as { tickets?: TicketItem[] }).tickets ?? [];
 }
 
 export async function createTicket(body: Partial<TicketItem>): Promise<TicketItem> {
@@ -749,8 +755,43 @@ export interface ThesisItem {
 }
 
 export async function getThesisItems(): Promise<ThesisItem[]> {
-  const res = await apiClient.get<ThesisItem[]>('/academic/thesis');
-  return (res as unknown as { data?: ThesisItem[] }).data ?? res;
+  const res = await apiClient.get<{ status: string; thesis: ThesisItem[] }>('/academic/thesis');
+  return (res as unknown as { thesis?: ThesisItem[] }).thesis ?? [];
+}
+
+export interface EdomEvaluation {
+  id: string;
+  studentNim: string;
+  studentName: string;
+  courseCode: string;
+  courseName: string;
+  lecturerEmail: string;
+  lecturerName: string;
+  semester: string;
+  pedagogik: number;
+  profesional: number;
+  kepribadian: number;
+  sosial: number;
+  comment?: string;
+  createdAt?: string;
+}
+
+export interface EdomPayload {
+  role: 'student' | 'lecturer' | 'leadership';
+  courses?: Array<{ code: string; name: string; lecturer: string; evaluated: boolean }>;
+  evaluations: EdomEvaluation[];
+}
+
+export async function getEdomEvaluations(): Promise<EdomPayload> {
+  const res = await apiClient.get<EdomPayload>('/academic/edom');
+  return (res as unknown as { data?: EdomPayload }).data ?? res;
+}
+
+export async function submitEdomEvaluation(
+  body: Omit<EdomEvaluation, 'id' | 'studentNim' | 'studentName' | 'semester' | 'createdAt' | 'lecturerEmail'> & { lecturerEmail?: string },
+): Promise<EdomEvaluation> {
+  const res = await apiClient.post<EdomEvaluation>('/academic/edom', body);
+  return (res as unknown as { data?: EdomEvaluation }).data ?? res;
 }
 
 export { reject };

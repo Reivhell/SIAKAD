@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Megaphone, X, ExternalLink, Sparkles, AlertCircle } from 'lucide-react';
+import { Megaphone, X, AlertCircle } from 'lucide-react';
+import { User as UserType } from '../../types';
+import { getAcademicAnnouncements } from '../../api/academic.api';
 
 interface Announcement {
   id: string;
@@ -8,49 +10,42 @@ interface Announcement {
   link?: string;
 }
 
-const defaultAnnouncements: Announcement[] = [
-  {
-    id: 'ann-1',
-    message: '⚠️ PENTING: Batas akhir pengisian KRS Semester Ganjil TA 2026/2027 adalah 10 Agustus 2026. Segera lakukan konsultasi dengan Dosen Wali Anda.',
-    isUrgent: true,
-  },
-  {
-    id: 'ann-2',
-    message: '🎓 Yudisium dan Pendaftaran Wisuda Periode II Tahun 2026 telah dibuka. Silakan unggah dokumen kelengkapan di modul Yudisium & Wisuda.',
-    isUrgent: false,
-  },
-  {
-    id: 'ann-3',
-    message: '🔬 Penerimaan Proposal Hibah Penelitian & Pengabdian Masyarakat Program Studi Tahun Anggaran 2026 diperpanjang hingga akhir bulan ini.',
-    isUrgent: false,
-  },
-  {
-    id: 'ann-4',
-    message: '🚨 PEMELIHARAAN SISTEM: Server SIAKAD Utama akan menjalani maintenance rutin pada hari Sabtu mulai pukul 22:00 WIB s.d. Minggu 02:00 WIB.',
-    isUrgent: true,
-  }
-];
-
-export function AnnouncementTicker() {
+export function AnnouncementTicker({ user }: { user?: UserType }) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isVisible, setIsVisible] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching announcements from a database or localStorage
-    const saved = localStorage.getItem('siakad_announcements');
-    if (saved) {
-      setAnnouncements(JSON.parse(saved));
-      setLoading(false);
-    } else {
-      // Seed initial announcements
-      localStorage.setItem('siakad_announcements', JSON.stringify(defaultAnnouncements));
-      setAnnouncements(defaultAnnouncements);
-      setLoading(false);
-    }
-  }, []);
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getAcademicAnnouncements();
+        if (cancelled) return;
+        // Filter sesuai peran pengguna agar ticker menampilkan pengumuman yang relevan.
+        const targets = user?.role === 'lecturer'
+          ? ['Semua', 'Dosen']
+          : user?.role === 'student'
+            ? ['Semua', 'Mahasiswa']
+            : ['Semua'];
+        const items: Announcement[] = rows
+          .filter((a) => targets.includes(a.target || 'Semua'))
+          .map((a) => ({
+            id: a.id,
+            message: `${a.title}${a.content ? ' — ' + a.content : ''} (${a.date || ''})`,
+            isUrgent: /(urgent|penting|pemeliharaan|maintenance|darurat)/i.test(`${a.title} ${a.content}`),
+            link: a.author ? `Diterbitkan oleh ${a.author}` : undefined,
+          }));
+        setAnnouncements(items);
+      } catch {
+        if (!cancelled) setAnnouncements([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
-  if (!isVisible || announcements.length === 0) return null;
+  if (loading || !isVisible || announcements.length === 0) return null;
 
   return (
     <div className="relative w-full bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl overflow-hidden shadow-sm transition-colors duration-200">
@@ -91,19 +86,6 @@ export function AnnouncementTicker() {
           <X className="w-4 h-4" />
         </button>
       </div>
-
-      {/* Add Marquee CSS animation style dynamically if not present in tailwind.config */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: inline-flex;
-          white-space: nowrap;
-          animation: marquee 35s linear infinite;
-        }
-      `}</style>
     </div>
   );
 }
