@@ -689,9 +689,9 @@ export interface FinanceBill {
   status?: string;
 }
 
-export async function getMyFinance(): Promise<{ bills: FinanceBill[]; unpaidTotal: number }> {
-  const res = await apiClient.get<{ bills: FinanceBill[]; unpaidTotal: number }>('/academic/finance');
-  return (res as unknown as { data?: { bills: FinanceBill[]; unpaidTotal: number } }).data ?? res;
+export async function getMyFinance(): Promise<{ bills: FinanceBill[] }> {
+  const res = await apiClient.get<{ bills: FinanceBill[] }>('/academic/finance');
+  return (res as unknown as { data?: { bills: FinanceBill[] } }).data ?? res;
 }
 
 export async function payFinanceBill(id: string, amount: number): Promise<FinanceBill> {
